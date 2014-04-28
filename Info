@@ -1,0 +1,7 @@
+realloc vom Workspace schlägt scheinbar fehl.
+Es wird hinter die maximale Größe geschrieben
+
+
+hm, wenn ich max_comp vergrößere und damit eine reallokierung verhindere, tritt
+das Problem nicht auf. Irgendwie wird der Zustand id>max_comp erreicht, obwohl
+das da abgefangen wird.
