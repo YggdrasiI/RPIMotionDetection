@@ -14,5 +14,5 @@ message(STATUS ${BLOBLIBb})
 include_directories(/opt/kinect/MyBlobDetection)
 target_link_libraries( DisplayImage 
 	${BLOBLIB}
-	#	${BLOBLIBb} 
+	${BLOBLIBb} 
 	)
