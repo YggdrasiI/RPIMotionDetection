@@ -6,19 +6,27 @@
 
 using namespace cv;
 
+/* Let only nodes with depth level = X passes. */
+static int my_filter(Node *n){
+	Blob* data = (Blob*) n->data;
+	if( data->depth_level > 3 ) return 3;
+	if( data->depth_level == 3 ) return 0;
+	return 1;
+}
+
 int main(int argc, char** argv )
 {
 
 		//==========================================================
 		//Setup
 		
-		const int loopMax = 3;//120;
+		const int loopMax = 120;
 		int loop = 0;
 		int thresh = 100;
 
 		//Init depth_map
 		unsigned char depth_map[256];
-		int i; for( i=0; i<256; i++) depth_map[i] = i/10;
+		int i; for( i=0; i<256; i++) depth_map[i] = i/50;
 
 		//Input handling
     if ( argc < 2 )
@@ -61,6 +69,8 @@ int main(int argc, char** argv )
 			mat = grey;
 			*/
 
+			Mat color(mat.size(),CV_8UC3);
+			cv::cvtColor(mat, color, CV_GRAY2BGR);
 
 			printf("Image data continuous: %s\n", mat.isContinuous()?"Yes":"No" );
 
@@ -83,33 +93,67 @@ int main(int argc, char** argv )
 			// Look at blobtree.h for more information.
 			blobtree_set_grid(blob, 1,1);
 
-			BlobtreeRect roi0 = {0,0,W, H-8 };//shrink height because lowest rows contains noise.
+			BlobtreeRect roi0 = {0,0,W, H };//shrink height because lowest rows contains noise.
 
-			blobtree_find_blobs(blob, ptr, W, H, roi0, thresh);
-			//depthtree_find_blobs(blob, ptr, W, H, roi0, depth_map, workspace);
+			//blobtree_find_blobs(blob, ptr, W, H, roi0, thresh);
+			depthtree_find_blobs(blob, ptr, W, H, roi0, depth_map, workspace);
 
+			/* Textual output of whole tree of blobs. */
+			//print_tree(blob->tree->root,0);
 
+			//Set output filter
 			blobtree_set_filter(blob, F_AREA_MIN, 25); //filter out small blobs
 			blobtree_set_filter(blob, F_AREA_MAX, 10000000); //filter out big blobs
 
-			blobtree_set_filter(blob, F_DEPTH_MIN, 1);//filter out top level blob for whole image
-			blobtree_set_filter(blob, F_DEPTH_MAX, 1);//filter out blobs included into bigger blobs
+			blobtree_set_filter(blob, F_TREE_DEPTH_MIN, 1);//filter out top level blob for whole image
+			blobtree_set_filter(blob, F_TREE_DEPTH_MAX, 3);//filter out blobs included into bigger blobs
+
+			//blobtree_set_filter(blob, F_ONLY_LEAFS, 1);
+			
+			//Add own filter over function pointer
+			blobtree_set_extra_filter(blob, my_filter);
+
+			//fill color image with id map of filtered list of blobs
+			//1. Create mapping for filtered list
+			depthree_filter_blob_ids(blob,workspace);
+
+			int fid;
+			int* ids = workspace->ids;
+			int* cm = workspace->comp_same;
+
+			int* ris = workspace->real_ids;
+			int* riv = workspace->real_ids_inv;
+			int* bif = workspace->blob_id_filtered;//map id on id of unfiltered node
+
+			for( int y=0; y<H; ++y){
+				for( int x=0; x<W; ++x) {
+					//fid = *(cm + fid); //fid = *(cm + fid);
+					fid = *(bif+ *ids);
+
+					const cv::Vec3b col( (fid*5*5+100)%256, (fid*7*7+10)%256, (fid*29*29+1)%256 );
+					color.at<Vec3b>(y, x) = col;
+					++ids;
+				}
+			}
 
 			BlobtreeRect *roi;
 			Node *curNode = blobtree_first(blob);
+
+			int num=0;
+
 			while( curNode != NULL ){
+				num++;
 				Blob *data = (Blob*)curNode->data;
 				roi = &data->roi;
 				int x     = roi->x + roi->width/2;
 				int y     = roi->y + roi->height/2;
 
-				/*
-				printf("Blob with id %i: x=%i y=%i w=%i h=%i area=%i\n",data->id,
+				printf("Blob with id %i: x=%i y=%i w=%i h=%i area=%i, depthlevel=%i\n",data->id,
 						roi->x, roi->y,
 						roi->width, roi->height,
-						data->area
+						data->area,
+						data->depth_level
 						);
-						*/
 
 				cv::Rect cvRect(
 						max(roi->x-1,0),
@@ -117,9 +161,11 @@ int main(int argc, char** argv )
 						roi->width+2,
 						roi->height+2
 						);
-				//const cv::Scalar color(255.0f,255.0f,255.0f);
-				const cv::Scalar color(255.0f);
-				cv::rectangle( mat, cvRect, color, 1);//, int thickness=1, int lineType=8, int shift=0 )¶
+				const cv::Scalar col1(205.0f);
+				cv::rectangle( mat, cvRect, col1, 1);//, int thickness=1, int lineType=8, int shift=0 )¶
+				//const cv::Scalar col2(255.0f,255.0f- (num*29)%256,(num*5)%256);
+				const cv::Scalar col2(255,255, 255);
+				cv::rectangle( color, cvRect, col2, 1);//, int thickness=1, int lineType=8, int shift=0 )¶
 
 				curNode = blobtree_next(blob);
 			}
@@ -136,23 +182,10 @@ int main(int argc, char** argv )
 			namedWindow("Display Image", CV_WINDOW_AUTOSIZE );
 
 			cv::Mat out;
-			cv::resize(mat, out, mat.size()*2, 0, 0, INTER_NEAREST);
-			//imshow("Display Image", out);
-
-			/* //Hm, IplImage stellt keine Option zur Verfügung die Schritt-
-			   //weite von Pixeln zu ändern.
-			IplImage test1 = out;
-			//IplImage test2 = cvCreateImage(mat.size(), IPL_DEPTH_8U, 1);
-			printf("widthStep: %i, width: %i \n align: %i, dataOrder: %i\n",
-					test1.widthStep, test1.width,
-					test1.align, test1.dataOrder
-					);
-			cvShowImage("Display Image", &test1);
-			*/
-	
-			printf("Steps: %i, %i\n", out.step[0], out.step[1]);
+			cv::resize(color, out, color.size()*2, 0, 0, INTER_NEAREST);
 			imshow("Display Image", out);
-			
+
+
 			//Keyboard interaction
 			int key = waitKey(0);
 			printf("Key: %i\n", key);
@@ -168,6 +201,7 @@ int main(int argc, char** argv )
 									 }
 			}
 			
+			//loop=loopMax;
 		}
 
 	 return 0;

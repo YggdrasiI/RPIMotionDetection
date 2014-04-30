@@ -5,3 +5,36 @@ Es wird hinter die maximale GrÃ¶ÃŸe geschrieben
 hm, wenn ich max_comp vergrÃ¶ÃŸere und damit eine reallokierung verhindere, tritt
 das Problem nicht auf. Irgendwie wird der Zustand id>max_comp erreicht, obwohl
 das da abgefangen wird.
+
+
+
+Aha, comp_same (cs) ist keine Projektion, erst csÂ = csÂ³
+
+
+Hm, im workspace mÃssen die Relationen der ids und ihre Elternrelationen enthalten
+sein, da die Clientprogramme diese Daten zum filtern brauchen kÃnnten.
+final_ids sollten aber nicht wie derzeit behandelt werden, da so Ãber dem ganzen Bild gearbeitet
+wird?! Naja, es ist nur eine verschiebung der Operation f(pixel) von Client zu Server oder umgekehrt.... 
+
+
+Man muss die Filter auf die Knoten anwerden kÃnnen so dass 
+die Id eines Pixels zum Elternknoten geÃndert wird, falls die Id herausgefiltern wird?
+
+Dazu muss man nicht alle Pixel Ãndern, sondern nur comp_same!
+
+=>
+blob_id_filtered
+gen_blob_id
+
+
+Fuck, der Fehler ist noch da:
+*** glibc detected *** ./DisplayImage: realloc(): invalid next size: 0x09870320 ***
+
+
+Fuck, real_ids haben nichts mit den internen Ids zu tun!
+Comp_same arbeitet auf den Ids 
+-> ich mÃsste zu dem Zeitpunkt eine Karte fÃr realids erstellen,
+die realids auf die ids in den datenstruckturen abbildet.
+Nur dann kann ich diese interen datenstrukturen weiterverwenden.
+
+
