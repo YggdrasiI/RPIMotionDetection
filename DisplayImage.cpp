@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
-#include "blobtree.h"
+#include "threshtree.h"
 #include "depthtree.h"
 
 using namespace cv;
@@ -26,7 +26,7 @@ int main(int argc, char** argv )
 
 		//Init depth_map
 		unsigned char depth_map[256];
-		int i; for( i=0; i<256; i++) depth_map[i] = i/50;
+		int i; for( i=0; i<256; i++) depth_map[i] = (i<thresh?0:i/30);
 
 		//Input handling
     if ( argc < 2 )
@@ -79,10 +79,16 @@ int main(int argc, char** argv )
 			const int H = mat.size().height;
 			const uchar* ptr = mat.data;
 
-			//Init workspace
-			DepthtreeWorkspace *workspace = NULL;
-			depthtree_create_workspace( W, H, &workspace );
-			if( workspace == NULL ){
+			//Init workspaces
+			ThreshtreeWorkspace *tworkspace = NULL;
+			threshtree_create_workspace( W, H, &tworkspace );
+			if( tworkspace == NULL ){
+				printf("Unable to create workspace.\n");
+				return -1;
+			}
+			DepthtreeWorkspace *dworkspace = NULL;
+			depthtree_create_workspace( W, H, &dworkspace );
+			if( dworkspace == NULL ){
 				printf("Unable to create workspace.\n");
 				return -1;
 			}
@@ -95,44 +101,55 @@ int main(int argc, char** argv )
 
 			BlobtreeRect roi0 = {0,0,W, H };//shrink height because lowest rows contains noise.
 
-			//blobtree_find_blobs(blob, ptr, W, H, roi0, thresh);
-			depthtree_find_blobs(blob, ptr, W, H, roi0, depth_map, workspace);
+			//threshtree_find_blobs(blob, ptr, W, H, roi0, thresh, tworkspace);
+			depthtree_find_blobs(blob, ptr, W, H, roi0, depth_map, dworkspace);
 
 			/* Textual output of whole tree of blobs. */
-			//print_tree(blob->tree->root,0);
+			print_tree(blob->tree->root,0);
 
-			//Set output filter
+			/* Set output filter */
 			blobtree_set_filter(blob, F_AREA_MIN, 25); //filter out small blobs
-			blobtree_set_filter(blob, F_AREA_MAX, 10000000); //filter out big blobs
+			blobtree_set_filter(blob, F_AREA_MAX, 100000); //filter out big blobs
 
 			blobtree_set_filter(blob, F_TREE_DEPTH_MIN, 1);//filter out top level blob for whole image
-			blobtree_set_filter(blob, F_TREE_DEPTH_MAX, 3);//filter out blobs included into bigger blobs
+			blobtree_set_filter(blob, F_TREE_DEPTH_MAX, 30);//filter out blobs included into bigger blobs
 
-			//blobtree_set_filter(blob, F_ONLY_LEAFS, 1);
+			/* Note: Changeing depth_map could be the more efficient approach to
+			 * get a similar filtering effect.*/
+			//blobtree_set_filter(blob, F_AREA_DEPTH_MIN, 3);//filter out blobs with lower depth values.
+			//blobtree_set_filter(blob, F_AREA_DEPTH_MAX, 10);//filter out blobs with higher depth values.
+
+			/* Add own filter over function pointer */
+			//blobtree_set_extra_filter(blob, my_filter);
 			
-			//Add own filter over function pointer
-			blobtree_set_extra_filter(blob, my_filter);
+			/* Only show leafes with above filtering effects */
+			//blobtree_set_filter(blob, F_ONLY_LEAFS, 1);
+		
+
+
+			/* Create data for graphical output */
 
 			//fill color image with id map of filtered list of blobs
 			//1. Create mapping for filtered list
-			depthree_filter_blob_ids(blob,workspace);
+			if( false ){
+				depthree_filter_blob_ids(blob,dworkspace);
 
-			int fid;
-			int* ids = workspace->ids;
-			int* cm = workspace->comp_same;
+				int fid;
+				int* ids = dworkspace->ids;
+				//int* cm = dworkspace->comp_same;
+				//int* ris = dworkspace->real_ids;
+				//int* riv = dworkspace->real_ids_inv;
+				int* bif = dworkspace->blob_id_filtered;//map id on id of unfiltered node
 
-			int* ris = workspace->real_ids;
-			int* riv = workspace->real_ids_inv;
-			int* bif = workspace->blob_id_filtered;//map id on id of unfiltered node
+				for( int y=0; y<H; ++y){
+					for( int x=0; x<W; ++x) {
+						//fid = *(cm + fid); //fid = *(cm + fid);
+						fid = *(bif+ *ids);
 
-			for( int y=0; y<H; ++y){
-				for( int x=0; x<W; ++x) {
-					//fid = *(cm + fid); //fid = *(cm + fid);
-					fid = *(bif+ *ids);
-
-					const cv::Vec3b col( (fid*5*5+100)%256, (fid*7*7+10)%256, (fid*29*29+1)%256 );
-					color.at<Vec3b>(y, x) = col;
-					++ids;
+						const cv::Vec3b col( (fid*5*5+100)%256, (fid*7*7+10)%256, (fid*29*29+1)%256 );
+						color.at<Vec3b>(y, x) = col;
+						++ids;
+					}
 				}
 			}
 
@@ -170,8 +187,9 @@ int main(int argc, char** argv )
 				curNode = blobtree_next(blob);
 			}
 
-			depthtree_destroy_workspace( &workspace );
 			blobtree_destroy(blob);
+			depthtree_destroy_workspace( &dworkspace );
+			threshtree_destroy_workspace( &tworkspace );
 			blob = NULL;
 
 
