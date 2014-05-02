@@ -86,12 +86,14 @@ static void redraw(){
 
 	//fill color image with id map of filtered list of blobs
 	//1. Create mapping for filtered list
-	if( algorithm == 1 && display_areas ){
+	if( (algorithm == 1) && display_areas ){
 
 		int id;
 		int* ids = dworkspace->ids;
 
-		if( display_filtered_areas ){
+		printf("Bif map for %i Elements \n", dworkspace->used_comp);
+
+		if( display_filtered_areas || true ){
 			//create blob_id_filtered
 			depthree_filter_blob_ids(blob,dworkspace);
 		}
@@ -101,6 +103,10 @@ static void redraw(){
 		//int* riv = dworkspace->real_ids_inv;
 		int* bif = dworkspace->blob_id_filtered;//maps  'unfiltered id' on 'parent filtered id'
 
+		for( int i=0; i<dworkspace->used_comp; ++i){
+			printf("bif[%i] = %i\n", i, *(bif+i) );
+		}
+
 		for( int y=0, H=input_image.size().height; y<H; ++y){
 			for( int x=0, W=input_image.size().width ; x<W; ++x) {
 				if( display_filtered_areas ){
@@ -108,6 +114,7 @@ static void redraw(){
 				}else{
 					id = *ids;
 				}
+				//printf("(%i,%i), %i, %i\n", x,y, *ids, id);
 
 				const cv::Vec3b col( (id*5*5+100)%256, (id*7*7+10)%256, (id*29*29+1)%256 );
 				color.at<Vec3b>(y, x) = col;
@@ -256,8 +263,9 @@ int main(int argc, char** argv )
 		 * Destroy old instances and reallocate memory
 		 * This should be avoided in real applications.
 		 * */
-		depthtree_destroy_workspace( &dworkspace );
 		threshtree_destroy_workspace( &tworkspace );
+		depthtree_destroy_workspace( &dworkspace );
+		blobtree_destroy(&blob);
 
 		//Init workspaces
 		threshtree_create_workspace( W, H, &tworkspace );
@@ -271,7 +279,6 @@ int main(int argc, char** argv )
 			return -1;
 		}
 
-		blobtree_destroy(&blob);
 		blob = blobtree_create();
 
 
