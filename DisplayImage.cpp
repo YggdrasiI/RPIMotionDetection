@@ -165,31 +165,34 @@ static void redraw(){
 	if( display_areas ){
 
 		int seed;
-		int *ids, *riv, *bif;
-			bif = dworkspace->blob_id_filtered;//maps  'unfiltered id' on 'parent filtered id'
+		int *ids, *riv, *bif, *cm;
 
 		if( algorithm == 1 ){
 			ids = dworkspace->ids;
-
+			cm = dworkspace->comp_same;
 			riv = dworkspace->real_ids_inv;
-			bif = dworkspace->blob_id_filtered;//maps  'unfiltered id' on 'parent filtered id'
 
 			if( display_filtered_areas ){
 				depthree_filter_blob_ids(blob,dworkspace);
 			}
+			bif = dworkspace->blob_id_filtered;//maps  'unfiltered id' on 'parent filtered id'
 
 		}else{
 			ids = tworkspace->ids;
+			cm = tworkspace->comp_same;
+			riv = tworkspace->real_ids_inv;
 		}
-printf("used_comp: %i\n", dworkspace->used_comp );
 
 		for( int y=0, H=input_image.size().height; y<H; ++y){
 			for( int x=0, W=input_image.size().width ; x<W; ++x) {
-				if( algorithm == 1 && display_filtered_areas ){
+				if( algorithm == 1 && display_filtered_areas && bif ){
 					seed = *(bif+ *ids);
-printf("seed= %i ", seed);
 				}else{
 					seed = *ids;
+
+					/* This transformation just adjust the set of if- and else-branch.
+					 * to avoid color flickering */
+					seed = *(riv + *(cm + seed)) + 1 ;
 				}
 
 				/* To reduce color flickering for thresh changes
@@ -197,7 +200,7 @@ printf("seed= %i ", seed);
 				 * Use seed(=id) to get the accociated node of the tree structure. 
 				 * Adding 1 compensate the dummy element at position 0.
 				*/
-				Blob *pixblob = (Blob*) (blob->tree->root + *(riv + seed) + 1)->data;
+				Blob *pixblob = (Blob*) (blob->tree->root + seed )->data;
 				seed = pixblob->area + pixblob->roi.x + pixblob->roi.y;
 
 				const cv::Vec3b col( (seed*5*5+100)%256, (seed*7*7+10)%256, (seed*29*29+1)%256 );
