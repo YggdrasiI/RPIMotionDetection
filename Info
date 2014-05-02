@@ -38,3 +38,9 @@ die realids auf die ids in den datenstruckturen abbildet.
 Nur dann kann ich diese interen datenstrukturen weiterverwenden.
 
 
+
+Idee für frameübergreifende Erkennung von Bewegungen:
+Versuche nichtleere Schnitte von Flächen oder deren Bounding-Boxes zu finden?!
+Dort,  wo man in 3 von 5 Frames etwas findet muss was los sein?!
+Simple Schnitte berücksichtigen aber nicht den Bewegungsvektor, der ja 
+die gesuchte Fläche verschiebt.
