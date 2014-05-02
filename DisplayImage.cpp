@@ -49,7 +49,7 @@ int main(int argc, char** argv )
 				mat = imread( argv[1], CV_LOAD_IMAGE_GRAYSCALE );
 			}else{
 				std::ostringstream filename;
-				filename << "png/" << loop << ".png" ;
+				filename << "images/" << loop << ".png" ;
 				mat = imread( filename.str(), CV_LOAD_IMAGE_GRAYSCALE );
 			}
 			loop++;
@@ -131,7 +131,7 @@ int main(int argc, char** argv )
 
 			//fill color image with id map of filtered list of blobs
 			//1. Create mapping for filtered list
-			if( false ){
+			if( true ){
 				depthree_filter_blob_ids(blob,dworkspace);
 
 				int fid;
@@ -187,10 +187,9 @@ int main(int argc, char** argv )
 				curNode = blobtree_next(blob);
 			}
 
-			blobtree_destroy(blob);
 			depthtree_destroy_workspace( &dworkspace );
 			threshtree_destroy_workspace( &tworkspace );
-			blob = NULL;
+			blobtree_destroy(&blob);
 
 
 			//====================================================================
