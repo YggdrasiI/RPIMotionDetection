@@ -173,7 +173,7 @@ static void redraw(){
 			riv = dworkspace->real_ids_inv;
 
 			if( display_filtered_areas ){
-				depthree_filter_blob_ids(blob,dworkspace);
+				depthtree_filter_blob_ids(blob,dworkspace);
 			}
 			bif = dworkspace->blob_id_filtered;//maps  'unfiltered id' on 'parent filtered id'
 
@@ -181,11 +181,16 @@ static void redraw(){
 			ids = tworkspace->ids;
 			cm = tworkspace->comp_same;
 			riv = tworkspace->real_ids_inv;
+
+			if( display_filtered_areas ){
+				threshtree_filter_blob_ids(blob,tworkspace);
+			}
+			bif = tworkspace->blob_id_filtered;//maps  'unfiltered id' on 'parent filtered id'
 		}
 
 		for( int y=0, H=input_image.size().height; y<H; ++y){
 			for( int x=0, W=input_image.size().width ; x<W; ++x) {
-				if( algorithm == 1 && display_filtered_areas && bif ){
+				if( display_filtered_areas && bif ){
 					seed = *(bif+ *ids);
 				}else{
 					seed = *ids;
@@ -364,7 +369,7 @@ int main(int argc, char** argv )
 		printf("Key: %i\n", key);
 		switch(key){
 			case 27:{ //ESC-Key
-								loop=loopMax;
+								loop=loopMax+1;
 								break;
 							}
 			case 65361:{ //Left
@@ -379,6 +384,10 @@ int main(int argc, char** argv )
 		while( redraw_pending ) {
 			sleep(1);
 		}
+
+		//go back to first step
+		if( loop==loopMax )
+			loop = 0;
 
 	}
 
