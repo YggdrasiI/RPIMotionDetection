@@ -10,13 +10,14 @@ execute_process( COMMAND "ln" "-s" "${CMAKE_HOME_DIRECTORY}/images" "images"
 	)
 
 # Compile blobdetection library in subdirectory
-execute_process( COMMAND "mkdir" "BlobDetection/build"
-	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}"	
+execute_process( COMMAND "mkdir" "build"
+	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection"
 	)
 execute_process( COMMAND "${CMAKE_COMMAND}" "-DCMAKE_BUILD_TYPE=Release" ".."
-	COMMAND make
 	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection/build"
-#	OUTPUT QUIET
+)
+execute_process( COMMAND make
+	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection/build"
 )
 
 # Add blobdetection library
@@ -27,8 +28,8 @@ message(STATUS ${THRESHLIB})
 message(STATUS ${DEPTHLIB})
 
 include_directories(${CMAKE_HOME_DIRECTORY}/BlobDetection)
-target_link_libraries( DisplayBlobs 
+target_link_libraries( DisplayBlobs
 	${THRESHLIB}
-	${DEPTHLIB} 
+	${DEPTHLIB}
 	)
 
