@@ -783,8 +783,11 @@ Tree* find_connection_components_coarse(
 	Blob *curdata  = blobs;
 
 	curdata->id = -1;
-	curdata->area = roi.width * roi.height;
 	memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
+	curdata->area = roi.width * roi.height;
+#ifdef SAVE_DEPTH_MAP_VALUE
+	curdata->depth_level = 0; 
+#endif
 	cur->data = curdata; // link to the data array.
 
 	BlobtreeRect *rect;
@@ -803,6 +806,9 @@ Tree* find_connection_components_coarse(
 		rect->height = *(bottom_index + *(real_ids+l)) - rect->y + 1;
 		rect->x = *(left_index + *(real_ids+l));
 		rect->width = *(right_index + *(real_ids+l)) - rect->x + 1;
+#endif
+#ifdef SAVE_DEPTH_MAP_VALUE
+		curdata->depth_level = 0; /* ??? without anchor not trivial.*/
 #endif
 
 		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area. 

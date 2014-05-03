@@ -106,9 +106,7 @@ int detection_loop(std::string filename ){
 	}
 
 	/* Textual output of whole tree of blobs. */
-	//print_tree(blob->tree->root,0);
-
-
+	print_tree(blob->tree->root,0);
 
 	return 0;
 }
@@ -249,8 +247,11 @@ static void redraw(){
 					color.size().height - cvRect.y );
 
 			//const cv::Scalar col2(255.0f,255.0f- (num*29)%256,(num*5)%256);
-			const cv::Scalar col2(255,255, 255);
-			cv::rectangle( color, cvRect, col2, 1);//, int thickness=1, int lineType=8, int shift=0 )¶
+			if( display_areas ){
+				cv::rectangle( color, cvRect, cv::Scalar(255,255, 255), 1);
+			}else{
+				cv::rectangle( color, cvRect, cv::Scalar(100, 100, 255), 1);
+			}
 
 			curNode = blobtree_next(blob);
 		}

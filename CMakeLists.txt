@@ -13,7 +13,7 @@ execute_process( COMMAND "ln" "-s" "${CMAKE_HOME_DIRECTORY}/images" "images"
 execute_process( COMMAND "mkdir" "build"
 	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection"
 	)
-execute_process( COMMAND "${CMAKE_COMMAND}" "-DCMAKE_BUILD_TYPE=Release" ".."
+execute_process( COMMAND "${CMAKE_COMMAND}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" ".."
 	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection/build"
 )
 execute_process( COMMAND make

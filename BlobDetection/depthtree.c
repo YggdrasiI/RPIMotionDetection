@@ -651,49 +651,57 @@ Tree* find_depthtree(
     Node *cur  = nodes;
     Blob *curdata  = blobs;
 
+		/* Set root node which represents the whole image/ROI.
+		 * Keep in mind, that the number of children depends 
+		 * on the border pixels of the ROI.
+		 * Almost in every cases it's only one child, but not always.
+		 * */
     curdata->id = -1;
-    curdata->area = roi.width * roi.height;
     memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
+    curdata->area = roi.width * roi.height;
+#ifdef SAVE_DEPTH_MAP_VALUE
+		curdata->depth_level = 0; 
+#endif
     cur->data = curdata; // link to the data array.
 
     BlobtreeRect *rect;
 
-    for(l=0;l<real_ids_size;l++){
-        cur++;
-        curdata++;
-        cur->data = curdata; // link to the data array.
+		for(l=0;l<real_ids_size;l++){
+			cur++;
+			curdata++;
+			cur->data = curdata; // link to the data array.
 
-        rect = &curdata->roi;
-				const int rid = *(real_ids+l);
-        curdata->id = rid;	//Set id of this blob.
+			rect = &curdata->roi;
+			const int rid = *(real_ids+l);
+			curdata->id = rid;	//Set id of this blob.
 #ifdef BLOB_DIMENSION
-        rect->y = *(top_index + rid);
-        rect->height = *(bottom_index + rid) - rect->y + 1;
-        rect->x = *(left_index + rid);
-        rect->width = *(right_index + rid) - rect->x + 1;
+			rect->y = *(top_index + rid);
+			rect->height = *(bottom_index + rid) - rect->y + 1;
+			rect->x = *(left_index + rid);
+			rect->width = *(right_index + rid) - rect->x + 1;
 #endif
 #ifdef SAVE_DEPTH_MAP_VALUE
-				curdata->depth_level = *(id_depth + rid );
+			curdata->depth_level = *(id_depth + rid );
 #endif
 
-        tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area. 
-        if( tmp_id < 0 ){
-            /* Use root as parent node. */
-            //cur->parent = root;
-            add_child(root, cur );
-        }else{
-            //find real id of parent id.
-            tmp_id2 = *(comp_same+tmp_id); 
-            while( tmp_id != tmp_id2 ){
-                tmp_id = tmp_id2; 
-                tmp_id2 = *(comp_same+tmp_id); 
-            } 
-            /*Now, tmp_id is in real_id array. And real_ids_inv is defined. */
-            add_child( root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id ),
-                    cur );
-        }
+			tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area. 
+			if( tmp_id < 0 ){
+				/* Use root as parent node. */
+				//cur->parent = root;
+				add_child(root, cur );
+			}else{
+				//find real id of parent id.
+				tmp_id2 = *(comp_same+tmp_id); 
+				while( tmp_id != tmp_id2 ){
+					tmp_id = tmp_id2; 
+					tmp_id2 = *(comp_same+tmp_id); 
+				} 
+				/*Now, tmp_id is in real_id array. And real_ids_inv is defined. */
+				add_child( root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id ),
+						cur );
+			}
 
-    }
+		}
 
     //sum up node areas
 #ifdef BLOB_COUNT_PIXEL

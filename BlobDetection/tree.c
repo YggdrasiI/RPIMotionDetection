@@ -136,8 +136,8 @@ void print_tree_filtered(Node *root, int shift, int minA){
 	//printf("%2i (w%i,h%i,a%2i) ",root->data.id, root->width, root->height, root->data.area);
 	//shift2+=9+4;
 #ifdef SAVE_DEPTH_MAP_VALUE
-	printf("%2i (level: %3i) ",data->id, data->depth_level);
-	shift2+=17;
+	printf("%2i (lvl:%3i, a:%4i) ",data->id, data->depth_level, data->area);
+	shift2+=22;
 #else
 	printf("%2i (area:%4i) ",data->id, data->area);
 	shift2+=9+6;

@@ -811,16 +811,19 @@ printf("\n");
 	Blob *curdata  = blobs;
 
 	curdata->id = -1;
-    curdata->area = roi.width * roi.height;
 	memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
-    cur->data = curdata; // link to the data array.
+	curdata->area = roi.width * roi.height;
+#ifdef SAVE_DEPTH_MAP_VALUE
+	curdata->depth_level = 0; 
+#endif
+	cur->data = curdata; // link to the data array.
 
 	BlobtreeRect *rect;
 
 	for(l=0;l<real_ids_size;l++){
 		cur++;
-        curdata++;
-        cur->data = curdata; // link to the data array.
+		curdata++;
+		cur->data = curdata; // link to the data array.
 
 		rect = &curdata->roi;
 		const int rid = *(real_ids+l);
@@ -832,7 +835,7 @@ printf("\n");
 		rect->width = *(right_index + rid) - rect->x + 1;
 #endif
 #ifdef SAVE_DEPTH_MAP_VALUE
-				curdata->depth_level = 0; /* ??? without anchor not trivial.*/
+		curdata->depth_level = 0; /* ??? without anchor not trivial.*/
 #endif
 
 		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area. 
