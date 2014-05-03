@@ -20,7 +20,7 @@ void blobtree_destroy(Blobtree **pblob){
 	if( *pblob == NULL ) return;
 	Blobtree *blob = *pblob;
 	if( blob->tree != NULL ){
-        tree_destroy(blob->tree);
+        tree_destroy(&blob->tree);
 	}
     if( blob->tree_data != NULL) {
         free(blob->tree_data);
@@ -67,7 +67,7 @@ void blobtree_set_grid(Blobtree *blob, const int gridwidth, const int gridheight
 }
 
 
-
+void blobtree_next2(Blobtree *blob, Iterator* pit);
 
 Node *blobtree_first( Blobtree *blob){
 	blob->it.node = blob->tree->root;

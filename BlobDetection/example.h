@@ -1,6 +1,8 @@
 #ifndef EXAMPLE_H
 #define EXAMPLE_H
 
+#include "time.h"
+
 #include "tree.h"
 #include "blob.h"
 
@@ -96,7 +98,7 @@ void test(Node* root, int tree_size){
 }
 
 
-void gen_image_data(char* sw, int w, int h){
+void gen_image_data(unsigned char* sw, int w, int h){
 
 	srand( time(NULL) );
 	int wh=w*h,i;

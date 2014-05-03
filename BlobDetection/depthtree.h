@@ -142,7 +142,7 @@ void depthtree_find_blobs(
 
 
 #ifdef EXTEND_BOUNDING_BOXES
-static void extend_bounding_boxes( Tree * const tree);
+void extend_bounding_boxes( Tree * const tree);
 #endif
 
 

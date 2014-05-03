@@ -898,7 +898,7 @@ void threshtree_find_blobs( Blobtree *blob,
 {
 	//clear old tree
 	if( blob->tree != NULL){
-		tree_destroy(blob->tree);
+		tree_destroy(&blob->tree);
 		blob->tree = NULL;
 	}
 	if( blob->tree_data != NULL){

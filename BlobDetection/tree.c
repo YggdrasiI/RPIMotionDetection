@@ -75,7 +75,7 @@ void gen_redundant_information_recursive(Node* root, int *pheight, int *psilbing
 		if( *pheight < height2+1 ) *pheight = height2+1;//update height of parent node
 	}
 	if( root->silbing != NULL ){
-		*psilbings++;//update number of children for parent node
+		(*psilbings)++;//update number of children for parent node
 		gen_redundant_information(root->silbing,pheight,psilbings);
 	}
 }

@@ -745,7 +745,7 @@ Tree* find_depthtree(
 void depthtree_find_blobs(Blobtree *blob, const unsigned char *data, const int w, const int h, const BlobtreeRect roi, const unsigned char *depth_map, DepthtreeWorkspace *workspace ){
 	//clear old tree
 	if( blob->tree != NULL){
-		tree_destroy(blob->tree);
+		tree_destroy(&blob->tree);
 		blob->tree = NULL;
 	}
 	if( blob->tree_data != NULL){
@@ -846,7 +846,7 @@ void depthtree_filter_blob_ids(
 
 
 #ifdef EXTEND_BOUNDING_BOXES
-static void extend_bounding_boxes( Tree * const tree){
+void extend_bounding_boxes( Tree * const tree){
 
 	Node* root = tree->root;
 	Node* cur = tree->root;

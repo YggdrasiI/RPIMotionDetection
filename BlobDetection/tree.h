@@ -92,11 +92,11 @@ void print_tree_filtered(Node *root, int shift, int minA);
 	Node *c = p->child;
 	Node *d = p->child;
 	//serach c,d with ...,c,a,...,d,b order
-	if(c==a) c == NULL;
+	if(c==a) c = NULL;
 	else{
 		while(c->silbing!=a) c=c->silbing;
 	}
-	if(d==b) d == NULL;
+	if(d==b) d = NULL;
 	else{
 		while(d->silbing!=b) d=d->silbing;
 	}

@@ -22,7 +22,7 @@ int main(int argc, char **argv) {
 	}
 
 	// Generate test image
-	char* sw;
+	unsigned char* sw;
 	sw = calloc( W*H,sizeof(unsigned char) );
 	if( sw == NULL ) return -1;
 	gen_image_data3(sw,W,H,4);
@@ -30,7 +30,7 @@ int main(int argc, char **argv) {
 	*(sw) = 3;
 
 	printf("Input image data:\n");
-	print_matrix_char_with_roi(sw,W,H,roi, 1, 1);
+	print_matrix_char_with_roi( (char*) sw,W,H,roi, 1, 1);
 
 	//Init workspace
 	DepthtreeWorkspace *workspace = NULL;
