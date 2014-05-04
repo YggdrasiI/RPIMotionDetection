@@ -49,6 +49,11 @@ bool threshtree_create_workspace(
         return false;
     }
 
+#ifdef BLOB_SUBGRID_CHECK
+		r->triangle = NULL;
+		r->triangle_len = 0;
+#endif
+
 		r->real_ids = NULL;
 		r->real_ids_inv = NULL;
 
@@ -107,6 +112,12 @@ void threshtree_destroy_workspace(
     free(r->left_index);
     free(r->right_index);
     free(r->bottom_index);
+#endif
+
+#ifdef BLOB_SUBGRID_CHECK
+		free(r->triangle);
+		r->triangle = NULL;
+		r->triangle_len = 0;
 #endif
 
     free(r->real_ids);
@@ -253,10 +264,18 @@ Tree* find_connection_components_subcheck(
 	 * 2 - All pixels of the quad was examined.
 	 *
 	 * */
-	const int triwidth = (roi.width-1)/stepwidth ;
-	unsigned char* const triangle = malloc(
-			(triwidth+1)* ( (roi.height-1)/STEPHEIGHT + 1)
-			* sizeof(unsigned char) );
+	const int triwidth = (roi.width-1)/stepwidth;
+	const size_t triangle_len = (triwidth+1)* ( (roi.height-1)/STEPHEIGHT + 1);
+	if( triangle_len  > workspace->triangle_len ){
+		free(workspace->triangle);
+		workspace->triangle = malloc( triangle_len	* sizeof(unsigned char) );
+		if( workspace->triangle == NULL ){
+			printf("(threshtree) Critical error: Mem allocation for triangle failed\n");
+		}
+		workspace->triangle_len = triangle_len;
+	}
+			
+	unsigned char* const triangle = workspace->triangle;
 	unsigned char* tri = triangle;
 #if VERBOSE > 0
 	printf("triwidth: %i\n", triwidth);

@@ -26,6 +26,10 @@ typedef struct {
 	int *right_index; //save column number of most right element.
 	int *bottom_index; //save row number of most bottom element.
 #endif
+#ifdef BLOB_SUBGRID_CHECK
+	int *triangle;
+	size_t triangle_len;
+#endif
 
 	int *real_ids;
 	int *real_ids_inv;
