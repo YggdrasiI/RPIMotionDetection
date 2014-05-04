@@ -1047,14 +1047,14 @@ void threshtree_filter_blob_ids(
 		//See workspace reallocation
 		pworkspace->blob_id_filtered= (int*) malloc( pworkspace->max_comp*sizeof(int) );
 	}
-	int * const bif = (int*) calloc( numNodes,sizeof(int) );
+	int * const nodeToFilteredNode = (int*) calloc( numNodes,sizeof(int) );
 	int * const blob_id_filtered = pworkspace->blob_id_filtered;
 	const int * const comp_same = pworkspace->comp_same;
 	const int * const real_ids_inv = pworkspace->real_ids_inv;
 
-	if( bif != NULL && blob_id_filtered != NULL ){
-		bif[0]=0;
-		bif[1]=1;
+	if( nodeToFilteredNode != NULL && blob_id_filtered != NULL ){
+		nodeToFilteredNode[0]=0;
+		nodeToFilteredNode[1]=1;
 
 		/* 1. Map is identity on filtered nodes.
 		 * After this loop all other nodes will be still mapped to 0.
@@ -1067,8 +1067,8 @@ void threshtree_filter_blob_ids(
 			//const int node_id = *(pworkspace->real_ids_inv+id) + 1;
 			const int node_id = cur-root;
 			//note: Both definitions of node_id are equivalent.
-			//*(bif + node_id) = id;
-			*(bif + node_id) = node_id;
+			//*(nodeToFilteredNode + node_id) = id;
+			*(nodeToFilteredNode + node_id) = node_id;
 			cur = blobtree_next(blob);
 		}
 
@@ -1077,13 +1077,13 @@ void threshtree_filter_blob_ids(
 		// Start for index=i=2 because first node is dummy and second is root.
 		int pn, ri; //parent real id, read id of parent node
 		for( ri=2; ri<numNodes; ri++){
-			if( bif[ri] == 0 ){
+			if( nodeToFilteredNode[ri] == 0 ){
 				//find parent node of 'ri' which was not filtered out
 				Node *pi = (blob->tree->root +ri)->parent;
 				while( pi != NULL ){
-					pn = bif[pi-root];
+					pn = nodeToFilteredNode[pi-root];
 					if( pn != 0 ){ 
-						bif[ri] = pn;
+						nodeToFilteredNode[ri] = pn;
 						break;
 					}
 					pi = pi->parent;
@@ -1091,27 +1091,28 @@ void threshtree_filter_blob_ids(
 			}
 		}
 
-		/*3. Expand bif map information on all ids
+		/*3. Expand nodeToFilteredNode map information on all ids
 		 * 3a)	Use projection (yes, its project now) comp_same to map id
 		 * 			on preimage of real_ids_inv. (=> id2)
 		 * 3b) Get node for id2. The dummy node produce +1 shift.
-		 * 3c) Finally, use bif map.
+		 * 3c) Finally, use nodeToFilteredNode map.
 		 */
 		int id=pworkspace->used_comp;//dec till 0
 		while( id ){
-			*(blob_id_filtered+id) = *(bif +	*(real_ids_inv + *(comp_same+id)) + 1 );
+			*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+id)) + 1 );
 			id--;
 		}
+		*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+id)) + 1 );
 
-#if VERBOSE > 0
-		printf("bif[realid] = realid\n");
+#if VERBOSE > 1
+		printf("nodeToFilteredNode[realid] = realid\n");
 		for( ri=0; ri<numNodes; ri++){
 			int id = ((Blob*)((blob->tree->root +ri)->data))->id;
-			printf("id=%i, bif[%i] = %i\n",id, ri, bif[ri]);
+			printf("id=%i, nodeToFilteredNode[%i] = %i\n",id, ri, nodeToFilteredNode[ri]);
 		}
 #endif
 
-		free(bif);
+		free(nodeToFilteredNode);
 
 	}else{
 		printf("(threshtree_filter_blob_ids) Critical error: Mem allocation failed\n");
