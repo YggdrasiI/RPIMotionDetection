@@ -988,7 +988,7 @@ printf("\n");
 
 	//clean up
 	free(tree_id_relation);
-	free(triangle);
+	//free(triangle);
 //	free(anchors);
 
 	//set output parameter
