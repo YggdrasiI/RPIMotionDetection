@@ -6,12 +6,31 @@
 
 using namespace cv;
 
+
+/* Define own filters. Node will pass filter
+ * if 0 will be returned. For more info
+ * see comment in blob.h for
+ * typedef int (FilterNodeHandler)(Node *node)
+ * */
+
 /* Let only nodes with depth level = X passes. */
 static int my_filter(Node *n){
-	Blob* data = (Blob*) n->data;
+	const Blob* const data = (Blob*) n->data;
 	if( data->depth_level > 3 ) return 3;
 	if( data->depth_level == 3 ) return 0;
 	return 1;
+}
+
+/* Remove Blobs which has almost the same size as their (first) child node */
+static int my_filter2(Node *n){
+	if( n->child != NULL ){
+		const Blob* const data = (Blob*) n->data;
+		const Blob* const cdata = (Blob*) n->child->data;
+		if( ((float)(cdata->area)) > (data->area) * 0.99f ){
+			return 1;
+		}
+	}
+	return 0;
 }
 
 static const char* window_name = "Blob Map";
@@ -19,23 +38,25 @@ static const char* window_options = window_name; //"Options";
 static std::string image_filename;
 
 static Mat input_image;
+static BlobtreeRect input_roi; // Region of interest of input image
 static bool redraw_pending = false;
 static bool display_areas = true;
-static bool display_filtered_areas = true;
+static bool display_filtered_areas = false;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
 static int of_area_min = 5*4;
-static int of_area_max = 1000*4;
+static int of_area_max = 4000*4;
 static int of_tree_depth_min = 1;
 static int of_tree_depth_max = 100;
 static int of_area_depth_min = 0;//2;
 static int of_area_depth_max = 255;//10;
 static bool of_only_leafs = false;
+static bool of_use_own_filter = true;
 static int output_scalefactor = 1;
 
 
 // Thresh 
-static int thresh = 60;
+static int thresh = 4;//60;
 // Depth map (for algorithm 1)
 unsigned char depth_map[256];
 
@@ -43,6 +64,13 @@ static ThreshtreeWorkspace *tworkspace = NULL;
 static DepthtreeWorkspace *dworkspace = NULL;
 static Blobtree *blob;
 
+/* Init id array:
+ * If this flag is set the ids array in the workspace
+ * will be filled manually with -1. This allows a better
+ * visual representation of the ids. The array is not
+ * reset automaticaly due performance increase.
+ * */
+static bool reset_ids = false;
 
 int detection_loop(std::string filename ){
 
@@ -92,17 +120,24 @@ int detection_loop(std::string filename ){
 
 	blob = blobtree_create();
 
+	if( reset_ids ){
+		int* ids = (algorithm==0)?tworkspace->ids:dworkspace->ids;
+		for( int* iEnd=ids+W*H; ids<iEnd;++ids){
+			*ids = -1;
+		}
+	}
+
 
 	// Set distance between compared pixels.	
 	// Look at blobtree.h for more information.
-	blobtree_set_grid(blob, 1,1);
+	blobtree_set_grid(blob, 4,4);
 
-	BlobtreeRect roi0 = {0,0,W, H };//shrink height because lowest rows contains noise.
+	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
 	if( algorithm == 0 ){
-		threshtree_find_blobs(blob, ptr, W, H, roi0, thresh, tworkspace);
+		threshtree_find_blobs(blob, ptr, W, H, input_roi, thresh, tworkspace);
 	}else{
-		depthtree_find_blobs(blob, ptr, W, H, roi0, depth_map, dworkspace);
+		depthtree_find_blobs(blob, ptr, W, H, input_roi, depth_map, dworkspace);
 	}
 
 	/* Textual output of whole tree of blobs. */
@@ -149,7 +184,11 @@ static void redraw(){
 			of_area_depth_max );
 
 	/* Add own filter over function pointer */
-	//blobtree_set_extra_filter(blob, my_filter);
+	if( of_use_own_filter ){
+		blobtree_set_extra_filter(blob, my_filter2);
+	}else{
+		blobtree_set_extra_filter(blob, NULL);
+	}
 
 	/* Only show leafs with above filtering effects */
 	blobtree_set_filter(blob, F_ONLY_LEAFS, of_only_leafs?1:0 );
@@ -162,7 +201,7 @@ static void redraw(){
 	//1. Create mapping for filtered list
 	if( display_areas ){
 
-		int seed;
+		int seed, id;
 		int *ids, *riv, *bif, *cm;
 
 		if( algorithm == 1 ){
@@ -186,29 +225,49 @@ static void redraw(){
 			bif = tworkspace->blob_id_filtered;//maps  'unfiltered id' on 'parent filtered id'
 		}
 
-		for( int y=0, H=input_image.size().height; y<H; ++y){
-			for( int x=0, W=input_image.size().width ; x<W; ++x) {
+		printf("Roi: (%i %i %i %i)\n", input_roi.x, input_roi.y, input_roi.width, input_roi.height);
+
+		for( int y=0, H=input_roi.height; y<H; ++y){
+
+			if( !reset_ids){
+				//restrict on grid pixels.
+				if( y % blob->grid.height != 0 && y!= H-1 ) continue;
+			}
+
+			for( int x=0, W=input_roi.width; x<W; ++x) {
+				if( !reset_ids){
+					if( x % blob->grid.width != 0 && x!= W-1 ) continue;
+				}
+
+				id = ids[ (y+input_roi.y)*input_image.size().width + x + input_roi.x ];
+				//id = ids[ (y)*input_image.size().width + x   ];
+				if( id == -1 ) continue;
+
+			  //	seed = *ids;
+				seed = id;
+
 				if( display_filtered_areas && bif ){
-					seed = *(bif+ *ids);
+					seed = *(bif+ seed);
 				}else{
-					seed = *ids;
 
 					/* This transformation just adjust the set of if- and else-branch.
-					 * to avoid color flickering */
+					 * to avoid color flickering after the flag changes. */
 					seed = *(riv + *(cm + seed)) + 1 ;
 				}
 
 				/* To reduce color flickering for thresh changes
 				 * eval variable which depends on some geometric information.
-				 * Use seed(=id) to get the accociated node of the tree structure. 
+				 * Use seed(=id) to get the associated node of the tree structure. 
 				 * Adding 1 compensate the dummy element at position 0.
 				*/
 				Blob *pixblob = (Blob*) (blob->tree->root + seed )->data;
 				seed = pixblob->area + pixblob->roi.x + pixblob->roi.y;
 
 				const cv::Vec3b col( (seed*5*5+100)%256, (seed*7*7+10)%256, (seed*29*29+1)%256 );
-				color.at<Vec3b>(y, x) = col;
-				++ids;
+				color.at<Vec3b>(y + input_roi.y, x + input_roi.x ) = col;
+				
+				
+				//++ids;
 			}
 		}
 
@@ -286,6 +345,7 @@ static void CB_Button1(int state, void* pointer){
 	if( p == &display_areas ){ display_areas = (state>0); }
 	if( p == &display_filtered_areas ){ display_filtered_areas = (state>0); }
 	if( p == &of_only_leafs ){ of_only_leafs = (state>0); }
+	if( p == &of_use_own_filter ){ of_use_own_filter = (state>0); }
 
 	redraw();
 }
@@ -328,13 +388,16 @@ int main(int argc, char** argv )
 		loop = -1;
 	}
 
+	if ( argc >= 3){
+		thresh = atoi(argv[3]);
+	}
 
 	namedWindow(window_options, CV_WINDOW_AUTOSIZE );
 	namedWindow(window_name, CV_WINDOW_AUTOSIZE );
 
 	createTrackbar( "Thresh:", window_options, &thresh, 255, CB_Thresh );
-	createTrackbar( "4*sqrt(Min Area):", window_options, &of_area_min, 200, CB_Filter );
-	createTrackbar( "4*sqrt(Max Area):", window_options, &of_area_max, 200, CB_Filter );
+	createTrackbar( "4*sqrt(Min Area):", window_options, &of_area_min, 400, CB_Filter );
+	createTrackbar( "4*sqrt(Max Area):", window_options, &of_area_max, 400, CB_Filter );
 	createTrackbar( "Min Tree Depth:", window_options, &of_tree_depth_min, 100, CB_Filter );
 	createTrackbar( "Max Tree Depth:", window_options, &of_tree_depth_max, 100, CB_Filter );
 	createTrackbar( "Min Area Level:", window_options, &of_area_depth_min, 255, CB_Filter );
@@ -342,9 +405,10 @@ int main(int argc, char** argv )
 	//createTrackbar( "Scale:", window_options, &output_scalefactor, 8, CB_Filter );
 
 	createButton("Bounding boxes",CB_Button1,&display_bounding_boxes,CV_CHECKBOX, display_bounding_boxes );
-	createButton("Only Leafs",CB_Button1,&of_only_leafs, CV_CHECKBOX, of_only_leafs );
+	createButton("Only leafs",CB_Button1,&of_only_leafs, CV_CHECKBOX, of_only_leafs );
 	createButton("Coloured ids",CB_Button1,&display_areas,CV_CHECKBOX, display_areas );
 	createButton("Only filtered coloured ids",CB_Button1,&display_filtered_areas,CV_CHECKBOX, display_filtered_areas );
+	createButton("Own filter",CB_Button1,&of_use_own_filter, CV_CHECKBOX, of_use_own_filter );
 
 	//Loop over list [Images] or [Image_Path, Images]
 	while( loop < loopMax ){

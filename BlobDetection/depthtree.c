@@ -609,20 +609,6 @@ Tree* find_depthtree(
 
 				}else{
 					//Its a component id of a new area
-					
-					/* //check if area id already identified as real id
-					found = 0;
-					for(l=0;l<real_ids_size;l++){
-					if( *(real_ids+l) == tmp_id ){
-					found = 1;
-					break;
-					}
-					}
-					if( !found ){
-					 *(real_ids+real_ids_size) = tmp_id;
-					 *(real_ids_inv+tmp_id) = real_ids_size;//inverse function
-					 real_ids_size++;
-					 }*/
 					*(real_ids+real_ids_size) = tmp_id;
 					*(real_ids_inv+tmp_id) = real_ids_size;//inverse function
 					real_ids_size++;

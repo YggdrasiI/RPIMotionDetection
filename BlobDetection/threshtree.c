@@ -222,6 +222,7 @@ Tree* find_connection_components_subcheck(
 	int max_comp = workspace->max_comp; 
 
 	int* ids = workspace->ids; 
+
 	int* comp_same = workspace->comp_same; 
 	int* prob_parent = workspace->prob_parent; 
 #ifdef BLOB_COUNT_PIXEL
@@ -237,14 +238,26 @@ Tree* find_connection_components_subcheck(
 	const int s=-1,z=-1; //Should not be used.
 #endif
 
-	//unsigned int triangle = 0; //1 =halve of next quad already done. 
+	/* triangle array store information about the 
+	 * evaluation of ids between the grid pixels.
+	 * This info is needed to avoid double evaluation
+	 * of ids for some pixels, which would be a critical problem.
+	 * Let sw = stepwidth, x%sw=0, y%sw=0.
+	 *
+	 * The image will divided into quads [x,x+sw) x (y-sw,y+sw]
+	 * Quads on right and bottom border will expand to image border.
+	 * Quads on the top border will notional shrinked to [x,x+sw) x (-1,0].
+	 *
+	 * 0 - Only the ids of the corners of a quad was evaluated
+	 * 1 - Ids for all Pixels over and on the anti-diagonal was evaluated.
+	 * 2 - All pixels of the quad was examined.
+	 *
+	 * */
 	const int triwidth = (roi.width-1)/stepwidth ;
 	unsigned char* const triangle = malloc(
 			(triwidth+1)* ( (roi.height-1)/STEPHEIGHT + 1)
 			* sizeof(unsigned char) );
-	// set values to 0 for toprow
-	memset(triangle, 0, triwidth*sizeof(char) );
-	unsigned char* tri = triangle + triwidth;
+	unsigned char* tri = triangle;
 #if VERBOSE > 0
 	printf("triwidth: %i\n", triwidth);
 #endif
@@ -257,12 +270,13 @@ Tree* find_connection_components_subcheck(
 	const unsigned char* const dE = dR + (roi.height-1)*w;
   const unsigned char* const dE2 = dE - shr*w;//remove last lines.
 
-//int i = w*roi.y+roi.x;
+	//int i = w*roi.y+roi.x;
 	const unsigned char* dPi = dS; // Pointer to data+i 
 	int* iPi = ids+(dS-data); // Poiner to ids+i
 
 #if VERBOSE > 0
-//debug: prefill array
+	//debug: prefill array
+	printf("Note: Prefill ids array with -1. This will be removed for VERBOSE=0\n");
 	memset(ids,-1, w*h*sizeof(int));
 #endif
 
@@ -287,16 +301,20 @@ Tree* find_connection_components_subcheck(
 		if( *(dPi) > thresh ){
 			/**** B-CASE *****/
 			if( *(dPi-stepwidth) > thresh ){//same component as left neighbour
-				LEFT_CHECK(stepwidth)
+				LEFT_CHECK(stepwidth);
+				*tri=0;
 			}else{//new component
 				SUBCHECK_ROW(dPi,iPi,stepwidth,w,sh,s,z,0);
+				*tri=2;
 			}
 		}else{
 			/**** B'-CASE *****/
 			if( *(dPi-stepwidth) <= thresh ){//same component as left neighbour
 				LEFT_CHECK(stepwidth)
+				*tri=0;
 			}else{//new component
 				SUBCHECK_ROW(dPi,iPi,stepwidth,w,sh,s,z,0);
+				*tri=2;
 			}
 		}
 		iPi += stepwidth;
@@ -304,11 +322,14 @@ Tree* find_connection_components_subcheck(
 #ifdef BLOB_DIMENSION
 		s += stepwidth;
 #endif
+		++tri;
 	}
 
 	//now process last, bigger, cell. stepwidth+swr indizies left.
 	//SUBCHECK_ROW(dPi,iPi,stepwidth,w,sh,s,z,swr);
 	SUBCHECK_ROW(dPi,iPi,stepwidth,w,sh,s,z,swr);
+	*tri=2;
+
 	/* Pointer is stepwidth+swr behind currrent element.
 	 * Move pointer to 'next' row.*/
 	dPi += r+roi.x+sh1+1;
@@ -320,34 +341,46 @@ Tree* find_connection_components_subcheck(
 	s=roi.x;
 	z += STEPHEIGHT;
 #endif	
+	++tri;
 
 	//2nd,...,(h-shr)-row
 	for( ; dPi<dE2 ; ){
 
-#if VERBOSE > 1
-		debug_print_matrix( ids, w, h, roi, 1, 1);
-		printf("Z:%i, S:%i, I:%i %i, tri: %i\n",z,s,dPi-dS, iPi-ids-(dS-data), (tri-triangle) );
-		debug_getline();
-#endif
-
 		//left border
-		if( *(dPi) > thresh ){
-			/**** E-CASE *****/
-			if( *(dPi-sh) > thresh ){//same component as top neighbour
-				TOP_CHECK(STEPHEIGHT, sh);
-				*(tri) = 0;
-			}else{
-				SUBCHECK_PART2b(dPi,iPi,stepwidth,w,sh,s,z);
-				*(tri) = 2;
-			}
-		}else{
-			/**** E'-CASE *****/
-			if( *(dPi-sh) <= thresh ){//same component as top neighbour
-				TOP_CHECK(STEPHEIGHT, sh);
-				*(tri) = 0;
-			}else{
-				SUBCHECK_PART2b(dPi,iPi,stepwidth,w,sh,s,z);
-				*(tri) = 2;
+		/* 8 Cases for >thresh-Test of 3 positions
+		 *    a — b
+		 *    |
+		 *    x
+		 *
+		 *    The positions in '—' are already evaluated if a!=b (<=> *(tri-triwidth)==2 )
+		 * */
+		{
+			const unsigned char casenbr = ( *(dPi) > thresh )? \
+				( (( *(dPi-sh+stepwidth) <= thresh ) << 1)
+				| (( *(dPi-sh) <= thresh ) << 0)): \
+				(	(( *(dPi-sh+stepwidth) > thresh ) << 1)
+				| (( *(dPi-sh) > thresh ) << 0));
+
+			switch( casenbr ){
+				case 0:{ /* no differences */
+								 TOP_CHECK(STEPHEIGHT, sh);
+								 *(tri) = 0;
+								 break;
+							 }
+				case 1:
+				case 2:{
+								 SUBCHECK_PART2b(dPi,iPi,stepwidth,w,sh,s,z);
+								 *(tri) = 1;
+								 break;
+							 }
+				case 3:{ /* a and b at same side of thresh, evaluate pixels between them*/
+								 if( *(tri-triwidth+1)<2 ){
+									 SUBCHECK_PART1c(dPi,iPi,stepwidth,w,sh,s,z);
+								 }
+								 SUBCHECK_PART2b(dPi,iPi,stepwidth,w,sh,s,z);
+								 *(tri) = 1;
+								 break;
+							 }
 			}
 		}
 
@@ -384,7 +417,7 @@ Tree* find_connection_components_subcheck(
 		debug_getline();
 #endif
 			if( dPi+stepwidth>=dR2 ){
-				//set bit do avoid PART1c/PART1d calls for this column.
+				//set bit do avoid PART1c/PART1d calls for column of last loop step.
 				//Could be unrolled...
 				casenbr = casenbr | 0x08;
 			}
@@ -738,6 +771,60 @@ int found;
 	workspace->real_ids_inv = calloc( nids, sizeof(int) ); //store for every id with position in real_id link to it's position.
 	int* const real_ids_inv = workspace->real_ids_inv;
 
+#if 0
+	for(k=1;k<nids;k++){ // k=1 skip the dummy component id=0
+
+		/* Sei F=comp_same. Wegen F(x)<=x folgt (F wird innerhalb dieser Schleife angepasst!)
+		 * F^2 = F^3 = ... = F^*
+		 * D.h. um die endgültige id zu finden muss comp_same maximal zweimal aufgerufen werden.
+		 * */
+		tmp_id = *(comp_same+k); 
+
+#if VERBOSE > 0
+		printf("%i: (%i->%i ",k,k,tmp_id);
+#endif
+		if( tmp_id != k ){
+			tmp_id = *(comp_same+tmp_id); 
+			*(comp_same+k) = tmp_id; 
+#if VERBOSE > 0
+			printf("->%i ",tmp_id);
+#endif
+		}
+#if VERBOSE > 0
+		printf(")\n");
+#endif
+
+		if( tmp_id != k ){
+
+#ifdef BLOB_COUNT_PIXEL
+			//move area size to other id.
+			*(comp_size+tmp_id) += *(comp_size+k); 
+			*(comp_size+k) = 0;
+#endif
+
+#ifdef BLOB_DIMENSION
+			//update dimension
+			if( *( top_index+tmp_id ) > *( top_index+k ) )
+				*( top_index+tmp_id ) = *( top_index+k );
+			if( *( left_index+tmp_id ) > *( left_index+k ) )
+				*( left_index+tmp_id ) = *( left_index+k );
+			if( *( right_index+tmp_id ) < *( right_index+k ) )
+				*( right_index+tmp_id ) = *( right_index+k );
+			if( *( bottom_index+tmp_id ) < *( bottom_index+k ) )
+				*( bottom_index+tmp_id ) = *( bottom_index+k );
+#endif
+
+		}else{
+			//Its a component id of a new area
+			*(real_ids+real_ids_size) = tmp_id;
+			*(real_ids_inv+tmp_id) = real_ids_size;//inverse function
+			real_ids_size++;
+		}
+
+	}
+#endif
+
+#if 1
 	for(k=0;k<nids;k++){
 		tmp_id = k;
 		tmp_id2 = *(comp_same+tmp_id); 
@@ -788,6 +875,7 @@ printf("\n");
 			real_ids_size++;
 		}
 	}
+#endif
 
 
 /*
@@ -857,14 +945,16 @@ printf("\n");
 		}
 
 	}
-
 #ifdef BLOB_COUNT_PIXEL
 	//sum up node areas
-	sum_areas(root->child, comp_size);
+	if(stepwidth == 1){
+		sum_areas(root->child, comp_size);
+	}
 #endif
 #ifdef BLOB_DIMENSION
 	if(stepwidth > 1){
-		/* comp_size values are not correct/not useable */
+		/* comp_size values are not correct/not useable.
+		 * Use bounding box as approximation. */
 		set_area_prop(root->child);
 	}
 #endif

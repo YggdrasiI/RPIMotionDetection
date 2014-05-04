@@ -323,7 +323,7 @@ if( *(DPI) > thresh ){ \
 
 
 /* Check of row without consider other rows. */
-/* | s |swr|,  s-stewidth
+/* | s |swr|,  s-stepwidth
  * 1xxxXxxx
  * */
 #define SUBCHECK_ROW(DPI,IPI,STEPWIDTH,W,SH,S,Z,SWR) { \

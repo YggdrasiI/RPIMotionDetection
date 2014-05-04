@@ -277,6 +277,7 @@ int sum_areas(const Node *root, int *comp_size){
 #ifdef BLOB_DIMENSION
 /* Assume type(data) = Blob* */
 void set_area_prop(Node * const root){
+#if 0
 	Node *node = root;
 	Blob *data;
 	do{
@@ -297,13 +298,14 @@ void set_area_prop(Node * const root){
 		}
 	}while( node != root );
 
+#endif
+#if 1
 	/* Recursive formulation */
-	/*
   Blob* data = (Blob*)root->data;
 	data->area = data->roi.width * data->roi.height;
 	if( root->child != NULL) set_area_prop(root->child);
 	if( root->silbing != NULL) set_area_prop(root->silbing);
-	*/
+#endif
 }
 #endif
 
@@ -377,7 +379,8 @@ void debug_print_matrix( int* data, int w, int h, BlobtreeRect roi, int gridw, i
 			//printf("%s", d==0?"■⬛":"□");
 			//printf("%s", d==0?"✘":" ");
 			if(d>-1)
-				printf("%s%i",d<10&&d>=0?" ":"", d);
+				//printf("%s%i",d<10&&d>=0?" ":"", d);
+				printf("%3i", d);
 			else
 				printf("  ");
 		}
