@@ -277,7 +277,7 @@ int sum_areas(const Node *root, int *comp_size){
 #ifdef BLOB_DIMENSION
 /* Assume type(data) = Blob* */
 void set_area_prop(Node * const root){
-#if 0
+#if 1
 	Node *node = root;
 	Blob *data;
 	do{
@@ -292,14 +292,14 @@ void set_area_prop(Node * const root){
 				node = node->parent;
 				if( node->silbing != NULL ){
 					node = node->silbing;
-					continue;
+					break;
 				}
 			}
 		}
 	}while( node != root );
 
 #endif
-#if 1
+#if 0
 	/* Recursive formulation */
   Blob* data = (Blob*)root->data;
 	data->area = data->roi.width * data->roi.height;
