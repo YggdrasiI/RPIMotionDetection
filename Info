@@ -47,3 +47,24 @@ die gesuchte Fläche verschiebt.
 
 Neue Idee: Vergleiche Stelle mit Bewegungen mit dem potentiellen
 Umriss einer Hand?! (nicht frameübergreifend, Hand=Stumpfes Ende einer größeren Fläche).
+
+
+Problem für die zweite Zeile:
+Es kann teilweise auf nichtgesetzte Stellen zugegriffen werden.
+Da fehlt die Info, ob diese Stellen überhaupt gesetzt sind....
+
+Die Tri-Information sagt etwas über die Fläche eines Qudrates aus
+(tri-1) == 2: Fläche komplett gefüllt.
+(tri-1) == 1: Dreieck gefüllt.
+
+(tri-triwidth) == 2: Untere Reihe der vorigen Quadradreihe ist gefüllt.
+(In Bezug auf zweite Zeile, sonst ist es mehr Info.)
+
+
+
+Ah: Erste Zeile -> Tri auf 2 setzen
+Beim Problem: Falls tri==0, Ganzes Quad darüber berechnen?!
+Falls tri==1 Dreieck darüber berechnen.
+
+Nein, es war so: Wenn das Quadrat darüber nicht berechnet wurde wird 
+nur die untere Zwischenzeile berechnet.

@@ -41,7 +41,7 @@ static Mat input_image;
 static BlobtreeRect input_roi; // Region of interest of input image
 static bool redraw_pending = false;
 static bool display_areas = true;
-static bool display_filtered_areas = false;
+static bool display_filtered_areas = true;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
 static int of_area_min = 5*4;
@@ -70,7 +70,8 @@ static Blobtree *blob;
  * visual representation of the ids. The array is not
  * reset automaticaly due performance increase.
  * */
-static bool reset_ids = false;
+static bool reset_ids = true;
+static const int IDINITVAL = -99999999;
 
 int detection_loop(std::string filename ){
 
@@ -102,8 +103,8 @@ int detection_loop(std::string filename ){
 	 * Destroy old instances and reallocate memory
 	 * This should be avoided in real applications.
 	 * */
-	threshtree_destroy_workspace( &tworkspace );
-	depthtree_destroy_workspace( &dworkspace );
+	//threshtree_destroy_workspace( &tworkspace );
+	//depthtree_destroy_workspace( &dworkspace );
 	blobtree_destroy(&blob);
 
 	//Init workspaces
@@ -123,14 +124,14 @@ int detection_loop(std::string filename ){
 	if( reset_ids ){
 		int* ids = (algorithm==0)?tworkspace->ids:dworkspace->ids;
 		for( int* iEnd=ids+W*H; ids<iEnd;++ids){
-			*ids = -1;
+			*ids = IDINITVAL; 
 		}
 	}
 
 
 	// Set distance between compared pixels.	
 	// Look at blobtree.h for more information.
-	blobtree_set_grid(blob, 4,4);
+	blobtree_set_grid(blob, 5,5);
 
 	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
@@ -141,7 +142,7 @@ int detection_loop(std::string filename ){
 	}
 
 	/* Textual output of whole tree of blobs. */
-	print_tree(blob->tree->root,0);
+	//print_tree(blob->tree->root,0);
 
 	return 0;
 }
@@ -201,7 +202,7 @@ static void redraw(){
 	//1. Create mapping for filtered list
 	if( display_areas ){
 
-		int seed, id;
+		int seed, id, s2, s3, s4;
 		int *ids, *riv, *bif, *cm;
 
 		if( algorithm == 1 ){
@@ -226,6 +227,7 @@ static void redraw(){
 		}
 
 		printf("Roi: (%i %i %i %i)\n", input_roi.x, input_roi.y, input_roi.width, input_roi.height);
+		fflush(stdout);
 
 		for( int y=0, H=input_roi.height; y<H; ++y){
 
@@ -241,18 +243,18 @@ static void redraw(){
 
 				id = ids[ (y+input_roi.y)*input_image.size().width + x + input_roi.x ];
 				//id = ids[ (y)*input_image.size().width + x   ];
-				if( id == -1 ) continue;
+				if( id == IDINITVAL ) continue;
 
 			  //	seed = *ids;
 				seed = id;
 
 				if( display_filtered_areas && bif ){
-					seed = *(bif+ seed);
+					s2 = *(bif+ seed);
 				}else{
 
 					/* This transformation just adjust the set of if- and else-branch.
 					 * to avoid color flickering after the flag changes. */
-					seed = *(riv + *(cm + seed)) + 1 ;
+					s2 = *(riv + *(cm + seed)) + 1 ;
 				}
 
 				/* To reduce color flickering for thresh changes
@@ -260,10 +262,10 @@ static void redraw(){
 				 * Use seed(=id) to get the associated node of the tree structure. 
 				 * Adding 1 compensate the dummy element at position 0.
 				*/
-				Blob *pixblob = (Blob*) (blob->tree->root + seed )->data;
-				seed = pixblob->area + pixblob->roi.x + pixblob->roi.y;
+				Blob *pixblob = (Blob*) (blob->tree->root + s2 )->data;
+				s3 = pixblob->area + pixblob->roi.x + pixblob->roi.y;
 
-				const cv::Vec3b col( (seed*5*5+100)%256, (seed*7*7+10)%256, (seed*29*29+1)%256 );
+				const cv::Vec3b col( (s3*5*5+100)%256, (s3*7*7+10)%256, (s3*29*29+1)%256 );
 				color.at<Vec3b>(y + input_roi.y, x + input_roi.x ) = col;
 				
 				
@@ -307,7 +309,10 @@ static void redraw(){
 
 			//const cv::Scalar col2(255.0f,255.0f- (num*29)%256,(num*5)%256);
 			if( display_areas ){
-				cv::rectangle( color, cvRect, cv::Scalar(255,255, 255), 1);
+				int s3 = data->area + data->roi.x + data->roi.y;
+				const cv::Scalar col( (s3*5*5+100)%256, (s3*7*7+10)%256, (s3*29*29+1)%256 );
+
+				cv::rectangle( color, cvRect, col /*cv::Scalar(255,255, 255)*/, 1);
 			}else{
 				cv::rectangle( color, cvRect, cv::Scalar(100, 100, 255), 1);
 			}
@@ -381,14 +386,14 @@ int main(int argc, char** argv )
 		algorithm = (algorithm!=0?1:0);
 	}
 
-	if ( argc < 3){
-		// Only use example images in "images/"
-	}else{
+	if ( argc >= 3){
 		// Show argv[2] image and then example images
 		loop = -1;
+	}else{
+		// Only use example images in "images/"
 	}
 
-	if ( argc >= 3){
+	if ( argc >= 4){
 		thresh = atoi(argv[3]);
 	}
 
@@ -437,6 +442,7 @@ int main(int argc, char** argv )
 								loop=loopMax+1;
 								break;
 							}
+			case 98: // b
 			case 65361:{ //Left
 									 loop-=2;
 									 if(loop<0 && argc<2 ) loop=0;

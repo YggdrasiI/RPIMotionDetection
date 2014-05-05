@@ -384,7 +384,6 @@ Tree* find_connection_components_subcheck(
 				(	(( *(dPi-sh+stepwidth) > thresh ) << 1)
 				| (( *(dPi-sh) > thresh ) << 0));
 
-			printf("tri=%i, %i, %i\n", *(tri-triwidth), tri-triangle, triwidth);
 			switch( casenbr ){
 				case 0:{ /* no differences */
 								 TOP_CHECK(STEPHEIGHT, sh);
@@ -398,16 +397,11 @@ Tree* find_connection_components_subcheck(
 								 break;
 							 }
 				case 3:{ /* a and b at same side of thresh, evaluate pixels between them*/
-									 const BlobtreeRect roiVorne = {s,z-16,17,17};
-									 printf("Case 3: (%i, %i)\n", z,s);
-		debug_print_matrix( ids, w, h, roiVorne, 1, 1);
-								 if( *(tri-triwidth)<2 ){
+								 if( *(tri-triwidth)<3 ){ /* For second row value 2 is possible => do not use !=1.*/
 									 SUBCHECK_PART1c(dPi,iPi,stepwidth,w,sh,s,z);
 								 }
-		debug_print_matrix( ids, w, h, roiVorne, 1, 1);
 								 SUBCHECK_PART2b(dPi,iPi,stepwidth,w,sh,s,z);
 								 *(tri) = 1;
-		debug_print_matrix( ids, w, h, roiVorne, 1, 1);
 								 break;
 							 }
 			}
@@ -455,103 +449,159 @@ Tree* find_connection_components_subcheck(
 				casenbr = casenbr | 0x02;
 			}
 
+			/* Legend:
+			 * X Current position of pointer
+			 * o Coarse grid positions
+			 * • Fine positions. Ids can already set or not ( information is encoded by casenbr )
+			 * ♣ Known ids, already set.
+			 * ♦ New id, set in this step. (Not set for -,| if already set)
+			 * */
+			/* *(tri-2)=0: Positions  
+			 *   -2   -1  0  <== tri-shift
+			 *	o   o•••o•••o  			o   o♦♦♦o♦♦♦o       o	    o•••o•••o 
+			 *	    •               	  ♦♦♦♦♦♦♦♦              •         
+			 * 	    •          	==>	    ♦♦♦♦♦♦♦     or        •         
+			 *	    •          			    ♦♦♦♦♦♦                •         
+			 *	o   o   X      			o   o♦♦♦X           o     o   X     
+			 */
+			/* *(tri-2)=1:
+			 *	o♣♣♣o•••o•••o				o♣♣♣o♦♦♦o♦♦♦o     	o♣♣♣o•••o•••o	
+			 *  ♣♣♣♣•              	♣♣♣♣♦♦♦♦♦♦♦♦        ♣♣♣♣•         
+			 *  ♣♣♣ • 					==>	♣♣♣ ♦♦♦♦♦♦♦   or    ♣♣♣ • 				
+			 *  ♣♣  •   						♣♣  ♦♦♦♦♦♦          ♣♣  •   			
+			 *  o   o   X						o   o♦♦♦X           o   o   X			
+			 */
+			/* *(tri-2)=3:
+			 *	o♣♣♣o♣♣♣o•••o 			o♣♣♣o♦♦♦o♦♦♦o       o♣♣♣o♣♣♣o•••o
+			 *	♣♣♣♣♣♣♣♣           	♣♣♣♣♣♣♣♣♦♦♦♦        ♣♣♣♣♣♣♣♣     
+			 *	♣♣♣♣♣♣♣       	==>	♣♣♣♣♣♣♣♦♦♦♦     or  ♣♣♣♣♣♣♣      
+			 *	♣♣♣♣♣♣        			♣♣♣♣♣♣♦♦♦♦          ♣♣♣♣♣♣       
+			 *	o♣♣♣o   X     			o♣♣♣o♦♦♦X           o   o   X   
+			 */
+			/* ==> Wenn man die |-Stellen im Fall *(tri-2) nicht von den Dreieckswerten
+			 * links davor abhängig macht, sind Fall 0 und Fall 1. identisch zu behandeln.
+			 * In dem Fall kann man auch *(tri-1) für die Entscheidung heran ziehen.
+			 * Trickreich ist noch die Einbeziehung der tri-Werte der vorigen Reihe, was
+			 * nicht dargestellt ist.
+			 * */
+
+#ifdef VERBOSE > 1
 			if( *(tri-1) > 1 ){
+				printf("(threshtree) Logic error: tri>1 should not be possible here.\n");
+			}
+#endif
+
+			if( *(tri-1) == 1 ){
 				switch( casenbr) {
 					case 0:
 					case 8: {
 										TOP_CHECK(STEPHEIGHT, sh);
 										TOP_LEFT_COMP(stepwidth);
-										*(tri) = 1; //tri filled, quad not.
+										*(tri) = 0; //tri filled, quad not.
 										break;
 									}
 					case 1:{
 									 SUBCHECK_PART1cd(dPi,iPi,stepwidth,w,sh,s,z);
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-										*(tri) = 3;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										*(tri-1) = 3;
+										*(tri) = 1;
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 2:{
 									 SUBCHECK_PART1cd(dPi,iPi,stepwidth,w,sh,s,z);
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-									 *(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 									 SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 3:{
 									 SUBCHECK_PART1cd(dPi,iPi,stepwidth,w,sh,s,z);
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-									 *(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 									 SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 4:{
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-									 *(tri) = 3;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										*(tri-1) = 3;
+										*(tri) = 1;
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 5:{
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-									 *(tri) = 3;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										*(tri-1) = 3;
+										*(tri) = 1;
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 6:{
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-									 *(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 									 SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 7:{
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-									 *(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 									 SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 9:{
 									 SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-									 *(tri) = 3;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										*(tri-1) = 3;
+										*(tri) = 1;
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 10:{
 										SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-										*(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 										SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
 					case 11:{
 										SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-										*(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 										SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
 					case 12:{
 										SUBCHECK_PART1cd(dPi,iPi,stepwidth,w,sh,s,z);
 										SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-										*(tri) = 3;
-										SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										*(tri-1) = 3;
+										*(tri) = 1;
+										/*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
 					case 13:{
 										SUBCHECK_PART1cd(dPi,iPi,stepwidth,w,sh,s,z);
 										SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-										*(tri) = 3;
-										SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										*(tri-1) = 3;
+										*(tri) = 1;
+										/*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
 					case 14:{
 										SUBCHECK_PART1cd(dPi,iPi,stepwidth,w,sh,s,z);
 										SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-										*(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 										SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
 					case 15:{
 										SUBCHECK_PART1cd(dPi,iPi,stepwidth,w,sh,s,z);
 										SUBCHECK_PART3b(dPi,iPi,stepwidth,w,sh,s,z);
-										*(tri) = 3;
+										*(tri-1) = 3;
+										*(tri) = 1;
 										SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
@@ -570,7 +620,7 @@ Tree* find_connection_components_subcheck(
 									 SUBCHECK_PART3a(dPi,iPi,stepwidth,w,sh,s,z);
 									 *(tri-1) = 3;
 									 *(tri) = 1;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 2:{
@@ -594,7 +644,7 @@ Tree* find_connection_components_subcheck(
 									 SUBCHECK_PART3a(dPi,iPi,stepwidth,w,sh,s,z);
 									 *(tri-1) = 3;
 									 *(tri) = 1;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 5:{
@@ -602,7 +652,7 @@ Tree* find_connection_components_subcheck(
 									 SUBCHECK_PART3a(dPi,iPi,stepwidth,w,sh,s,z);
 									 *(tri-1) = 3;
 									 *(tri) = 1;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 6:{
@@ -624,7 +674,7 @@ Tree* find_connection_components_subcheck(
 									 SUBCHECK_PART3a(dPi,iPi,stepwidth,w,sh,s,z);
 									 *(tri-1) = 3;
 									 *(tri) = 1;
-									 SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+									 /*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 									 break;
 								 }
 					case 10:{
@@ -647,7 +697,7 @@ Tree* find_connection_components_subcheck(
 										SUBCHECK_PART3a(dPi,iPi,stepwidth,w,sh,s,z);
 										*(tri-1) = 3;
 										*(tri) = 1;
-										SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										/*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
 					case 13:{
@@ -656,7 +706,7 @@ Tree* find_connection_components_subcheck(
 										SUBCHECK_PART3a(dPi,iPi,stepwidth,w,sh,s,z);
 										*(tri-1) = 3;
 										*(tri) = 1;
-										SUBCHECK_PART4b(dPi,iPi,stepwidth,w,sh,s,z);
+										/*SUBCHECK_PART4b*/SUBCHECK_PART4a(dPi,iPi,stepwidth,w,sh,s,z);
 										break;
 									}
 					case 14:{
@@ -701,12 +751,13 @@ Tree* find_connection_components_subcheck(
 		 * and bottom border should evaluated, too.
 		 */
 
-		if( *(tri-1) > 1 ){
+		if( *(tri-1) == 1 ){
 			SUBCHECK_PART6b(dPi,iPi,stepwidth,w,sh,s,z,swr); 
 		}else{
 			SUBCHECK_PART6a(dPi,iPi,stepwidth,w,sh,s,z,swr); 
 		}
-		*(tri) = 2;
+		*(tri-1) = 3;
+		*(tri) = 3; //redundant
 
 		/* Pointer is still on currrent element.
 		 * Move pointer to 'next' row.*/
