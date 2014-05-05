@@ -83,7 +83,7 @@ Tree* find_depthtree(
 		const int w, const int h,
 		const BlobtreeRect roi,
 		const unsigned char *depth_map,
-//		const int stepwidth,
+		const int stepwidth,
 		DepthtreeWorkspace *workspace,
 		Blob** tree_data );
 

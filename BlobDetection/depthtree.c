@@ -158,15 +158,15 @@ Tree* find_depthtree(
 		const int w, const int h,
 		const BlobtreeRect roi,
 		const unsigned char *depth_map,
-//		const int stepwidth,
+		const int stepwidth,
 		DepthtreeWorkspace *workspace,
         Blob** tree_data )
 {
-//only stepwidth = 1 is supported.
-#define stepwidth 1 
+
+//#define stepwidth 7 //speed up due faster addition for fixed stepwidth?!
 #define stepheight stepwidth
     /* Marks of 10 Cases:
-     *  x - stepwidth, y - stepheigt, swr - (w-1)%x, shr - (h-1)%y
+     *  x - stepwidth, y - stepheight, swr - (w-1)%x, shr - (h-1)%y
      * <----------------------- w --------------------------------->
      * |        <-- roi.width -------------->
      * |        <-- roi.width-swr -->
@@ -747,7 +747,9 @@ void depthtree_find_blobs(Blobtree *blob, const unsigned char *data, const int w
 		blob->tree_data = NULL;
 	}
 	//get new blob tree structure.
-    blob->tree = find_depthtree(data, w, h, roi, depth_map, workspace, &blob->tree_data);
+    blob->tree = find_depthtree(data, w, h, roi, depth_map, 
+				blob->grid.width,
+				workspace, &blob->tree_data);
 }
 
 

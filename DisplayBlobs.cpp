@@ -44,6 +44,7 @@ static bool display_areas = true;
 static bool display_filtered_areas = true;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
+static int gridwidth = 1;
 static int of_area_min = 5*4;
 static int of_area_max = 4000*4;
 static int of_tree_depth_min = 1;
@@ -131,7 +132,7 @@ int detection_loop(std::string filename ){
 
 	// Set distance between compared pixels.	
 	// Look at blobtree.h for more information.
-	blobtree_set_grid(blob, 5,5);
+	blobtree_set_grid(blob, gridwidth,gridwidth);
 
 	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
@@ -309,10 +310,9 @@ static void redraw(){
 
 			//const cv::Scalar col2(255.0f,255.0f- (num*29)%256,(num*5)%256);
 			if( display_areas ){
-				int s3 = data->area + data->roi.x + data->roi.y;
-				const cv::Scalar col( (s3*5*5+100)%256, (s3*7*7+10)%256, (s3*29*29+1)%256 );
-
-				cv::rectangle( color, cvRect, col /*cv::Scalar(255,255, 255)*/, 1);
+				//int s3 = data->area + data->roi.x + data->roi.y;
+				//const cv::Scalar col( (s3*5*5+100)%256, (s3*7*7+10)%256, (s3*29*29+1)%256 );
+				cv::rectangle( color, cvRect, /*col*/ cv::Scalar(255,255, 255), 1);
 			}else{
 				cv::rectangle( color, cvRect, cv::Scalar(100, 100, 255), 1);
 			}
@@ -340,6 +340,8 @@ static void CB_Filter(int, void*){
 
 static void CB_Thresh(int, void*){
 	//Change of thresh require rerun of main algo.
+	if(gridwidth<1) gridwidth=1;
+
 	detection_loop(image_filename);
 	redraw();
 }
@@ -401,6 +403,7 @@ int main(int argc, char** argv )
 	namedWindow(window_name, CV_WINDOW_AUTOSIZE );
 
 	createTrackbar( "Thresh:", window_options, &thresh, 255, CB_Thresh );
+	createTrackbar( "Gridwidth:", window_options, &gridwidth, 5, CB_Thresh );
 	createTrackbar( "4*sqrt(Min Area):", window_options, &of_area_min, 400, CB_Filter );
 	createTrackbar( "4*sqrt(Max Area):", window_options, &of_area_max, 400, CB_Filter );
 	createTrackbar( "Min Tree Depth:", window_options, &of_tree_depth_min, 100, CB_Filter );
