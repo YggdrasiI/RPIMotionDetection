@@ -865,8 +865,8 @@ int found;
 	workspace->real_ids_inv = calloc( nids, sizeof(int) ); //store for every id with position in real_id link to it's position.
 	int* const real_ids_inv = workspace->real_ids_inv;
 
-#if 0
-	for(k=1;k<nids;k++){ // k=1 skip the dummy component id=0
+#if 1
+	for(k=0;k<nids;k++){ 
 
 		/* Sei F=comp_same. Wegen F(x)<=x folgt (F wird innerhalb dieser Schleife angepasst!)
 		 * F^2 = F^3 = ... = F^*
@@ -918,7 +918,10 @@ int found;
 	}
 #endif
 
-#if 1
+#if 0
+/* Old approach: Attention, old version does not create 
+ * the projection property of comp_same (cs). Here, only cs^2=cs^3.
+ */
 	for(k=0;k<nids;k++){
 		tmp_id = k;
 		tmp_id2 = *(comp_same+tmp_id); 
@@ -1174,10 +1177,12 @@ void threshtree_filter_blob_ids(
 		 */
 		int id=pworkspace->used_comp;//dec till 0
 		while( id ){
-			*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+id)) + 1 );
+			//*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+id)) + 1 );
+			*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+*(comp_same+id))) + 1 );
 			id--;
 		}
-		*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+id)) + 1 );
+		//*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+id)) + 1 );
+		*(blob_id_filtered+id) = *(nodeToFilteredNode +	*(real_ids_inv + *(comp_same+*(comp_same+id))) + 1 );
 
 #if VERBOSE > 1
 		printf("nodeToFilteredNode[realid] = realid\n");
