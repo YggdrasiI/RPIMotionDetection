@@ -382,7 +382,7 @@ void debug_print_matrix( int* data, int w, int h, BlobtreeRect roi, int gridw, i
 				//printf("%s%i",d<10&&d>=0?" ":"", d);
 				printf("%3i", d);
 			else
-				printf("  ");
+				printf("   ");
 		}
 		j-=gridw-wr;
 

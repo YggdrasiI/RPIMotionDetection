@@ -642,7 +642,7 @@ if( *(DPI) > thresh ){ \
 
 /* Check of row with top check */
 /* Handle positions x, look at ones and x's. X mark DPI pointer.
- *     00000 
+ * 0   00000 
  *      001
  *      01
  *      1
@@ -707,16 +707,18 @@ if( *(DPI) > thresh ){ \
 
 /* Switch between 1a or 1b */
 #define SUBCHECK_PART1ab(DPI,IPI,STEPWIDTH,W,SH,S,Z) \
-	if( *(tri-triwidth-1) > 1 ) SUBCHECK_PART1b(DPI,IPI,STEPWIDTH,W,SH,S,Z) \
-	else if( *(tri-triwidth-1) ) SUBCHECK_PART1bb(DPI,IPI,STEPWIDTH,W,SH,S,Z) \
-	else SUBCHECK_PART1a(DPI,IPI,STEPWIDTH,W,SH,S,Z)
+	if ( z==STEPWIDTH ){ SUBCHECK_PART1a(DPI,IPI,STEPWIDTH,W,SH,S,Z) } \
+	else if( *(tri-triwidth) > 1 ) { SUBCHECK_PART1b(DPI,IPI,STEPWIDTH,W,SH,S,Z) } \
+	else if( *(tri-triwidth) ) { SUBCHECK_PART1bb(DPI,IPI,STEPWIDTH,W,SH,S,Z) } \
+	else { SUBCHECK_PART1a(DPI,IPI,STEPWIDTH,W,SH,S,Z) }
 
 
 /* Switch between 1c or 1d */
 #define SUBCHECK_PART1cd(DPI,IPI,STEPWIDTH,W,SH,S,Z) \
-	if( *(tri-triwidth) > 1 ) SUBCHECK_PART1d(DPI,IPI,STEPWIDTH,W,SH,S,Z) \
-	else if( *(tri-triwidth) ) SUBCHECK_PART1dd(DPI,IPI,STEPWIDTH,W,SH,S,Z) \
-	else SUBCHECK_PART1c(DPI,IPI,STEPWIDTH,W,SH,S,Z)
+	if( z==STEPWIDTH ){ SUBCHECK_PART1c(DPI,IPI,STEPWIDTH,W,SH,S,Z) } \
+	else if( *(tri-triwidth+1) > 1 ){ SUBCHECK_PART1d(DPI,IPI,STEPWIDTH,W,SH,S,Z) } \
+	else if( *(tri-triwidth+1) ) { SUBCHECK_PART1dd(DPI,IPI,STEPWIDTH,W,SH,S,Z) } \
+	else { SUBCHECK_PART1c(DPI,IPI,STEPWIDTH,W,SH,S,Z) }
 
 
 
@@ -862,7 +864,7 @@ if( *(DPI) > thresh ){ \
  * 00000
  * 00000
  * 111111
- * 1xxxx
+ * 1xxxX
  */
 #define SUBCHECK_PART4a(DPI,IPI,STEPWIDTH,W,SH,S,Z) { \
 	const unsigned char * const pc = DPI; \
@@ -883,7 +885,7 @@ if( *(DPI) > thresh ){ \
  * 00000
  * 00000
  * 000111
- * 1---x
+ * 1---X
  */
 #define SUBCHECK_PART4b(DPI,IPI,STEPWIDTH,W,SH,S,Z) { \
 	if( *(DPI) > thresh ){ \
