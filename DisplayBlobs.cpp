@@ -4,7 +4,7 @@
 #include "threshtree.h"
 #include "depthtree.h"
 
-#include "Fps.h";
+#include "Fps.h"
 
 using namespace cv;
 
@@ -430,7 +430,7 @@ int main(int argc, char** argv )
 	//Input handling
 	if ( argc < 2 )
 	{
-		printf("usage: DisplayImage.out [Number of algorithm] [image path]\n"
+		printf("usage: DisplayImage.out [Number of algorithm] [image path] [thresh] [grid width]\n"
 				"Available Algorithms:\n"
 				"0 - Thresh value split image in 'black' and 'white' areas. The areas\n"
 				"    can be nested.\n"
@@ -451,8 +451,15 @@ int main(int argc, char** argv )
 	}
 
 	if ( argc >= 4){
-		//thresh = atoi(argv[3]);
-		gridheight = atoi(argv[3]);
+		thresh = atoi(argv[3]);
+	}
+
+	if ( argc >= 5){
+		gridwidth = atoi(argv[4]);
+	}
+
+	if ( argc >= 6){
+		gridheight = atoi(argv[5]);
 	}
 
 
@@ -488,13 +495,13 @@ int main(int argc, char** argv )
 	createTrackbar( "Min Area Level:", window_options, &of_area_depth_min, 255, CB_Filter );
 	createTrackbar( "Max Area Level:", window_options, &of_area_depth_max, 255, CB_Filter );
 	//createTrackbar( "Scale:", window_options, &output_scalefactor, 8, CB_Filter );
-
+/*
 	createButton("Bounding boxes",CB_Button1,&display_bounding_boxes,CV_CHECKBOX, display_bounding_boxes );
 	createButton("Only leafs",CB_Button1,&of_only_leafs, CV_CHECKBOX, of_only_leafs );
 	createButton("Coloured ids",CB_Button1,&display_areas,CV_CHECKBOX, display_areas );
 	createButton("Only filtered coloured ids",CB_Button1,&display_filtered_areas,CV_CHECKBOX, display_filtered_areas );
 	createButton("Own filter",CB_Button1,&of_use_own_filter, CV_CHECKBOX, of_use_own_filter );
-
+*/
 	//Loop over list [Images] or [Image_Path, Images]
 	while( loop < loopMax ){
 
