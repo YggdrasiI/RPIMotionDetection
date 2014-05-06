@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include <signal.h>
 #include <opencv2/opencv.hpp>
 
 #include "threshtree.h"
 #include "depthtree.h"
 
-#include "Fps.h";
+#include "Fps.h"
 
 using namespace cv;
 
@@ -66,7 +67,7 @@ unsigned char depth_map[256];
 
 static ThreshtreeWorkspace *tworkspace = NULL;
 static DepthtreeWorkspace *dworkspace = NULL;
-static Blobtree *blob;
+static Blobtree *blob = NULL;
 
 /* Init id array:
  * If this flag is set the ids array in the workspace
@@ -109,7 +110,7 @@ int detection_loop(std::string filename ){
 	 * */
 	//threshtree_destroy_workspace( &tworkspace );
 	//depthtree_destroy_workspace( &dworkspace );
-	blobtree_destroy(&blob);
+	//blobtree_destroy(&blob);
 
 	//Init workspaces
 	threshtree_create_workspace( W, H, &tworkspace );
@@ -123,7 +124,7 @@ int detection_loop(std::string filename ){
 		return -1;
 	}
 
-	blob = blobtree_create();
+	blobtree_create(&blob);
 
 	if( reset_ids ){
 		int* ids = (algorithm==0)?tworkspace->ids:dworkspace->ids;
@@ -177,7 +178,7 @@ int fpsTest(std::string filename ){
 	//Init workspaces
 	threshtree_create_workspace( W, H, &tworkspace );
 	depthtree_create_workspace( W, H, &dworkspace );
-	blob = blobtree_create();
+	blobtree_create(&blob);
 	blobtree_set_grid(blob, gridwidth,gridheight);
 	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
@@ -416,10 +417,30 @@ static void CB_Button1(int state, void* pointer){
 // ---- END Some callbacks for opencv gui ----
 
 
+void ctrl_c_handler(int s){
+	printf("Caught signal %d\n",s);
+
+	depthtree_destroy_workspace( &dworkspace );
+	threshtree_destroy_workspace( &tworkspace );
+	blobtree_destroy(&blob);
+
+	exit(1); 
+}
+
 
 
 int main(int argc, char** argv )
 {
+
+	//Add signal handler
+	struct sigaction sigIntHandler;
+
+	sigIntHandler.sa_handler = ctrl_c_handler;
+	sigemptyset(&sigIntHandler.sa_mask);
+	sigIntHandler.sa_flags = 0;
+
+	sigaction(SIGINT, &sigIntHandler, NULL);
+
 
 	//==========================================================
 	//Setup
@@ -457,7 +478,7 @@ int main(int argc, char** argv )
 
 
 //Just test speed
-	bool fpsTesting = true;
+	bool fpsTesting = (argc>=6);
 	if( fpsTesting ) {
 		std::string filename("");
 		if( loop == -1 ){

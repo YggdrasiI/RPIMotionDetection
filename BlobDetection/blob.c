@@ -5,15 +5,19 @@
 // Blobtree functions
 //+++++++++++++++++++++++++++++
 
-Blobtree *blobtree_create(){
-	Blobtree *blob = malloc(sizeof(Blobtree) );
+void blobtree_create(Blobtree **pblob){
+	if( *pblob != NULL ){
+		blobtree_destroy(pblob);
+	}
+	Blobtree* blob = (Blobtree*) malloc(sizeof(Blobtree) );
 	blob->tree = NULL;
 	blob->tree_data = NULL;
 	Filter filter = {0,INT_MAX, 0,INT_MAX, 0, 0,255, NULL };
 	blob->filter = filter;
 	Grid grid = {1,1};
 	blob->grid = grid;
-	return blob;
+
+	*pblob = blob;
 }
 
 void blobtree_destroy(Blobtree **pblob){
