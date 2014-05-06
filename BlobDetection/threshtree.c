@@ -485,7 +485,7 @@ Tree* find_connection_components_subcheck(
 			 * nicht dargestellt ist.
 			 * */
 
-#ifdef VERBOSE > 1
+#if VERBOSE > 1
 			if( *(tri-1) > 1 ){
 				printf("(threshtree) Logic error: tri>1 should not be possible here.\n");
 			}

@@ -318,7 +318,13 @@ static void redraw(){
 				Blob *pixblob = (Blob*) (blob->tree->root + s2 )->data;
 				s3 = pixblob->area + pixblob->roi.x + pixblob->roi.y;
 
-				const cv::Vec3b col( (s3*5*5+100)%256, (s3*7*7+10)%256, (s3*29*29+1)%256 );
+				cv::Vec3b col( (s3*5*5+100)%256, (s3*7*7+10)%256, (s3*29*29+1)%256 );
+
+				if( algorithm == 1 ){
+					s3 = pixblob->depth_level << 3;
+					cv::Vec3b col( (s3)%256, (s3)%256, (255-s3)%256 );
+				}
+
 				color.at<Vec3b>(y + input_roi.y, x + input_roi.x ) = col;
 				
 				

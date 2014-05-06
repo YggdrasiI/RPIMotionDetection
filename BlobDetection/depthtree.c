@@ -890,7 +890,7 @@ void extend_bounding_boxes( Tree * const tree){
 
 
 
-//TEST
+//TEST, yes this runs faster. (Gain up to 8% on test images)
 Tree* find_depthtree11(
 		const unsigned char *data,
 		const int w, const int h,
