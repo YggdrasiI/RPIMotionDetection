@@ -4,6 +4,12 @@
 /* 0, 1, 2(with stops) */
 //#define VERBOSE 1
 
+/* Force inlining of main function to create
+ * constant stepwidth variable.
+ * Increases compile time by factor 12. Coment out to disalbe optimization.
+ * */
+#define FORCEINLINE __attribute__((always_inline))
+
 /* Sort tree by child node structure and area size. This provide 
 	 some robustness on rotation for tree comparison. */
 #define BLOB_SORT_TREE
