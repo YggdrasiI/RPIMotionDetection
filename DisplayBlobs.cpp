@@ -1,8 +1,6 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
-#include <sys/time.h>
-
 #include "threshtree.h"
 #include "depthtree.h"
 
