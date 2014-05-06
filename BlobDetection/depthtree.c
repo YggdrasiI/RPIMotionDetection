@@ -747,6 +747,7 @@ void depthtree_find_blobs(Blobtree *blob, const unsigned char *data, const int w
 		blob->tree_data = NULL;
 	}
 	//get new blob tree structure.
+	/*
 	if( blob->grid.height == 11 ){
     blob->tree = find_depthtree11(data, w, h, roi, depth_map, 
 				workspace, &blob->tree_data);
@@ -754,7 +755,34 @@ void depthtree_find_blobs(Blobtree *blob, const unsigned char *data, const int w
     blob->tree = find_depthtree(data, w, h, roi, depth_map, 
 				blob->grid.width,
 				workspace, &blob->tree_data);
+	}*/
+
+	if( blob->grid.height == 1 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 1, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 2 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 2, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 3 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 3, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 4 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 4, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 5 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 5, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 6 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 6, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 7 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 7, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 8 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 8, workspace, &blob->tree_data);
+	}else if( blob->grid.height == 9 ){
+    blob->tree = find_depthtreeInlined(data, w, h, roi, depth_map, 9, workspace, &blob->tree_data);
 	}
+
+
+
+
+
+
+
 }
 
 
@@ -891,16 +919,20 @@ void extend_bounding_boxes( Tree * const tree){
 
 
 //TEST, yes this runs faster. (Gain up to 8% on test images)
-Tree* find_depthtree11(
+__attribute__((always_inline))
+//static
+inline
+Tree* find_depthtreeInlined(
 		const unsigned char *data,
 		const int w, const int h,
 		const BlobtreeRect roi,
 		const unsigned char *depth_map,
+		const int stepwidth,
 		DepthtreeWorkspace *workspace,
         Blob** tree_data )
 {
 
-#define stepwidth 1 
+//#define stepwidth 1 
 #define stepheight stepwidth
     /* Marks of 10 Cases:
      *  x - stepwidth, y - stepheight, swr - (w-1)%x, shr - (h-1)%y

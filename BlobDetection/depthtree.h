@@ -146,13 +146,17 @@ void extend_bounding_boxes( Tree * const tree);
 #endif
 
 // TEST
-Tree* find_depthtree11(
+//__attribute__((always_inline))
+//static
+inline
+Tree* find_depthtreeInlined(
 		const unsigned char *data,
 		const int w, const int h,
 		const BlobtreeRect roi,
 		const unsigned char *depth_map,
+		const int stepwidth,
 		DepthtreeWorkspace *workspace,
-		Blob** tree_data );
+		Blob** tree_data ) ;
 
 #ifdef __cplusplus
 }
