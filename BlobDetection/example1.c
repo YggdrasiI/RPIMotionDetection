@@ -35,7 +35,8 @@ int main(int argc, char **argv) {
   threshtree_create_workspace( W, H, &workspace );
 
 	// Init blobtree struct
-	Blobtree *blob = blobtree_create();
+	Blobtree *blob = NULL;
+	blobtree_create(&blob);
 
 	// Set distance between compared pixels.	
 	// Look at blobtree.h for more information.

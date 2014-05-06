@@ -81,7 +81,7 @@ typedef struct {
 
 
 /* Create blob struct. Use threshtree_destroy to free mem. */
-Blobtree *blobtree_create();
+void blobtree_create(Blobtree **blob);
 void blobtree_destroy(Blobtree **blob );
 
 /* Set one of the default filter values */
