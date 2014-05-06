@@ -268,7 +268,7 @@ Tree* find_connection_components_subcheck(
 	const size_t triangle_len = (triwidth+1)* ( (roi.height-1)/STEPHEIGHT + 1);
 	if( triangle_len  > workspace->triangle_len ){
 		free(workspace->triangle);
-		workspace->triangle = malloc( triangle_len	* sizeof(unsigned char) );
+		workspace->triangle = (unsigned char*) malloc( triangle_len	* sizeof(unsigned char) );
 		if( workspace->triangle == NULL ){
 			printf("(threshtree) Critical error: Mem allocation for triangle failed\n");
 		}
@@ -856,7 +856,7 @@ if( stepwidth*STEPHEIGHT >1 ){
  * */
 int nids = id+1; //number of ids
 int tmp_id,tmp_id2, real_ids_size=0,l;
-int found;
+//int found;
 	free(workspace->real_ids);
 	workspace->real_ids = calloc( nids, sizeof(int) ); //store join of ids.
 	int* const real_ids = workspace->real_ids;

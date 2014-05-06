@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <opencv2/opencv.hpp>
 
+#include <sys/time.h>
+
 #include "threshtree.h"
 #include "depthtree.h"
+
+#include "Fps.h";
 
 using namespace cv;
 
@@ -45,6 +49,7 @@ static bool display_filtered_areas = true;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
 static int gridwidth = 1;
+static int gridheight = 1;
 static int of_area_min = 5*4;
 static int of_area_max = 4000*4;
 static int of_tree_depth_min = 1;
@@ -132,7 +137,7 @@ int detection_loop(std::string filename ){
 
 	// Set distance between compared pixels.	
 	// Look at blobtree.h for more information.
-	blobtree_set_grid(blob, gridwidth,gridwidth);
+	blobtree_set_grid(blob, gridwidth,gridheight);
 
 	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
@@ -147,6 +152,54 @@ int detection_loop(std::string filename ){
 
 	return 0;
 }
+
+
+
+
+int fpsTest(std::string filename ){
+
+	input_image = imread( filename, CV_LOAD_IMAGE_GRAYSCALE );
+	if ( !input_image.data )
+	{
+		printf("No image data \n");
+		return -1;
+	}
+
+	image_filename = filename;
+	int div=30;
+	for( int i=0; i<256; i++){ depth_map[i] = (i<thresh?0:(i-thresh)/30+1); }
+
+	//====================================================
+	const int W = input_image.size().width;
+	const int H = input_image.size().height;
+	const uchar* ptr = input_image.data;
+
+	blobtree_destroy(&blob);
+
+	//Init workspaces
+	threshtree_create_workspace( W, H, &tworkspace );
+	depthtree_create_workspace( W, H, &dworkspace );
+	blob = blobtree_create();
+	blobtree_set_grid(blob, gridwidth,gridheight);
+	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
+
+	Fps fps;
+	int N = 1;
+	while( N++<100000 ){
+		//printf("N = %i\n", N);
+		if( algorithm == 0 ){
+			threshtree_find_blobs(blob, ptr, W, H, input_roi, thresh, tworkspace);
+		}else{
+			depthtree_find_blobs(blob, ptr, W, H, input_roi, depth_map, dworkspace);
+		}
+
+		fps.next(stdout);
+	}
+
+	return 0;
+}
+
+
 
 static void redraw(){
 
@@ -198,7 +251,6 @@ static void redraw(){
 
 	
 	/* Create data for graphical output */
-
 	//fill color image with id map of filtered list of blobs
 	//1. Create mapping for filtered list
 	if( display_areas ){
@@ -371,7 +423,6 @@ int main(int argc, char** argv )
 	const int loopMax = 120;
 	int loop = 0;
 
-
 	//Input handling
 	if ( argc < 2 )
 	{
@@ -396,8 +447,30 @@ int main(int argc, char** argv )
 	}
 
 	if ( argc >= 4){
-		thresh = atoi(argv[3]);
+		//thresh = atoi(argv[3]);
+		gridheight = atoi(argv[3]);
 	}
+
+
+//Just test speed
+	bool fpsTesting = true;
+	if( fpsTesting ) {
+		std::string filename("");
+		if( loop == -1 ){
+			filename.append(argv[2]);
+		}else{
+			std::ostringstream ofilename;
+			ofilename << "images/" << loop << ".png" ;
+			filename.append(ofilename.str());
+		}
+		printf("Load image %s\n", filename.c_str());
+		fpsTest(filename);
+
+		return 0;
+	}
+
+
+
 
 	namedWindow(window_options, CV_WINDOW_AUTOSIZE );
 	namedWindow(window_name, CV_WINDOW_AUTOSIZE );
@@ -420,16 +493,17 @@ int main(int argc, char** argv )
 
 	//Loop over list [Images] or [Image_Path, Images]
 	while( loop < loopMax ){
+
+		std::string filename("");
 		if( loop == -1 ){
-			printf("Load image %s\n", argv[2]);
-			std::string filename(argv[2]);
-			detection_loop(filename);
+			filename.append(argv[2]);
 		}else{
-			std::ostringstream filename;
-			filename << "images/" << loop << ".png" ;
-			printf("Load image %s\n", filename.str().c_str());
-			detection_loop(filename.str());
+			std::ostringstream ofilename;
+			ofilename << "images/" << loop << ".png" ;
+			filename.append(ofilename.str());
 		}
+		printf("Load image %s\n", filename.c_str());
+		detection_loop(filename);
 		loop++;
 
 		//====================================================================
@@ -440,6 +514,7 @@ int main(int argc, char** argv )
 		//Keyboard interaction
 		int key = waitKey(0);
 		printf("Key: %i\n", key);
+
 		switch(key){
 			case 27:{ //ESC-Key
 								loop=loopMax+1;
@@ -448,7 +523,7 @@ int main(int argc, char** argv )
 			case 98: // b
 			case 65361:{ //Left
 									 loop-=2;
-									 if(loop<0 && argc<2 ) loop=0;
+									 if(loop<0 && argc<3 ) loop=0;
 									 if(loop<-1)loop=0;
 									 break;
 								 }
@@ -460,9 +535,10 @@ int main(int argc, char** argv )
 		}
 
 		//go back to first step
-		if( loop==loopMax )
+		if( loop==loopMax ){
 			loop = 0;
-
+		}
+	
 	}
 
 	depthtree_destroy_workspace( &dworkspace );

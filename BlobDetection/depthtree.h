@@ -145,6 +145,14 @@ void depthtree_find_blobs(
 void extend_bounding_boxes( Tree * const tree);
 #endif
 
+// TEST
+Tree* find_depthtree11(
+		const unsigned char *data,
+		const int w, const int h,
+		const BlobtreeRect roi,
+		const unsigned char *depth_map,
+		DepthtreeWorkspace *workspace,
+		Blob** tree_data );
 
 #ifdef __cplusplus
 }

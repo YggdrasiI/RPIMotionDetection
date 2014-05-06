@@ -27,6 +27,12 @@ find_library(DEPTHLIB NAMES libdepthtree.so )
 message(STATUS ${THRESHLIB})
 message(STATUS ${DEPTHLIB})
 
+add_custom_command(TARGET DisplayBlobs
+	PRE_BUILD
+	COMMAND make
+	WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/BlobDetection/build)
+
+
 include_directories(${CMAKE_HOME_DIRECTORY}/BlobDetection)
 target_link_libraries( DisplayBlobs
 	${THRESHLIB}

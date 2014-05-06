@@ -13,6 +13,7 @@ target_link_libraries(example1 threshtree )
 add_executable( example2 example2.c )
 target_link_libraries(example2 depthtree ) 
 
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpic -O3" )
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -g -O0 -fmax-errors=3 -w" )
 

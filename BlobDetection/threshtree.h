@@ -27,7 +27,7 @@ typedef struct {
 	int *bottom_index; //save row number of most bottom element.
 #endif
 #ifdef BLOB_SUBGRID_CHECK
-	int *triangle;
+	unsigned char *triangle;
 	size_t triangle_len;
 #endif
 
