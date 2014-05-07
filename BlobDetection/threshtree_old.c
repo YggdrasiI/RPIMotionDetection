@@ -39,7 +39,7 @@ Tree* find_connection_components_coarse2(
 	 * <----------------------- w --------------------------------->
 	 * |        <-- roi.width -------------->
 	 * |        <-- roi.width-swr -->
-	 * | 
+	 * |
 	 * | | |    A ←x→ B ←x→ … B ←x→ B ←swr→ C
 	 * | | roi  ↑                   ↑       ↑
 	 * h | hei  y                   y       y
@@ -55,9 +55,9 @@ Tree* find_connection_components_coarse2(
 	 * | t     shr                 shr     shr
 	 * | |      ↓                   ↓       ↓
 	 * h |      L ←x→ M ←x→ … M ←x→ N ←swr→ P
-	 * |  
-	 * |  
 	 * | 
+	 * | 
+	 * |
 	 *
 	 */
 	//init
@@ -76,20 +76,20 @@ Tree* find_connection_components_coarse2(
 	int sh2 = shr*w;
 
 	int id=-1;//id for next component
-	int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y)) 
+	int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y))
 	int k; //loop variable
 
 	/* Create pointer to workspace arrays */
-	int max_comp = workspace->max_comp; 
+	int max_comp = workspace->max_comp;
 
-	int* ids = workspace->ids; 
-	int* comp_same = workspace->comp_same; 
-	int* prob_parent = workspace->prob_parent; 
+	int* ids = workspace->ids;
+	int* comp_same = workspace->comp_same;
+	int* prob_parent = workspace->prob_parent;
 #ifdef BLOB_COUNT_PIXEL
-	int* comp_size = workspace->comp_size; 
+	int* comp_size = workspace->comp_size;
 #endif
 #ifdef BLOB_DIMENSION
-	int* top_index = workspace->top_index; 
+	int* top_index = workspace->top_index;
 	int* left_index = workspace->left_index;
 	int* right_index = workspace->right_index;
 	int* bottom_index = workspace->bottom_index;
@@ -111,7 +111,7 @@ Tree* find_connection_components_coarse2(
 	/**** A,A'-CASE *****/
 	//top, left corner of BlobtreeRect get first id.
 	NEW_COMPONENT_OLD(-1);
-	BLOB_INC_COMP_SIZE; 
+	BLOB_INC_COMP_SIZE;
 	iPi += stepwidth;
 	dPi += stepwidth;
 
@@ -142,7 +142,7 @@ Tree* find_connection_components_coarse2(
 				NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 			}
 		}
-		BLOB_INC_COMP_SIZE; 
+		BLOB_INC_COMP_SIZE;
 #ifdef BLOB_DIMENSION
 		s += stepwidth;
 #endif
@@ -172,7 +172,7 @@ Tree* find_connection_components_coarse2(
 				NEW_COMPONENT_OLD( *(iPi-swr) )
 			}
 		}
-	BLOB_INC_COMP_SIZE; 
+		BLOB_INC_COMP_SIZE;
 	}
 
 	//move pointer to 'next' row
@@ -213,7 +213,7 @@ Tree* find_connection_components_coarse2(
 			}
 		}
 
-		BLOB_INC_COMP_SIZE; 
+		BLOB_INC_COMP_SIZE;
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -284,7 +284,7 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 #ifdef BLOB_DIMENSION
 			s += stepwidth;
 #endif
@@ -293,7 +293,7 @@ Tree* find_connection_components_coarse2(
 
 		/* If dR2==dR, then the last column is reached. Thus it's not possibe
 		 * to check diagonal element. (only G case)
-		 * Otherwise use G and H cases. 
+		 * Otherwise use G and H cases.
 		 */
 		if( dR2==dR ){
 			if( *(dPi) > thresh ){
@@ -331,7 +331,7 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 
 		}else{
 			//structure: (dPi-stepwidth),(dPi),(dPi+swr)
@@ -394,7 +394,7 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 #ifdef BLOB_DIMENSION
 			s+=swr;
 #endif
@@ -437,9 +437,9 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
+			BLOB_INC_COMP_SIZE;
 		}//end of else case of (dR2==dR)
 
-		BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 		s=roi.x;
 		z += stepheight;
@@ -481,7 +481,7 @@ Tree* find_connection_components_coarse2(
 			}
 		}
 
-		BLOB_INC_COMP_SIZE; 
+		BLOB_INC_COMP_SIZE;
 #ifdef BLOB_DIMENSION
 		s += stepwidth;
 #endif
@@ -553,7 +553,7 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 #ifdef BLOB_DIMENSION
 			s += stepwidth;
 #endif
@@ -561,7 +561,7 @@ Tree* find_connection_components_coarse2(
 
 		/* If dR2==dR, then the last column is reached. Thus it's not possibe
 		 * to check diagonal element. (only N case)
-		 * Otherwise use N and P cases. 
+		 * Otherwise use N and P cases.
 		 */
 		if( dR2==dR ){
 			if( *(dPi) > thresh ){
@@ -599,7 +599,7 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 
 		}else{
 			//structure: (dPi-stepwidth),(dPi),(dPi+swr)
@@ -663,7 +663,7 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 #ifdef BLOB_DIMENSION
 			s+=swr;
 #endif
@@ -707,14 +707,14 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 		}//end of else case of (dR2==dR)
 
 	} //end of if(dE2==dE)
 
 	/* end of main algo */
 
-#if VERBOSE > 0 
+#if VERBOSE > 0
 	//printf("Matrix of ids:\n");
 	//print_matrix(ids,w,h);
 
@@ -726,7 +726,7 @@ Tree* find_connection_components_coarse2(
 
 	/* Postprocessing.
 	 * Sum up all areas with connecteted ids.
-	 * Then create nodes and connect them. 
+	 * Then create nodes and connect them.
 	 * If BLOB_DIMENSION is set, detect
 	 * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
 	 * */
@@ -742,20 +742,20 @@ Tree* find_connection_components_coarse2(
 	int* const real_ids_inv = workspace->real_ids_inv;
 
 #if 1
-	for(k=0;k<nids;k++){ 
+	for(k=0;k<nids;k++){
 
 		/* Sei F=comp_same. Wegen F(x)<=x folgt (F wird innerhalb dieser Schleife angepasst!)
 		 * F^2 = F^3 = ... = F^*
 		 * D.h. um die endgültige id zu finden muss comp_same maximal zweimal aufgerufen werden.
 		 * */
-		tmp_id = *(comp_same+k); 
+		tmp_id = *(comp_same+k);
 
 #if VERBOSE > 0
 		printf("%i: (%i->%i ",k,k,tmp_id);
 #endif
 		if( tmp_id != k ){
-			tmp_id = *(comp_same+tmp_id); 
-			*(comp_same+k) = tmp_id; 
+			tmp_id = *(comp_same+tmp_id);
+			*(comp_same+k) = tmp_id;
 #if VERBOSE > 0
 			printf("->%i ",tmp_id);
 #endif
@@ -768,7 +768,7 @@ Tree* find_connection_components_coarse2(
 
 #ifdef BLOB_COUNT_PIXEL
 			//move area size to other id.
-			*(comp_size+tmp_id) += *(comp_size+k); 
+			*(comp_size+tmp_id) += *(comp_size+k);
 			*(comp_size+k) = 0;
 #endif
 
@@ -793,13 +793,13 @@ Tree* find_connection_components_coarse2(
 
 	}
 #else
-/* Old approach: Attention, old version does not create 
+/* Old approach: Attention, old version does not create
  * the projection property of comp_same (cs). Here, only cs^2=cs^3.
  */
 	int found;
 	for(k=0;k<nids;k++){
 		tmp_id = k;
-		tmp_id2 = *(comp_same+tmp_id); 
+		tmp_id2 = *(comp_same+tmp_id);
 #if VERBOSE > 0
 		printf("%i: (%i->%i) ",k,tmp_id,tmp_id2);
 #endif
@@ -807,7 +807,7 @@ Tree* find_connection_components_coarse2(
 
 #ifdef BLOB_COUNT_PIXEL
 			//move area size to other id.
-			*(comp_size+tmp_id2) += *(comp_size+tmp_id); 
+			*(comp_size+tmp_id2) += *(comp_size+tmp_id);
 			*(comp_size+tmp_id) = 0;
 #endif
 
@@ -823,14 +823,14 @@ Tree* find_connection_components_coarse2(
 				*( bottom_index+tmp_id2 ) = *( bottom_index+k );
 #endif
 
-			tmp_id = tmp_id2; 
-			tmp_id2 = *(comp_same+tmp_id); 
+			tmp_id = tmp_id2;
+			tmp_id2 = *(comp_same+tmp_id);
 
 #if VERBOSE > 0
 			printf("(%i->%i) ",tmp_id,tmp_id2);
 #endif
 		}
-#if VERBOSE > 0 
+#if VERBOSE > 0
 		printf("\n");
 #endif
 
@@ -876,7 +876,7 @@ Tree* find_connection_components_coarse2(
 	memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
 	curdata->area = roi.width * roi.height;
 #ifdef SAVE_DEPTH_MAP_VALUE
-	curdata->depth_level = 0; 
+	curdata->depth_level = 0;
 #endif
 	cur->data = curdata; // link to the data array.
 
@@ -901,18 +901,18 @@ Tree* find_connection_components_coarse2(
 		curdata->depth_level = 0; /* ??? without anchor not trivial.*/
 #endif
 
-		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area. 
+		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area.
 		if( tmp_id < 0 ){
 			/* Use root as parent node. */
 			//cur->parent = root;
 			add_child(root, cur );
 		}else{
 			//find real id of parent id.
-			tmp_id2 = *(comp_same+tmp_id); 
+			tmp_id2 = *(comp_same+tmp_id);
 			while( tmp_id != tmp_id2 ){
-				tmp_id = tmp_id2; 
-				tmp_id2 = *(comp_same+tmp_id); 
-			} 
+				tmp_id = tmp_id2;
+				tmp_id2 = *(comp_same+tmp_id);
+			}
 			/*Now, tmp_id is in real_id array. And real_ids_inv is defined. */
 			//cur->parent = root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id );
 			add_child( root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id ),

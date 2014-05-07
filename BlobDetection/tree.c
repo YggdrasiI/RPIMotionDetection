@@ -1,9 +1,9 @@
 #define INLINE inline
 #include "tree.h"
 
-/* Allocate tree struct. If you use 
- * the data pointer of the nodes you has to 
- * setup/handle the storage for this data 
+/* Allocate tree struct. If you use
+ * the data pointer of the nodes you has to
+ * setup/handle the storage for this data
  * separatly */
 Tree *tree_create(int size){
 	Tree *tree = (Tree*) malloc(sizeof(Tree));
@@ -266,9 +266,15 @@ void gen_tree_id(Node *root, int* id, int size){
 
 #ifdef BLOB_COUNT_PIXEL
 int sum_areas(const Node *root, int *comp_size){
+
 #if 1
 	Node *node = root;
 	Blob* data = (Blob*)node->data;
+	if( root->child == NULL){
+		data->area = *(comp_size + data->id );
+		return data->area;
+	}
+
 	do{
 		data->area = *(comp_size + data->id );
 
@@ -277,23 +283,29 @@ int sum_areas(const Node *root, int *comp_size){
 			node = node->child;
 			data = (Blob*)node->data;
 			continue;
-		}else if( node->silbing != NULL ){
-			((Blob*)node->parent->data)->area += data->area;
+		}
+		
+		((Blob*)node->parent->data)->area += data->area;
+
+		if( node->silbing != NULL ){
 			node = node->silbing;
 			data = (Blob*)node->data;
 			continue;
-		}else{
-			while( node != root ){
+		}
+
+		while( node != root ){
+			node = node->parent;
+			data = (Blob*)node->data;
+			if(node != root ){
 				((Blob*)node->parent->data)->area += data->area;
-				node = node->parent;
+			}
+			if( node->silbing != NULL ){
+				node = node->silbing;
 				data = (Blob*)node->data;
-				if( node->silbing != NULL ){
-					node = node->silbing;
-					data = (Blob*)node->data;
-					break;
-				}
+				break;
 			}
 		}
+
 	}while( node != root );
 	return data->area;
 #else
@@ -339,12 +351,12 @@ int sum_areas(const Node *root, int *comp_size){
  * • A_F - Sum of areas of fine boxes.
  * • N_C - Number of coarse pixels in C.
  *         ( approx. A_C/stepwidth^2. )
- * • N_F - Number of coarse pixels in all children bounding boxes. 
+ * • N_F - Number of coarse pixels in all children bounding boxes.
  *
  * • S_C - Number of coarse pixels in the blob.
- *         ( This value would stored in data->area after the call 
+ *         ( This value would stored in data->area after the call
  *           of sum_areas, but we eval it on the fly, here. )
- * • S_F - Number of coarse pixels of children blobs. 
+ * • S_F - Number of coarse pixels of children blobs.
  *
  * Fine bounding boxes are complete in the blob, thus
  * => A = A_F + X
@@ -362,7 +374,7 @@ int sum_areas(const Node *root, int *comp_size){
  * 2S_F + comp_size(i) - N_F, which will stored in node->data->area.
  * After all children of a node was processed the approimation
  * starts, which will replace node->data->area.
- * 
+ *
  * */
 
 
@@ -386,95 +398,75 @@ void approx_areas(const Tree* tree, const Node *startnode,
 
 	/*store A_F= Sum of areas of children bounding boxes.
 	 * We use *(pA_F +(node-root) ) for access. Thus, we
-	 * need the root node of the tree as anchor (or doubles the array size) 
+	 * need the root node of the tree as anchor (or doubles the array size)
 	 * to avoid access errors.
 	 * */
 	int * const pA_F = (int*) calloc(tree->size, sizeof(int) );
 
 	do{
 		data->area = *(comp_size + data->id );
-#if VERBOSE > 1
-		printf("(tree.c, approx areas) Nodeindex: %i, comp_size=%i\n", node-root, data->area);
-#endif
 
 		/* To to next node. update parent node on uprising flank */
 		if( node->child != NULL ){
 			node = node->child;
 			data = (Blob*)node->data;
 			continue;
+		}
+
+		const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
+			*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+		const int A_C = (data->roi.width*data->roi.height);
+
+		/* Update parent node. N_C,A_C of this level is part of N_F, A_F from parent*/
+		((Blob*)node->parent->data)->area += (data->area <<1) - N_C;
+		*(pA_F + (node->parent - root) ) += A_C;
+
+		/*Eval approximation, use A = A_C * S_C/N_C (for leafs is A_F=N_F=S_F=0 ) */
+		if( N_C ){
+			data->area = A_C * ((float)data->area/N_C) + 0.5f;
 		}else{
-#if VERBOSE > 1
-			printf("(tree.c, approx areas) Leaf, counter::%i\t", data->area);
-#endif
-			const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
-				*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
-			const int A_C = (data->roi.width*data->roi.height);
-
-			/* Update parent node. N_C,A_C of this level is part of N_F, A_F from parent*/
-			((Blob*)node->parent->data)->area += (data->area <<1) - N_C;
-			*(pA_F + (node->parent - root) ) += A_C;
-
-int backup = data->area;
-
-			/*Eval approximation, use A = A_C * S_C/N_C (for leafs is A_F=N_F=S_F=0 ) */
-			if( N_C ){
-				data->area = A_C * ((float)data->area/N_C) + 0.5f;
-			}else{
-				data->area = 0;//area contains only subpixel 
-			}
-#if VERBOSE > 1
-			printf("\tApproximation:%i\n", data->area);
-			printf("(tree.c, approx areas) A_C = %i, S_C = %i, N_C = %i\n", A_C, backup, N_C);
-#endif
+			data->area = 0;//area contains only subpixel
 		}
 
 		if( node->silbing != NULL ){
 			node = node->silbing;
 			data = (Blob*)node->data;
 			continue;
-		}else{
+		}
 
-			while( node != startnode ){
+		while( node != startnode ){
+			/*
+			 * All children of parent processed.
+			 * We can start the approximation for the parent node.
+			 * */
+			node = node->parent;
+			data = (Blob*)node->data;
 
-				/*
-				 * All children of parent processed.
-				 * We can start the approximation for the parent node.
-				 * */
-				node = node->parent;
+			const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
+				*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+			const int A_C = (data->roi.width*data->roi.height);
+
+			if( node!=startnode ){//required to avoid changes over startnode
+				/* Update parent node. N_C,A_C of this level is part of N_F, A_F from parent*/
+				((Blob*)node->parent->data)->area += (data->area <<1) - N_C;
+				*(pA_F + (node->parent - root) ) += A_C;
+			}
+
+			const int A_F = *(pA_F + (node - root) );
+			/* A = A_F + (A_C - A_F) * (2*S_F + comp_size(i) - N_F) */
+			if( N_C ){
+				data->area = A_F + (A_C - A_F) * ((float)data->area/N_C) +0.5f;
+			}else{
+				data->area = 0;//area contains only subpixel
+			}
+
+			if( node->silbing != NULL ){
+				node = node->silbing;
 				data = (Blob*)node->data;
-
-				const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
-					*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
-				const int A_C = (data->roi.width*data->roi.height);
-
-				if( node!=startnode ){//required to avoid changes over startnode
-
-					/* Update parent node. N_C,A_C of this level is part of N_F, A_F from parent*/
-					((Blob*)node->parent->data)->area += (data->area <<1) - N_C;
-					*(pA_F + (node->parent - root) ) += A_C;
-				}
-#if VERBOSE > 1
-				printf("Area:%i\t", data->area);
-#endif
-
-				const int A_F = *(pA_F + (node - root) );
-				/* A = A_F + (A_C - A_F) * (2*S_F + comp_size(i) - N_F) */
-				if( N_C ){
-					data->area = A_F + (A_C - A_F) * ((float)data->area/N_C) +0.5f;
-				}else{
-					data->area = 0;//area contains only subpixel 
-				}
-#if VERBOSE > 1
-				printf("Box: %i \tApprox::%i\n",A_C, data->area);
-#endif
-
-				if( node->silbing != NULL ){
-					node = node->silbing;
-					data = (Blob*)node->data;
-					break;
-				}
+				break;
 			}
 		}
+
 	}while( node != startnode );
 
 	free( pA_F);
@@ -520,7 +512,7 @@ void set_area_prop(Node * const root){
 
 
 /* tree_hashval, (NEVER FINISHED)
- * Berechnet für einen Baum eine Id, die eindeutig ist, 
+ * Berechnet für einen Baum eine Id, die eindeutig ist,
  * wenn die Bäume eine bestimmte Struktur einhalten.
  * Die Struktur der Bäume (z.B. max. Anzahl der Kinder)
  *  ist grob einstellbar.

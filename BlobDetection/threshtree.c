@@ -30,7 +30,7 @@ bool threshtree_create_workspace(
     const int max_comp = (w+h)*100;
     r->max_comp = max_comp;
 		r->used_comp = 0;
-    if( 
+    if(
             ( r->ids = (int*) malloc( w*h*sizeof(int) ) ) == NULL ||
             ( r->comp_same = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
             ( r->prob_parent = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
@@ -41,7 +41,7 @@ bool threshtree_create_workspace(
             ( r->top_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
             ( r->left_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
             ( r->right_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
-            ( r->bottom_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL || 
+            ( r->bottom_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
 						
 #endif
 						0 ){
@@ -71,7 +71,7 @@ bool threshtree_realloc_workspace(
 
     ThreshtreeWorkspace *r = *pworkspace;
     r->max_comp = max_comp;
-    if( 
+    if(
             ( r->comp_same = (int*) realloc(r->comp_same, max_comp*sizeof(int) ) ) == NULL ||
             ( r->prob_parent = (int*) realloc(r->prob_parent, max_comp*sizeof(int) ) ) == NULL ||
 #ifdef BLOB_COUNT_PIXEL
@@ -97,7 +97,7 @@ bool threshtree_realloc_workspace(
 }
 
 void threshtree_destroy_workspace(
-        ThreshtreeWorkspace **pworkspace 
+        ThreshtreeWorkspace **pworkspace
         ){
 		if( *pworkspace == NULL ) return;
 
@@ -141,7 +141,7 @@ Tree* find_connection_components(
 	return find_connection_components_coarse(data,w,h,roi,thresh,1,1,tree_data, workspace);
 }
 
- 
+
 Tree* find_connection_components_roi(
 		const unsigned char *data,
 		const int w, const int h,
@@ -157,7 +157,7 @@ Tree* find_connection_components_roi(
 #include "threshtree_old.c"
 
 
-#ifdef BLOB_SUBGRID_CHECK 
+#ifdef BLOB_SUBGRID_CHECK
 #define stepheight stepwidth
 Tree* find_connection_components_subcheck(
 		const unsigned char *data,
@@ -181,7 +181,7 @@ Tree* find_connection_components_subcheck(
  * <----------------------- w --------------------------------->
  * |        <-- roi.width ------------------------>
  * |        <- roi.width-stepwidth-swr -->
- * | 
+ * |
  * | | |    A ←x→ B ←x→ … B ←x→ C ←swr+stepwidth→ C
  * | | roi  ↑                   ↑                 ↑
  * h | hei  y                   y                 y
@@ -201,9 +201,9 @@ Tree* find_connection_components_subcheck(
  * | |     	1                   1                 1
  * | |      ↓                   ↓                 ↓
  * h |      L ←x→ M ←x→ … M ←x→ N ←swr+stepwidth→ P
- * |  
- * |  
- * | 
+ * |
+ * |
+ * |
  *
  */
 	if( stepwidth < 2){
@@ -226,21 +226,21 @@ Tree* find_connection_components_subcheck(
 //	int sh2 = shr*w;
 
 	int id=-1;//id for next component
-	int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y)) 
+	int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y))
 	int k; //loop variable
 
 	/* Create pointer to workspace arrays */
-	int max_comp = workspace->max_comp; 
+	int max_comp = workspace->max_comp;
 
-	int* ids = workspace->ids; 
+	int* ids = workspace->ids;
 
-	int* comp_same = workspace->comp_same; 
-	int* prob_parent = workspace->prob_parent; 
+	int* comp_same = workspace->comp_same;
+	int* prob_parent = workspace->prob_parent;
 #ifdef BLOB_COUNT_PIXEL
-	int* comp_size = workspace->comp_size; 
+	int* comp_size = workspace->comp_size;
 #endif
 #ifdef BLOB_DIMENSION
-	int* top_index = workspace->top_index; 
+	int* top_index = workspace->top_index;
 	int* left_index = workspace->left_index;
 	int* right_index = workspace->right_index;
 	int* bottom_index = workspace->bottom_index;
@@ -249,7 +249,7 @@ Tree* find_connection_components_subcheck(
 	const int s=-1,z=-1; //Should not be used.
 #endif
 
-	/* triangle array store information about the 
+	/* triangle array store information about the
 	 * evaluation of ids between the grid pixels.
 	 * This info is needed to avoid double evaluation
 	 * of ids for some pixels, which would be a critical problem.
@@ -290,7 +290,7 @@ Tree* find_connection_components_subcheck(
   const unsigned char* const dE2 = dE - shr*w;//remove last lines.
 
 	//int i = w*roi.y+roi.x;
-	const unsigned char* dPi = dS; // Pointer to data+i 
+	const unsigned char* dPi = dS; // Pointer to data+i
 	int* iPi = ids+(dS-data); // Poiner to ids+i
 
 #if VERBOSE > 0
@@ -302,7 +302,7 @@ Tree* find_connection_components_subcheck(
 	/**** A,A'-CASE *****/
 	//top, left corner of BlobtreeRect get first id.
 	NEW_COMPONENT(-1);
-	BLOB_INC_COMP_SIZE; 
+	BLOB_INC_COMP_SIZE;
 	iPi += stepwidth;
 	dPi += stepwidth;
 
@@ -340,7 +340,7 @@ Tree* find_connection_components_subcheck(
 				*(tri-1)=2;
 			}
 		}
-		BLOB_INC_COMP_SIZE; 
+		BLOB_INC_COMP_SIZE;
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -359,7 +359,7 @@ Tree* find_connection_components_subcheck(
 #ifdef BLOB_COUNT_PIXEL
 	*(comp_size+*(iPi-swr)) += 1;
 #endif
-	 
+	
 	/* Move pointer to 'next' row.*/
 	dPi += r+roi.x+sh1+1;
 	iPi += r+roi.x+sh1+1;
@@ -413,7 +413,7 @@ Tree* find_connection_components_subcheck(
 			}
 		}
 
-		BLOB_INC_COMP_SIZE; 
+		BLOB_INC_COMP_SIZE;
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -427,9 +427,9 @@ Tree* find_connection_components_subcheck(
 		 */
 		for( ; dPi<dR2; ){
 
-			/* Bit order: 
+			/* Bit order:
 			 * 0 2 3
-			 * 1 
+			 * 1
 			 */
 			/*const*/ unsigned char casenbr = ( *(dPi) > thresh )? \
 				( (( *(dPi-sh+stepwidth) <= thresh ) << 3)
@@ -463,27 +463,27 @@ Tree* find_connection_components_subcheck(
 			 * ♣ Known ids, already set.
 			 * ♦ New id, set in this step. (Not set for -,| if already set)
 			 * */
-			/* *(tri-2)=0: Positions  
+			/* *(tri-2)=0: Positions
 			 *   -2   -1  0  <== tri-shift
-			 *	o   o•••o•••o  			o   o♦♦♦o♦♦♦o       o	    o•••o•••o 
-			 *	    •               	  ♦♦♦♦♦♦♦♦              •         
-			 * 	    •          	==>	    ♦♦♦♦♦♦♦     or        •         
-			 *	    •          			    ♦♦♦♦♦♦                •         
-			 *	o   o   X      			o   o♦♦♦X           o     o   X     
+			 *	o   o•••o•••o  			o   o♦♦♦o♦♦♦o       o	    o•••o•••o
+			 *	    •               	  ♦♦♦♦♦♦♦♦              •       
+			 * 	    •          	==>	    ♦♦♦♦♦♦♦     or        •       
+			 *	    •          			    ♦♦♦♦♦♦                •       
+			 *	o   o   X      			o   o♦♦♦X           o     o   X   
 			 */
 			/* *(tri-2)=1:
 			 *	o♣♣♣o•••o•••o				o♣♣♣o♦♦♦o♦♦♦o     	o♣♣♣o•••o•••o	
-			 *  ♣♣♣♣•              	♣♣♣♣♦♦♦♦♦♦♦♦        ♣♣♣♣•         
+			 *  ♣♣♣♣•              	♣♣♣♣♦♦♦♦♦♦♦♦        ♣♣♣♣•       
 			 *  ♣♣♣ • 					==>	♣♣♣ ♦♦♦♦♦♦♦   or    ♣♣♣ • 				
 			 *  ♣♣  •   						♣♣  ♦♦♦♦♦♦          ♣♣  •   			
 			 *  o   o   X						o   o♦♦♦X           o   o   X			
 			 */
 			/* *(tri-2)=3:
 			 *	o♣♣♣o♣♣♣o•••o 			o♣♣♣o♦♦♦o♦♦♦o       o♣♣♣o♣♣♣o•••o
-			 *	♣♣♣♣♣♣♣♣           	♣♣♣♣♣♣♣♣♦♦♦♦        ♣♣♣♣♣♣♣♣     
-			 *	♣♣♣♣♣♣♣       	==>	♣♣♣♣♣♣♣♦♦♦♦     or  ♣♣♣♣♣♣♣      
-			 *	♣♣♣♣♣♣        			♣♣♣♣♣♣♦♦♦♦          ♣♣♣♣♣♣       
-			 *	o♣♣♣o   X     			o♣♣♣o♦♦♦X           o   o   X   
+			 *	♣♣♣♣♣♣♣♣           	♣♣♣♣♣♣♣♣♦♦♦♦        ♣♣♣♣♣♣♣♣   
+			 *	♣♣♣♣♣♣♣       	==>	♣♣♣♣♣♣♣♦♦♦♦     or  ♣♣♣♣♣♣♣    
+			 *	♣♣♣♣♣♣        			♣♣♣♣♣♣♦♦♦♦          ♣♣♣♣♣♣     
+			 *	o♣♣♣o   X     			o♣♣♣o♦♦♦X           o   o   X 
 			 */
 			/* ==> Wenn man die |-Stellen im Fall *(tri-2) nicht von den Dreieckswerten
 			 * links davor abhängig macht, sind Fall 0 und Fall 1. identisch zu behandeln.
@@ -738,7 +738,7 @@ Tree* find_connection_components_subcheck(
 			}
 
 
-			BLOB_INC_COMP_SIZE; 
+			BLOB_INC_COMP_SIZE;
 			dPi += stepwidth;
 			iPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -747,7 +747,7 @@ Tree* find_connection_components_subcheck(
 			++tri;
 		}
 
-#if VERBOSE > 2 
+#if VERBOSE > 2
 		debug_print_matrix( ids, w, h, roi, 1, 1);
 		printf("G *tri: %i %i %i\n", *(tri-1), *(tri-triwidth), *(tri-triwidth+1));
 		debug_getline();
@@ -760,17 +760,17 @@ Tree* find_connection_components_subcheck(
 		 */
 
 		if( *(tri-1) == 1 ){
-			SUBCHECK_PART6b(dPi,iPi,stepwidth,w,sh,s,z,swr); 
+			SUBCHECK_PART6b(dPi,iPi,stepwidth,w,sh,s,z,swr);
 		}else{
-			SUBCHECK_PART6a(dPi,iPi,stepwidth,w,sh,s,z,swr); 
+			SUBCHECK_PART6a(dPi,iPi,stepwidth,w,sh,s,z,swr);
 		}
 		*(tri-1) = 3;
 		*(tri) = 3; //redundant
 
 		/* Pointer is still on currrent element.*/
-		BLOB_INC_COMP_SIZE; 
+		BLOB_INC_COMP_SIZE;
 		/* Move pointer to 'next' row.*/
-		dPi += r+roi.x+sh1+swr+1; 
+		dPi += r+roi.x+sh1+swr+1;
 		iPi += r+roi.x+sh1+swr+1;
 		dR += sh; // Move border indizes to next row.
 		dR2 += sh;
@@ -780,7 +780,7 @@ Tree* find_connection_components_subcheck(
 #endif	
 		++tri;
 
-#if VERBOSE > 2 
+#if VERBOSE > 2
 		debug_print_matrix( ids, w, h, roi, 1, 1);
 		printf("Z:%i, S:%i, I:%i %i\n",z,s,dPi-dS, iPi-ids-(dS-data) );
 		debug_getline();
@@ -826,7 +826,7 @@ Tree* find_connection_components_subcheck(
 			//right border
 			SUBCHECK_TOPLEFT(dPi,iPi,stepwidth,w,sh,s,z);
 			//move pointer to 'next' row
-			dPi += r+roi.x+1; 
+			dPi += r+roi.x+1;
 			iPi += r+roi.x+1;
 #ifdef BLOB_DIMENSION
 			s = roi.x;
@@ -847,7 +847,7 @@ Tree* find_connection_components_subcheck(
 
 /* end of main algo */
 
-#if VERBOSE > 0 
+#if VERBOSE > 0
 //printf("Matrix of ids:\n");
 //print_matrix(ids,w,h);
 
@@ -864,7 +864,7 @@ if( stepwidth*stepheight >1 ){
 
 /* Postprocessing.
  * Sum up all areas with connecteted ids.
- * Then create nodes and connect them. 
+ * Then create nodes and connect them.
  * If BLOB_DIMENSION is set, detect
  * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
  * */
@@ -879,20 +879,20 @@ int tmp_id,tmp_id2, real_ids_size=0,l;
 	int* const real_ids_inv = workspace->real_ids_inv;
 
 #if 1
-	for(k=0;k<nids;k++){ 
+	for(k=0;k<nids;k++){
 
 		/* Sei F=comp_same. Wegen F(x)<=x folgt (F wird innerhalb dieser Schleife angepasst!)
 		 * F^2 = F^3 = ... = F^*
 		 * D.h. um die endgültige id zu finden muss comp_same maximal zweimal aufgerufen werden.
 		 * */
-		tmp_id = *(comp_same+k); 
+		tmp_id = *(comp_same+k);
 
 #if VERBOSE > 0
 		printf("%i: (%i->%i ",k,k,tmp_id);
 #endif
 		if( tmp_id != k ){
-			tmp_id = *(comp_same+tmp_id); 
-			*(comp_same+k) = tmp_id; 
+			tmp_id = *(comp_same+tmp_id);
+			*(comp_same+k) = tmp_id;
 #if VERBOSE > 0
 			printf("->%i ",tmp_id);
 #endif
@@ -905,7 +905,7 @@ int tmp_id,tmp_id2, real_ids_size=0,l;
 
 #ifdef BLOB_COUNT_PIXEL
 			//move area size to other id.
-			*(comp_size+tmp_id) += *(comp_size+k); 
+			*(comp_size+tmp_id) += *(comp_size+k);
 			*(comp_size+k) = 0;
 #endif
 
@@ -930,30 +930,30 @@ int tmp_id,tmp_id2, real_ids_size=0,l;
 
 	}
 #else
-/* Old approach: Attention, old version does not create 
+/* Old approach: Attention, old version does not create
  * the projection property of comp_same (cs). Here, only cs^2=cs^3.
  */
 	int found;
 	for(k=0;k<nids;k++){
 		tmp_id = k;
-		tmp_id2 = *(comp_same+tmp_id); 
+		tmp_id2 = *(comp_same+tmp_id);
 #if VERBOSE > 0
         printf("%i: (%i->%i) ",k,tmp_id,tmp_id2);
 #endif
 		while( tmp_id2 != tmp_id ){
-			tmp_id = tmp_id2; 
-			tmp_id2 = *(comp_same+tmp_id); 
+			tmp_id = tmp_id2;
+			tmp_id2 = *(comp_same+tmp_id);
 #if VERBOSE > 0
             printf("(%i->%i) ",tmp_id,tmp_id2);
 #endif
 		}
-#if VERBOSE > 0 
+#if VERBOSE > 0
 printf("\n");
 #endif
 
 #ifdef BLOB_COUNT_PIXEL
 			//move area size to other id.
-			*(comp_size+tmp_id2) += *(comp_size+k); 
+			*(comp_size+tmp_id2) += *(comp_size+k);
 			*(comp_size+k) = 0;
 #endif
 
@@ -1011,7 +1011,7 @@ printf("\n");
 	memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
 	curdata->area = roi.width * roi.height;
 #ifdef SAVE_DEPTH_MAP_VALUE
-	curdata->depth_level = 0; 
+	curdata->depth_level = 0;
 #endif
 	cur->data = curdata; // link to the data array.
 
@@ -1035,18 +1035,18 @@ printf("\n");
 		curdata->depth_level = 0; /* ??? without anchor not trivial.*/
 #endif
 
-		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area. 
+		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area.
 		if( tmp_id < 0 ){
 			/* Use root as parent node. */
 			//cur->parent = root;
 			add_child(root, cur );
 		}else{
 			//find real id of parent id.
-			tmp_id2 = *(comp_same+tmp_id); 
+			tmp_id2 = *(comp_same+tmp_id);
 			while( tmp_id != tmp_id2 ){
-				tmp_id = tmp_id2; 
-				tmp_id2 = *(comp_same+tmp_id); 
-			} 
+				tmp_id = tmp_id2;
+				tmp_id2 = *(comp_same+tmp_id);
+			}
 			/*Now, tmp_id is in real_id array. And real_ids_inv is defined. */
 			//cur->parent = root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id );
 			add_child( root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id ),
@@ -1104,11 +1104,11 @@ printf("\n");
 }
 
 #undef stepheight
-#endif // BLOB_SUBGRID_CHECK 
+#endif // BLOB_SUBGRID_CHECK
 
 
-void threshtree_find_blobs( Blobtree *blob, 
-		const unsigned char *data, 
+void threshtree_find_blobs( Blobtree *blob,
+		const unsigned char *data,
 		const int w, const int h,
 		const BlobtreeRect roi,
 		const unsigned char thresh,
@@ -1178,7 +1178,7 @@ void threshtree_filter_blob_ids(
 			cur = blobtree_next(blob);
 		}
 
-		// 2. Take all nodes which are mapped to 0 and 
+		// 2. Take all nodes which are mapped to 0 and
 		// search parent node with nonzero mapping.
 		// Start for index=i=2 because first node is dummy and second is root.
 		int pn, ri; //parent real id, read id of parent node
@@ -1188,7 +1188,7 @@ void threshtree_filter_blob_ids(
 				Node *pi = (blob->tree->root +ri)->parent;
 				while( pi != NULL ){
 					pn = nodeToFilteredNode[pi-root];
-					if( pn != 0 ){ 
+					if( pn != 0 ){
 						nodeToFilteredNode[ri] = pn;
 						break;
 					}

@@ -10,13 +10,13 @@
  *
 				if( *(dPi-sh) COND ){//same component as top neighbour
 					TOP_CHECK(...)
-					// check if left neighbour id can associate with top neigbour id. 
+					// check if left neighbour id can associate with top neigbour id.
 					if( *(dPi-stepwidth) > thresh ){
 						TOP_LEFT_COMP(...)
 					}
 				}else	if( *(dPi-stepwidth) > thresh ){//same component as left neighbour
 					LEFT_CHECK(...)
-					// check if diagonal neighbour id can associate with left neigbour id. 
+					// check if diagonal neighbour id can associate with left neigbour id.
 					if( *(dPi-sh+stepwidth) > thresh ){
 						LEFT_DIAG_COMP(...)
 					}
@@ -40,7 +40,7 @@
 #ifdef BLOB_COUNT_PIXEL
 #define COUNT(X) X;
 #define BLOB_REALLOC_COMP_SIZE comp_size = realloc(comp_size, max_comp*sizeof(int) );
-#define BLOB_INIT_COMP_SIZE *(comp_size+id) = 0; /*Increase now every pixel. => Can't start with 1 anymore. Overhead of |ids| operations */ 
+#define BLOB_INIT_COMP_SIZE *(comp_size+id) = 0; /*Increase now every pixel. => Can't start with 1 anymore. Overhead of |ids| operations */
 #define BLOB_INC_COMP_SIZE *(comp_size+*(iPi)) += 1;
 #else
 /* empty definitions */
@@ -56,7 +56,7 @@
 *(top_index+id) = z; \
 *(left_index+id) = s; \
 *(right_index+id) = s; \
-*(bottom_index+id) = z; 
+*(bottom_index+id) = z;
 
 #define BLOB_DIMENSION_LEFT(STEPWIDTH) \
 	/*	if( *( left_index+*(iPi) ) > s ) *( left_index+*(iPi) ) -= STEPWIDTH; */ \
@@ -68,11 +68,11 @@
 
 #define BLOB_DIMENSION_BOTTOM(STEPHEIGHT) \
 	/*	if( *( bottom_index+*(iPi) ) < z ) *( bottom_index+*(iPi) ) += STEPHEIGHT; */ \
-	if( *( bottom_index+*(iPi) ) < z ) *( bottom_index+*(iPi) ) = z; 
+	if( *( bottom_index+*(iPi) ) < z ) *( bottom_index+*(iPi) ) = z;
 
 #else
 /* empty definitions */
-#define SZ(X) 
+#define SZ(X)
 #define BLOB_INIT_INDEX_ARRAYS
 #define BLOB_DIMENSION_LEFT
 #define BLOB_DIMENSION_RIGHT
@@ -109,7 +109,7 @@ if( id>=max_comp ){ \
 		right_index = workspace->right_index; \
 		bottom_index = workspace->bottom_index; \
 		) \
-} 
+}
 
 
 #define TOP_CHECK(STEPHEIGHT,WIDTH) \
@@ -117,9 +117,9 @@ if( id>=max_comp ){ \
 /*	BLOB_INC_COMP_SIZE;*/ \
 BLOB_DIMENSION_BOTTOM(STEPHEIGHT);
 
-/* check if left neighbour id can associate with top neigbour id. */ 
-/* The diagonal and anti diagonal check is not ness. due to checks on top element.*/ 
-/* => g(f(x)) == g(f(y)) */ 
+/* check if left neighbour id can associate with top neigbour id. */
+/* The diagonal and anti diagonal check is not ness. due to checks on top element.*/
+/* => g(f(x)) == g(f(y)) */
 #define TOP_LEFT_COMP(STEPWIDTH) \
 	a1 = *(comp_same+*(iPi-STEPWIDTH)); \
 	a2 = *(comp_same+*(iPi  )); \
@@ -138,9 +138,9 @@ VPRINTF("(%i=>%i), (%i=>%i) (%i,%i), TOP_LEFT_COMP\n", *(iPi), a2, *(iPi-STEPWID
 #define LEFT_CHECK(STEPWIDTH) \
 	*(iPi) = *(iPi-STEPWIDTH); \
 /*BLOB_INC_COMP_SIZE;*/ \
-BLOB_DIMENSION_RIGHT(STEPWIDTH); 
+BLOB_DIMENSION_RIGHT(STEPWIDTH);
 
-/* check if left neighbour id can associate with diagonal neigbour id. */ 
+/* check if left neighbour id can associate with diagonal neigbour id. */
 #define LEFT_DIAG_COMP(STEPWIDTHRIGHT,WIDTH) \
 	a1 = *(comp_same+*(iPi-WIDTH+STEPWIDTHRIGHT)); \
 	a2 = *(comp_same+*(iPi    )); \
@@ -154,17 +154,17 @@ VPRINTF("(%i=>%i), (%i=>%i) changed to ", *(iPi), a2, *(iPi+STEPWIDTHRIGHT-WIDTH
 		*(comp_same+a1) = a2; \
 		*(comp_same+ *(iPi-WIDTH+STEPWIDTHRIGHT) ) = a2; \
 VPRINTF("(%i=>%i), (%i=>%i) (%i,%i), LEFT_DIAG_COMP\n", *(iPi), a2, *(iPi+STEPWIDTHRIGHT-WIDTH),a2,s,z);  \
-	} 
+	}
 
 
 #define ANTI_DIAG_CHECK(STEPWIDTH,STEPHEIGHT,WIDTH) \
 	*(iPi) = *(iPi-WIDTH-STEPWIDTH); \
 /*BLOB_INC_COMP_SIZE;*/ \
 BLOB_DIMENSION_RIGHT(STEPWIDTH); \
-BLOB_DIMENSION_BOTTOM(STEPHEIGHT); 
+BLOB_DIMENSION_BOTTOM(STEPHEIGHT);
 
 
-/* check if diagonal neighbour id can associate with anti diagonal neigbour id.*/ 
+/* check if diagonal neighbour id can associate with anti diagonal neigbour id.*/
 #define ANTI_DIAG_COMP(STEPWIDTHRIGHT,WIDTH) \
 	a1 = *(comp_same+*(iPi-WIDTH+STEPWIDTHRIGHT)); \
 	a2 = *(comp_same+*(iPi    )); \
@@ -185,7 +185,7 @@ VPRINTF("(%i=>%i), (%i=>%i) (%i,%i), ANTI_DIAG_COMP\n", *(iPi),a2 , *(iPi+STEPWI
 	*(iPi) = *(iPi-WIDTH+STEPWIDTH); \
 /*BLOB_INC_COMP_SIZE;*/ \
 BLOB_DIMENSION_LEFT(STEPWIDTH); \
-BLOB_DIMENSION_BOTTOM(STEPHEIGHT); 
+BLOB_DIMENSION_BOTTOM(STEPHEIGHT);
 
 
 
@@ -195,7 +195,7 @@ BLOB_DIMENSION_BOTTOM(STEPHEIGHT);
 			/* check if diag neighbour id can associate with left neighbour id.*/ \
 			if( *(DPI-W+1) COMP thresh ){ \
 				LEFT_DIAG_COMP(1,W); \
-			} 
+			}
 
 #define BLOB_DIAGONAL_CHECK_2a(DPI,IPI,STEPWIDTH,W,SH,S,Z,COMP) \
 	else	if( *(DPI-W-1) COMP thresh ){/* same component as anti diagonal neighbour */ \
@@ -218,7 +218,7 @@ else	if( *(DPI-W-1) COMP thresh ){/* same component as anti diagonal neighbour *
 
 #else
 /* empty definitions */
-#define BLOB_DIAGONAL_CHECK_1(DPI,IPI,STEPWIDTH,W,SH,S,Z,COMP) 
+#define BLOB_DIAGONAL_CHECK_1(DPI,IPI,STEPWIDTH,W,SH,S,Z,COMP)
 #define BLOB_DIAGONAL_CHECK_2a(DPI,IPI,STEPWIDTH,W,SH,S,Z,COMP)
 #define BLOB_DIAGONAL_CHECK_2b(DPI,IPI,STEPWIDTH,W,SH,S,Z,COMP)
 #define BLOB_DIAGONAL_CHECK_3(DPI,IPI,STEPWIDTH,W,SH,S,Z,COMP)
@@ -226,12 +226,12 @@ else	if( *(DPI-W-1) COMP thresh ){/* same component as anti diagonal neighbour *
 
 
 
-/* Macros for subchecks 
+/* Macros for subchecks
  * Important: After the subcheck macros
- *	SUBCHECK_PART{1|2a|2b|3|4a|4b} 
+ *	SUBCHECK_PART{1|2a|2b|3|4a|4b}
  * dPi, iPi points to the same element
  * as before the macro was called. For
- *	SUBCHECK_PART{NONE} 
+ *	SUBCHECK_PART{NONE}
  *	it Points to dPi+1, iPi+1.
  * */
 
@@ -648,7 +648,7 @@ if( *(DPI) > thresh ){ \
 
 /* Check of row with top check */
 /* Handle positions x, look at ones and x's. X mark DPI pointer.
- * 0   00000 
+ * 0   00000
  *      001
  *      01
  *      1

@@ -25,6 +25,6 @@ if( id>=max_comp ){ \
 		right_index = workspace->right_index; \
 		bottom_index = workspace->bottom_index; \
 		) \
-} 
+}
 
 
