@@ -79,7 +79,6 @@ void depthtree_filter_blob_ids(
 		);
 
 FORCEINLINE
-static
 Tree* find_depthtree(
 		const unsigned char *data,
 		const int w, const int h,

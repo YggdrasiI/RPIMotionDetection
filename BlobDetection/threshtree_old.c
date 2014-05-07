@@ -1,8 +1,30 @@
 //some old stuff
+#include "threshtree_macros.h"
 #include "threshtree_macros_old.h"
 
-
 Tree* find_connection_components_coarse(
+		const unsigned char *data,
+		const int w, const int h,
+		const BlobtreeRect roi,
+		const unsigned char thresh,
+		const int stepwidth,
+		const int stepheight,
+		Blob **tree_data,
+		ThreshtreeWorkspace *workspace )
+{
+	if( stepwidth == 1 && stepheight == 1 ){
+		return find_connection_components_coarse2(data,w,h,roi,thresh,
+				1,1,
+				tree_data, workspace);
+	}else{
+		return find_connection_components_coarse2(data,w,h,roi,thresh,
+				stepwidth,stepheight
+				,tree_data, workspace);
+	}
+}
+
+FORCEINLINE
+Tree* find_connection_components_coarse2(
 		const unsigned char *data,
 		const int w, const int h,
 		const BlobtreeRect roi,
@@ -88,8 +110,9 @@ Tree* find_connection_components_coarse(
 
 	/**** A,A'-CASE *****/
 	//top, left corner of BlobtreeRect get first id.
-	NEW_COMPONENT_OLD(-1)
-		iPi += stepwidth;
+	NEW_COMPONENT_OLD(-1);
+	BLOB_INC_COMP_SIZE; 
+	iPi += stepwidth;
 	dPi += stepwidth;
 
 #ifdef BLOB_DIMENSION
@@ -119,6 +142,7 @@ Tree* find_connection_components_coarse(
 				NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 			}
 		}
+		BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 		s += stepwidth;
 #endif
@@ -148,6 +172,7 @@ Tree* find_connection_components_coarse(
 				NEW_COMPONENT_OLD( *(iPi-swr) )
 			}
 		}
+	BLOB_INC_COMP_SIZE; 
 	}
 
 	//move pointer to 'next' row
@@ -188,6 +213,7 @@ Tree* find_connection_components_coarse(
 			}
 		}
 
+		BLOB_INC_COMP_SIZE; 
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -258,6 +284,7 @@ Tree* find_connection_components_coarse(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
+			BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 			s += stepwidth;
 #endif
@@ -304,6 +331,7 @@ Tree* find_connection_components_coarse(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
+			BLOB_INC_COMP_SIZE; 
 
 		}else{
 			//structure: (dPi-stepwidth),(dPi),(dPi+swr)
@@ -366,6 +394,7 @@ Tree* find_connection_components_coarse(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
+			BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 			s+=swr;
 #endif
@@ -410,6 +439,7 @@ Tree* find_connection_components_coarse(
 			}
 		}//end of else case of (dR2==dR)
 
+		BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 		s=roi.x;
 		z += stepheight;
@@ -451,11 +481,12 @@ Tree* find_connection_components_coarse(
 			}
 		}
 
-		iPi += stepwidth;
-		dPi += stepwidth;
+		BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 		s += stepwidth;
 #endif
+		iPi += stepwidth;
+		dPi += stepwidth;
 
 		/*inner elements till last colum before dR2 reached.
 		 * => Lefthand tests with -stepwidth
@@ -522,6 +553,7 @@ Tree* find_connection_components_coarse(
 				}
 			}
 
+			BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 			s += stepwidth;
 #endif
@@ -567,6 +599,7 @@ Tree* find_connection_components_coarse(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
+			BLOB_INC_COMP_SIZE; 
 
 		}else{
 			//structure: (dPi-stepwidth),(dPi),(dPi+swr)
@@ -630,11 +663,12 @@ Tree* find_connection_components_coarse(
 				}
 			}
 
-			iPi+=swr;
-			dPi+=swr;
+			BLOB_INC_COMP_SIZE; 
 #ifdef BLOB_DIMENSION
 			s+=swr;
 #endif
+			iPi+=swr;
+			dPi+=swr;
 
 			//right border, not check diag element
 			if( *(dPi) > thresh ){
@@ -673,6 +707,7 @@ Tree* find_connection_components_coarse(
 				}
 			}
 
+			BLOB_INC_COMP_SIZE; 
 		}//end of else case of (dR2==dR)
 
 	} //end of if(dE2==dE)
@@ -692,12 +727,11 @@ Tree* find_connection_components_coarse(
 	/* Postprocessing.
 	 * Sum up all areas with connecteted ids.
 	 * Then create nodes and connect them. 
-	 * If BLOB_DIMENSION is set, detectet
-	 * maximal limits in [left|right|bottom]_index(*(real_ids+X)).
+	 * If BLOB_DIMENSION is set, detect
+	 * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
 	 * */
 	int nids = id+1; //number of ids
 	int tmp_id,tmp_id2, real_ids_size=0,l;
-	int found;
 
 	free(workspace->real_ids);
 	workspace->real_ids = calloc( nids, sizeof(int) ); //store join of ids.
@@ -707,6 +741,62 @@ Tree* find_connection_components_coarse(
 	workspace->real_ids_inv = calloc( nids, sizeof(int) ); //store for every id with position in real_id link to it's position.
 	int* const real_ids_inv = workspace->real_ids_inv;
 
+#if 1
+	for(k=0;k<nids;k++){ 
+
+		/* Sei F=comp_same. Wegen F(x)<=x folgt (F wird innerhalb dieser Schleife angepasst!)
+		 * F^2 = F^3 = ... = F^*
+		 * D.h. um die endgültige id zu finden muss comp_same maximal zweimal aufgerufen werden.
+		 * */
+		tmp_id = *(comp_same+k); 
+
+#if VERBOSE > 0
+		printf("%i: (%i->%i ",k,k,tmp_id);
+#endif
+		if( tmp_id != k ){
+			tmp_id = *(comp_same+tmp_id); 
+			*(comp_same+k) = tmp_id; 
+#if VERBOSE > 0
+			printf("->%i ",tmp_id);
+#endif
+		}
+#if VERBOSE > 0
+		printf(")\n");
+#endif
+
+		if( tmp_id != k ){
+
+#ifdef BLOB_COUNT_PIXEL
+			//move area size to other id.
+			*(comp_size+tmp_id) += *(comp_size+k); 
+			*(comp_size+k) = 0;
+#endif
+
+#ifdef BLOB_DIMENSION
+			//update dimension
+			if( *( top_index+tmp_id ) > *( top_index+k ) )
+				*( top_index+tmp_id ) = *( top_index+k );
+			if( *( left_index+tmp_id ) > *( left_index+k ) )
+				*( left_index+tmp_id ) = *( left_index+k );
+			if( *( right_index+tmp_id ) < *( right_index+k ) )
+				*( right_index+tmp_id ) = *( right_index+k );
+			if( *( bottom_index+tmp_id ) < *( bottom_index+k ) )
+				*( bottom_index+tmp_id ) = *( bottom_index+k );
+#endif
+
+		}else{
+			//Its a component id of a new area
+			*(real_ids+real_ids_size) = tmp_id;
+			*(real_ids_inv+tmp_id) = real_ids_size;//inverse function
+			real_ids_size++;
+		}
+
+	}
+#else
+/* Old approach: Attention, old version does not create 
+ * the projection property of comp_same (cs). Here, only cs^2=cs^3.
+ */
+	int found;
 	for(k=0;k<nids;k++){
 		tmp_id = k;
 		tmp_id2 = *(comp_same+tmp_id); 
@@ -759,7 +849,7 @@ Tree* find_connection_components_coarse(
 			real_ids_size++;
 		}
 	}
-
+#endif
 
 	/*
 	 * Generate tree structure
@@ -831,13 +921,36 @@ Tree* find_connection_components_coarse(
 
 	}
 
-	//sum up node areas
-#ifdef BLOB_COUNT_PIXEL
-	sum_areas(root->child, comp_size);
+	/* Evaluate exact areas of blobs for stepwidth==1
+	 * and try to approximate for stepwith>1. The
+	 * approximation requires a bounding box.
+	 * */
+#ifdef BLOB_DIMENSION
+	#ifdef BLOB_COUNT_PIXEL
+	if(stepwidth == 1){
+		sum_areas(root->child, comp_size);
+	}else{
+		approx_areas(tree, root->child, comp_size, stepwidth, stepheight);
+		//replace estimation with exact value for full image area
+		Blob* img = (Blob*)root->child->data;
+		img->area = img->roi.width * img->roi.height;
+	}
+	#else
+	set_area_prop(root->child);
+	#endif
+#else
+	#ifdef BLOB_COUNT_PIXEL
+	if(stepwidth == 1){
+		sum_areas(root->child, comp_size);
+	}else{
+		//this values can be completly wrong
+		fprintf(stderr,"(threshtree) Warning: Eval areas for stepwidth>1.\n");
+		sum_areas(root->child, comp_size);
+	}
+	#endif
 #endif
 
 #ifdef BLOB_SORT_TREE
-	//sort_tree(root->child);
 	sort_tree(root);
 #endif
 

@@ -1,5 +1,5 @@
-#ifndef BLOBTREE_MACROS
-#define BLOBTREE_MACROS
+#ifndef THRESHTREE_MACROS
+#define THRESHTREE_MACROS
 
 /*
  *
@@ -40,7 +40,7 @@
 #ifdef BLOB_COUNT_PIXEL
 #define COUNT(X) X;
 #define BLOB_REALLOC_COMP_SIZE comp_size = realloc(comp_size, max_comp*sizeof(int) );
-#define BLOB_INIT_COMP_SIZE *(comp_size+id) = 1;
+#define BLOB_INIT_COMP_SIZE *(comp_size+id) = 0; /*Increase now every pixel. => Can't start with 1 anymore. Overhead of |ids| operations */ 
 #define BLOB_INC_COMP_SIZE *(comp_size+*(iPi)) += 1;
 #else
 /* empty definitions */
@@ -114,7 +114,7 @@ if( id>=max_comp ){ \
 
 #define TOP_CHECK(STEPHEIGHT,WIDTH) \
 	*(iPi) = *(iPi-WIDTH); \
-	BLOB_INC_COMP_SIZE; \
+/*	BLOB_INC_COMP_SIZE;*/ \
 BLOB_DIMENSION_BOTTOM(STEPHEIGHT);
 
 /* check if left neighbour id can associate with top neigbour id. */ 
@@ -137,7 +137,7 @@ VPRINTF("(%i=>%i), (%i=>%i) (%i,%i), TOP_LEFT_COMP\n", *(iPi), a2, *(iPi-STEPWID
 
 #define LEFT_CHECK(STEPWIDTH) \
 	*(iPi) = *(iPi-STEPWIDTH); \
-BLOB_INC_COMP_SIZE; \
+/*BLOB_INC_COMP_SIZE;*/ \
 BLOB_DIMENSION_RIGHT(STEPWIDTH); 
 
 /* check if left neighbour id can associate with diagonal neigbour id. */ 
@@ -159,7 +159,7 @@ VPRINTF("(%i=>%i), (%i=>%i) (%i,%i), LEFT_DIAG_COMP\n", *(iPi), a2, *(iPi+STEPWI
 
 #define ANTI_DIAG_CHECK(STEPWIDTH,STEPHEIGHT,WIDTH) \
 	*(iPi) = *(iPi-WIDTH-STEPWIDTH); \
-BLOB_INC_COMP_SIZE; \
+/*BLOB_INC_COMP_SIZE;*/ \
 BLOB_DIMENSION_RIGHT(STEPWIDTH); \
 BLOB_DIMENSION_BOTTOM(STEPHEIGHT); 
 
@@ -183,7 +183,7 @@ VPRINTF("(%i=>%i), (%i=>%i) (%i,%i), ANTI_DIAG_COMP\n", *(iPi),a2 , *(iPi+STEPWI
 
 #define DIAG_CHECK(STEPWIDTH,STEPHEIGHT,WIDTH) \
 	*(iPi) = *(iPi-WIDTH+STEPWIDTH); \
-BLOB_INC_COMP_SIZE; \
+/*BLOB_INC_COMP_SIZE;*/ \
 BLOB_DIMENSION_LEFT(STEPWIDTH); \
 BLOB_DIMENSION_BOTTOM(STEPHEIGHT); 
 

@@ -30,7 +30,7 @@ void tree_destroy(Tree **ptree){
 /* Eval height and number of children for each Node */
 void gen_redundant_information(Node * const root, int *pheight, int *psilbings){
 	Node *node = root;
-	while( node != NULL ){
+	do{
 		/* Reset values */
 		node->height = 0;
 		node->width = 0;
@@ -49,7 +49,7 @@ void gen_redundant_information(Node * const root, int *pheight, int *psilbings){
 			node = node->silbing;
 			continue;
 		}else{
-			while( node != NULL ){
+			while( node->parent != NULL ){
 				if( node->parent->height < node->height+1 ){
 					node->parent->height = node->height+1;
 				}
@@ -57,11 +57,11 @@ void gen_redundant_information(Node * const root, int *pheight, int *psilbings){
 				if( node->silbing != NULL ){
 					node->parent->width++;
 					node = node->silbing;
-					continue;
+					break;
 				}
 			}
 		}
-	}
+	}while( node != root );
 
 }
 
@@ -136,7 +136,8 @@ void print_tree_filtered(Node *root, int shift, int minA){
 	//printf("%2i (w%i,h%i,a%2i) ",root->data.id, root->width, root->height, root->data.area);
 	//shift2+=9+4;
 #ifdef SAVE_DEPTH_MAP_VALUE
-	printf("%2i (lvl:%3i, a:%4i) ",data->id, data->depth_level, data->area);
+	//printf("%2i (lvl:%3i, a:%4i) ",data->id, data->depth_level, data->area);
+	printf("%2i (wxh:%3i, a:%4i) ",data->id, data->roi.width*data->roi.height, data->area);
 	shift2+=22;
 #else
 	printf("%2i (area:%4i) ",data->id, data->area);
@@ -265,14 +266,222 @@ void gen_tree_id(Node *root, int* id, int size){
 
 #ifdef BLOB_COUNT_PIXEL
 int sum_areas(const Node *root, int *comp_size){
+#if 1
+	Node *node = root;
+	Blob* data = (Blob*)node->data;
+	do{
+		data->area = *(comp_size + data->id );
+
+		/* To to next node. update parent node on uprising flank */
+		if( node->child != NULL ){
+			node = node->child;
+			data = (Blob*)node->data;
+			continue;
+		}else if( node->silbing != NULL ){
+			((Blob*)node->parent->data)->area += data->area;
+			node = node->silbing;
+			data = (Blob*)node->data;
+			continue;
+		}else{
+			while( node != root ){
+				((Blob*)node->parent->data)->area += data->area;
+				node = node->parent;
+				data = (Blob*)node->data;
+				if( node->silbing != NULL ){
+					node = node->silbing;
+					data = (Blob*)node->data;
+					break;
+				}
+			}
+		}
+	}while( node != root );
+	return data->area;
+#else
+	/* Recursive formulation */
     Blob* data = (Blob*)root->data;
 	int *val=&data->area;
 	*val = *(comp_size + data->id );
 	if( root->child != NULL) *val += sum_areas(root->child,comp_size);
 	if( root->silbing != NULL) return *val+sum_areas(root->silbing, comp_size);
 	else return *val;
-}
 #endif
+}
+
+#ifdef BLOB_DIMENSION
+
+/*
+ * Let i be the id of current blob. We search
+ * • A = Number of pixels of current blob.
+ *
+ * The Problem: We do not has information about
+ * every pixel because only the pixels of the coarse
+ * grid was processed.
+ *
+ * Solution: Use the counting on the coarse values
+ * and the bounding boxes to estimate the correct
+ * values. Use the fact, that bounding boxes of children
+ * propagate the correct values on subsets.
+ *
+ * Definition of algorithm:
+ *
+ * C - (Coarse) Bounding box of current blob
+ * F - (Fine) Bounding box(es) of child(ren) blob(s).
+ *  ┌──────┐
+ *  │┌─┐   │
+ *  ││F│ C │
+ *  │└─┘   │
+ *  └──────┘
+ *
+ * • coarse pixel: Pixel which is part of the coarse grid
+ *         => p.x%stepwidth = 0 = p.y%stepwidth
+ *
+ * • A_C - Area of coarse box a.k.a. number of pixels in this box.
+ * • A_F - Sum of areas of fine boxes.
+ * • N_C - Number of coarse pixels in C.
+ *         ( approx. A_C/stepwidth^2. )
+ * • N_F - Number of coarse pixels in all children bounding boxes. 
+ *
+ * • S_C - Number of coarse pixels in the blob.
+ *         ( This value would stored in data->area after the call 
+ *           of sum_areas, but we eval it on the fly, here. )
+ * • S_F - Number of coarse pixels of children blobs. 
+ *
+ * Fine bounding boxes are complete in the blob, thus
+ * => A = A_F + X
+ *
+ * Y := N_F - S_F is the number of coarse pixels in F which are not
+ *      in one of the children blobs.
+ *
+ * Estimation of X:
+ *
+ *	X = (A_C - A_F) * (S_C - Y)/(N_C - N_F)
+ *
+ * Moreover, S_C-Y = 2S_F + comp_size(i) - N_F.
+ *
+ * The algorithm loops over every node and eval
+ * 2S_F + comp_size(i) - N_F, which will stored in node->data->area.
+ * After all children of a node was processed the approimation
+ * starts, which will replace node->data->area.
+ * 
+ * */
+
+
+void approx_areas(const Tree* tree, const Node *startnode,
+		int* comp_size,
+		int stepwidth, int stepheight)
+{
+
+	Node *root = tree->root;
+	Node *node = startnode;
+	Blob* data = (Blob*)node->data;
+
+	if( node->child == NULL ){
+		//tree has only one node: startnode.
+		const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
+			*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+		const int A_C = (data->roi.width*data->roi.height);
+		data->area = A_C * ((float)data->area/N_C);
+		return;
+	}
+
+	/*store A_F= Sum of areas of children bounding boxes.
+	 * We use *(pA_F +(node-root) ) for access. Thus, we
+	 * need the root node of the tree as anchor (or doubles the array size) 
+	 * to avoid access errors.
+	 * */
+	int * const pA_F = (int*) calloc(tree->size, sizeof(int) );
+
+	do{
+		data->area = *(comp_size + data->id );
+#if VERBOSE > 1
+		printf("(tree.c, approx areas) Nodeindex: %i, comp_size=%i\n", node-root, data->area);
+#endif
+
+		/* To to next node. update parent node on uprising flank */
+		if( node->child != NULL ){
+			node = node->child;
+			data = (Blob*)node->data;
+			continue;
+		}else{
+#if VERBOSE > 1
+			printf("(tree.c, approx areas) Leaf, counter::%i\t", data->area);
+#endif
+			const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
+				*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+			const int A_C = (data->roi.width*data->roi.height);
+
+			/* Update parent node. N_C,A_C of this level is part of N_F, A_F from parent*/
+			((Blob*)node->parent->data)->area += (data->area <<1) - N_C;
+			*(pA_F + (node->parent - root) ) += A_C;
+
+int backup = data->area;
+
+			/*Eval approximation, use A = A_C * S_C/N_C (for leafs is A_F=N_F=S_F=0 ) */
+			if( N_C ){
+				data->area = A_C * ((float)data->area/N_C) + 0.5f;
+			}else{
+				data->area = 0;//area contains only subpixel 
+			}
+#if VERBOSE > 1
+			printf("\tApproximation:%i\n", data->area);
+			printf("(tree.c, approx areas) A_C = %i, S_C = %i, N_C = %i\n", A_C, backup, N_C);
+#endif
+		}
+
+		if( node->silbing != NULL ){
+			node = node->silbing;
+			data = (Blob*)node->data;
+			continue;
+		}else{
+
+			while( node != startnode ){
+
+				/*
+				 * All children of parent processed.
+				 * We can start the approximation for the parent node.
+				 * */
+				node = node->parent;
+				data = (Blob*)node->data;
+
+				const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
+					*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+				const int A_C = (data->roi.width*data->roi.height);
+
+				if( node!=startnode ){//required to avoid changes over startnode
+
+					/* Update parent node. N_C,A_C of this level is part of N_F, A_F from parent*/
+					((Blob*)node->parent->data)->area += (data->area <<1) - N_C;
+					*(pA_F + (node->parent - root) ) += A_C;
+				}
+#if VERBOSE > 1
+				printf("Area:%i\t", data->area);
+#endif
+
+				const int A_F = *(pA_F + (node - root) );
+				/* A = A_F + (A_C - A_F) * (2*S_F + comp_size(i) - N_F) */
+				if( N_C ){
+					data->area = A_F + (A_C - A_F) * ((float)data->area/N_C) +0.5f;
+				}else{
+					data->area = 0;//area contains only subpixel 
+				}
+#if VERBOSE > 1
+				printf("Box: %i \tApprox::%i\n",A_C, data->area);
+#endif
+
+				if( node->silbing != NULL ){
+					node = node->silbing;
+					data = (Blob*)node->data;
+					break;
+				}
+			}
+		}
+	}while( node != startnode );
+
+	free( pA_F);
+}
+#endif //BLOB_DIMENSION
+#endif //BLOB_COUNT_PIXEL
+
 
 #ifdef BLOB_DIMENSION
 /* Assume type(data) = Blob* */
@@ -298,8 +507,7 @@ void set_area_prop(Node * const root){
 		}
 	}while( node != root );
 
-#endif
-#if 0
+#else
 	/* Recursive formulation */
   Blob* data = (Blob*)root->data;
 	data->area = data->roi.width * data->roi.height;

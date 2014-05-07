@@ -9,6 +9,7 @@
 #include "threshtree.h"
 
 #include "threshtree_macros.h"
+#include "threshtree_macros_old.h"
 
 
 bool threshtree_create_workspace(
@@ -157,7 +158,7 @@ Tree* find_connection_components_roi(
 
 
 #ifdef BLOB_SUBGRID_CHECK 
-#define STEPHEIGHT stepwidth
+#define stepheight stepwidth
 Tree* find_connection_components_subcheck(
 		const unsigned char *data,
 		const int w, const int h,
@@ -208,7 +209,6 @@ Tree* find_connection_components_subcheck(
 	if( stepwidth < 2){
 		return find_connection_components_coarse(data,w,h,roi,thresh,1,1,tree_data, workspace);
 	}
-//    return find_connection_components_coarse(data,w,h,roi,thresh,stepwidth,stepwidth,tree_data);
 
 	//init
 	int r=w-roi.x-roi.width; //right border
@@ -220,9 +220,9 @@ Tree* find_connection_components_subcheck(
 	}
 
 	int swr = (roi.width-1)%stepwidth; // remainder of width/stepwidth;
-	int shr = (roi.height-1)%STEPHEIGHT; // remainder of height/stepheight;
-	int sh = STEPHEIGHT*w;
-	int sh1 = (STEPHEIGHT-1)*w;
+	int shr = (roi.height-1)%stepheight; // remainder of height/stepheight;
+	int sh = stepheight*w;
+	int sh1 = (stepheight-1)*w;
 //	int sh2 = shr*w;
 
 	int id=-1;//id for next component
@@ -265,7 +265,7 @@ Tree* find_connection_components_subcheck(
 	 *
 	 * */
 	const int triwidth = (roi.width-1)/stepwidth + 1;
-	const size_t triangle_len = (triwidth+1)* ( (roi.height-1)/STEPHEIGHT + 1);
+	const size_t triangle_len = (triwidth+1)* ( (roi.height-1)/stepheight + 1);
 	if( triangle_len  > workspace->triangle_len ){
 		free(workspace->triangle);
 		workspace->triangle = (unsigned char*) malloc( triangle_len	* sizeof(unsigned char) );
@@ -302,6 +302,7 @@ Tree* find_connection_components_subcheck(
 	/**** A,A'-CASE *****/
 	//top, left corner of BlobtreeRect get first id.
 	NEW_COMPONENT(-1);
+	BLOB_INC_COMP_SIZE; 
 	iPi += stepwidth;
 	dPi += stepwidth;
 
@@ -339,6 +340,7 @@ Tree* find_connection_components_subcheck(
 				*(tri-1)=2;
 			}
 		}
+		BLOB_INC_COMP_SIZE; 
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -348,13 +350,17 @@ Tree* find_connection_components_subcheck(
 	}
 
 	//now process last, bigger, cell. stepwidth+swr indizies left.
-	//SUBCHECK_ROW(dPi,iPi,stepwidth,w,sh,s,z,swr);
 	SUBCHECK_ROW(dPi,iPi,stepwidth,w,sh,s,z,swr);
 	*(tri-1)=2;
 	*(tri) = 9;//Dummy, unused value.
 
-	/* Pointer is stepwidth+swr behind currrent element.
-	 * Move pointer to 'next' row.*/
+	/* Pointer is swr behind currrent element.*/
+	//BLOB_INC_COMP_SIZE; would increase wrong element, omit macro
+#ifdef BLOB_COUNT_PIXEL
+	*(comp_size+*(iPi-swr)) += 1;
+#endif
+	 
+	/* Move pointer to 'next' row.*/
 	dPi += r+roi.x+sh1+1;
 	iPi += r+roi.x+sh1+1;
 
@@ -362,7 +368,7 @@ Tree* find_connection_components_subcheck(
 	dR2 += sh;
 #ifdef BLOB_DIMENSION
 	s=roi.x;
-	z += STEPHEIGHT;
+	z += stepheight;
 #endif	
 	++tri;
 
@@ -386,7 +392,7 @@ Tree* find_connection_components_subcheck(
 
 			switch( casenbr ){
 				case 0:{ /* no differences */
-								 TOP_CHECK(STEPHEIGHT, sh);
+								 TOP_CHECK(stepheight, sh);
 								 *(tri) = 0;
 								 break;
 							 }
@@ -407,6 +413,7 @@ Tree* find_connection_components_subcheck(
 			}
 		}
 
+		BLOB_INC_COMP_SIZE; 
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -495,7 +502,7 @@ Tree* find_connection_components_subcheck(
 				switch( casenbr) {
 					case 0:
 					case 8: {
-										TOP_CHECK(STEPHEIGHT, sh);
+										TOP_CHECK(stepheight, sh);
 										TOP_LEFT_COMP(stepwidth);
 										*(tri) = 0; //tri filled, quad not.
 										break;
@@ -610,7 +617,7 @@ Tree* find_connection_components_subcheck(
 				switch( casenbr ){
 					case 0:
 					case 8: {
-										TOP_CHECK(STEPHEIGHT, sh);
+										TOP_CHECK(stepheight, sh);
 										TOP_LEFT_COMP(stepwidth);
 										*(tri) = 0;
 										break;
@@ -731,6 +738,7 @@ Tree* find_connection_components_subcheck(
 			}
 
 
+			BLOB_INC_COMP_SIZE; 
 			dPi += stepwidth;
 			iPi += stepwidth;
 #ifdef BLOB_DIMENSION
@@ -759,15 +767,16 @@ Tree* find_connection_components_subcheck(
 		*(tri-1) = 3;
 		*(tri) = 3; //redundant
 
-		/* Pointer is still on currrent element.
-		 * Move pointer to 'next' row.*/
+		/* Pointer is still on currrent element.*/
+		BLOB_INC_COMP_SIZE; 
+		/* Move pointer to 'next' row.*/
 		dPi += r+roi.x+sh1+swr+1; 
 		iPi += r+roi.x+sh1+swr+1;
 		dR += sh; // Move border indizes to next row.
 		dR2 += sh;
 #ifdef BLOB_DIMENSION
 		s=roi.x;
-		z += STEPHEIGHT;
+		z += stepheight;
 #endif	
 		++tri;
 
@@ -785,7 +794,7 @@ Tree* find_connection_components_subcheck(
 	dR -= sh1;
 	dR2 -= sh1;
 #ifdef BLOB_DIMENSION
-	z -= STEPHEIGHT-1;
+	z -= stepheight-1;
 #endif
 
 #if VERBOSE > 1
@@ -796,6 +805,11 @@ Tree* find_connection_components_subcheck(
 
 	if( dE2 != dE ){
 		//Process elementwise till end of ROI reached.
+/* Note: This pixels are not influence the values of
+ *  comp_size because it doesn't made sense to mix up
+ *  the counting for coarse pixels and subgrid pixels.
+ *  All pixels below dE2 are only elements of the fine grid.
+ * */
 		for( ; dPi<dE ; ){
 			SUBCHECK_TOPDIAG(dPi,iPi,stepwidth,w,sh,s,z);
 			++dPi; ++iPi;
@@ -841,22 +855,21 @@ Tree* find_connection_components_subcheck(
 //print_matrix(comp_same, id+1, 1);
 debug_print_matrix( ids, w, h, roi, 1, 1);
 debug_print_matrix2( ids, comp_same, w, h, roi, 1, 1, 0);
-if( stepwidth*STEPHEIGHT >1 ){
-	debug_print_matrix( ids, w, h, roi, stepwidth, STEPHEIGHT);
+if( stepwidth*stepheight >1 ){
+	debug_print_matrix( ids, w, h, roi, stepwidth, stepheight);
 	//printf("\n\n");
-	debug_print_matrix2( ids, comp_same, w, h, roi, stepwidth, STEPHEIGHT, 0);
+	debug_print_matrix2( ids, comp_same, w, h, roi, stepwidth, stepheight, 0);
 }
 #endif
 
 /* Postprocessing.
  * Sum up all areas with connecteted ids.
  * Then create nodes and connect them. 
- * If BLOB_DIMENSION is set, detectet
- * maximal limits in [left|right|bottom]_index(*(real_ids+X)).
+ * If BLOB_DIMENSION is set, detect
+ * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
  * */
 int nids = id+1; //number of ids
 int tmp_id,tmp_id2, real_ids_size=0,l;
-//int found;
 	free(workspace->real_ids);
 	workspace->real_ids = calloc( nids, sizeof(int) ); //store join of ids.
 	int* const real_ids = workspace->real_ids;
@@ -916,12 +929,11 @@ int tmp_id,tmp_id2, real_ids_size=0,l;
 		}
 
 	}
-#endif
-
-#if 0
+#else
 /* Old approach: Attention, old version does not create 
  * the projection property of comp_same (cs). Here, only cs^2=cs^3.
  */
+	int found;
 	for(k=0;k<nids;k++){
 		tmp_id = k;
 		tmp_id2 = *(comp_same+tmp_id); 
@@ -1042,19 +1054,36 @@ printf("\n");
 		}
 
 	}
-#ifdef BLOB_COUNT_PIXEL
-	//sum up node areas
+
+	/* Evaluate exact areas of blobs for stepwidth==1
+	 * and try to approximate for stepwith>1. The
+	 * approximation requires a bounding box.
+	 * */
+#ifdef BLOB_DIMENSION
+	#ifdef BLOB_COUNT_PIXEL
 	if(stepwidth == 1){
 		sum_areas(root->child, comp_size);
+	}else{
+		approx_areas(tree, root->child, comp_size, stepwidth, stepheight);
+		//replace estimation with exact value for full image area
+		Blob* img = (Blob*)root->child->data;
+		img->area = img->roi.width * img->roi.height;
 	}
-#endif
-#ifdef BLOB_DIMENSION
-	if(stepwidth > 1){
-		/* comp_size values are not correct/not useable.
-		 * Use bounding box as approximation. */
-		set_area_prop(root->child);
+	#else
+	set_area_prop(root->child);
+	#endif
+#else
+	#ifdef BLOB_COUNT_PIXEL
+	if(stepwidth == 1){
+		sum_areas(root->child, comp_size);
+	}else{
+		//this values can be completly wrong
+		fprintf(stderr,"(threshtree) Warning: Eval areas for stepwidth>1.\n");
+		sum_areas(root->child, comp_size);
 	}
+	#endif
 #endif
+
 
 #ifdef BLOB_SORT_TREE
 	//sort_tree(root->child);
@@ -1074,9 +1103,8 @@ printf("\n");
 	return tree;
 }
 
-#undef STEPHEIGHT
-#endif
-
+#undef stepheight
+#endif // BLOB_SUBGRID_CHECK 
 
 
 void threshtree_find_blobs( Blobtree *blob, 

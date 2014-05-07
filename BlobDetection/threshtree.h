@@ -167,6 +167,17 @@ Tree* find_connection_components_coarse(
 		Blob **tree_data,
 		ThreshtreeWorkspace *workspace );
 
+/* Let compiler optimize code for fixed stepwidth and stepheight */
+FORCEINLINE
+Tree* find_connection_components_coarse2(
+		const unsigned char *data,
+		const int w, const int h,
+		const BlobtreeRect roi,
+		const unsigned char thresh,
+		const int stepwidth,
+		const int stepheight,
+		Blob **tree_data,
+		ThreshtreeWorkspace *workspace );
 
 #ifdef BLOB_SUBGRID_CHECK 
 /* Find Blobs. With flexible stepwidth and

@@ -147,7 +147,7 @@ int detection_loop(std::string filename ){
 	}
 
 	/* Textual output of whole tree of blobs. */
-	//print_tree(blob->tree->root,0);
+	print_tree(blob->tree->root,0);
 
 	return 0;
 }
@@ -357,8 +357,8 @@ static void redraw(){
 			cv::Rect cvRect(
 					max(roi->x-1,0),
 					max(roi->y-1,0),
-					roi->width+2,
-					roi->height+2
+					roi->width + (roi->x>0?2:1),
+					roi->height+ (roi->y>0?2:1)
 					);
 			cvRect.width = min(cvRect.width,
 					color.size().width - cvRect.x );
@@ -516,13 +516,13 @@ int main(int argc, char** argv )
 	createTrackbar( "Min Area Level:", window_options, &of_area_depth_min, 255, CB_Filter );
 	createTrackbar( "Max Area Level:", window_options, &of_area_depth_max, 255, CB_Filter );
 	//createTrackbar( "Scale:", window_options, &output_scalefactor, 8, CB_Filter );
-/*
+
 	createButton("Bounding boxes",CB_Button1,&display_bounding_boxes,CV_CHECKBOX, display_bounding_boxes );
 	createButton("Only leafs",CB_Button1,&of_only_leafs, CV_CHECKBOX, of_only_leafs );
 	createButton("Coloured ids",CB_Button1,&display_areas,CV_CHECKBOX, display_areas );
 	createButton("Only filtered coloured ids",CB_Button1,&display_filtered_areas,CV_CHECKBOX, display_filtered_areas );
 	createButton("Own filter",CB_Button1,&of_use_own_filter, CV_CHECKBOX, of_use_own_filter );
-*/
+
 	//Loop over list [Images] or [Image_Path, Images]
 	while( loop < loopMax ){
 

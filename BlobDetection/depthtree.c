@@ -154,7 +154,6 @@ void depthtree_destroy_workspace(
 }
 
 FORCEINLINE
-static
 Tree* find_depthtree(
 		const unsigned char *data,
 		const int w, const int h,
@@ -162,7 +161,7 @@ Tree* find_depthtree(
 		const unsigned char *depth_map,
 		const int stepwidth,
 		DepthtreeWorkspace *workspace,
-        Blob** tree_data )
+		Blob** tree_data )
 {
 
 //#define stepwidth 7 //speed up due faster addition for fixed stepwidth?!
@@ -552,8 +551,8 @@ Tree* find_depthtree(
     /* Postprocessing.
      * Sum up all areas with connecteted ids.
      * Then create nodes and connect them. 
-     * If BLOB_DIMENSION is set, detectet
-     * maximal limits in [left|right|bottom]_index(*(real_ids+X)).
+		 * If BLOB_DIMENSION is set, detect
+		 * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
      * */
     int nids = id+1; //number of ids
     int tmp_id,tmp_id2, real_ids_size=0,l;

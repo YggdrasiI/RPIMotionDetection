@@ -5,7 +5,7 @@
 /* *(anchors+id) = dPi-dS; */\
 *(prob_parent+id) = PARENTID; \
 *(comp_same+id) = id; \
-*(comp_size+id) = 1; \
+*(comp_size+id) = 0; /*Increase now every pixel. => Can't start with 1 anymore. Overhead of |ids| operations */ \
 *(left_index+id) = s; \
 *(right_index+id) = s; \
 *(top_index+id) = z; \

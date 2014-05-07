@@ -181,6 +181,11 @@ void gen_tree_id(Node *root, int* id, int size);
 
 #ifdef BLOB_COUNT_PIXEL
 int sum_areas(const Node *root, int *comp_size);
+#ifdef BLOB_DIMENSION
+void approx_areas(const Tree* tree, const Node *startnode,
+		int* comp_size,
+		int stepwidth, int stepheight);
+#endif
 #endif
 
 #ifdef BLOB_DIMENSION
