@@ -1,4 +1,11 @@
-//some old stuff
+
+#include <stdlib.h>
+#include <stdio.h>
+#include <time.h>
+#include <string.h> //for memset
+
+#include "threshtree.h"
+
 #include "threshtree_macros.h"
 #include "threshtree_macros_old.h"
 

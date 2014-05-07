@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 project(Bloblib)
 
-set(THRESH_SOURCES blob.c threshtree.c tree.c )
+set(THRESH_SOURCES blob.c threshtree.c tree.c threshtree_old.c )
 add_library(threshtree SHARED ${THRESH_SOURCES} )
 
 set(DEPTH_SOURCES blob.c depthtree.c tree.c )

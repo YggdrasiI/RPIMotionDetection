@@ -9,7 +9,7 @@
 #include "threshtree.h"
 
 #include "threshtree_macros.h"
-#include "threshtree_macros_old.h"
+//#include "threshtree_macros_old.h"
 
 
 bool threshtree_create_workspace(
@@ -154,7 +154,7 @@ Tree* find_connection_components_roi(
 }
 
 /* now include the old algo without subchecks ( find_connection_components_coarse ) */
-#include "threshtree_old.c"
+//#include "threshtree_old.c"
 
 
 #ifdef BLOB_SUBGRID_CHECK
