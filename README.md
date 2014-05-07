@@ -14,6 +14,14 @@ Compiling:
 	cmake [-DCMAKE_BUILD_TYPE=Release] ..
 	make
 
+	If you compile on the RPi: Please note that the compiling 
+	of the release version (-O3) requires a big amount of memory.
+  Reduce the memory for the gpu at 64MB (config.txt) or enable the
+	swapping file (very slow).
+
+
 Execute:
-	./DisplayBlobs [path] [thresh]
+	./DisplayBlobs [algorithm number] [path] [thresh] [stepwidth]
+
+		- algorithm number should be 0 or 1.
 
