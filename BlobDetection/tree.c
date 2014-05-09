@@ -376,7 +376,7 @@ int sum_areas(Node * const root, const int * const comp_size){
  * starts, which will replace node->data->area.
  *
  * */
-
+static inline int number_of_coarse_roi(BlobtreeRect* roi, int sw, int sh);
 
 void approx_areas(const Tree * const tree, Node * const startnode,
 		int* comp_size,
@@ -389,8 +389,7 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 
 	if( node->child == NULL ){
 		//tree has only one node: startnode.
-		const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
-			*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+		const int N_C = number_of_coarse_roi(&data->roi, stepwidth, stepheight);
 		const int A_C = (data->roi.width*data->roi.height);
 		data->area = A_C * ((float)data->area/N_C);
 		return;
@@ -413,9 +412,12 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 			continue;
 		}
 
-		const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
-			*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+		printf("Id: %i Roi: (%i,%i,%i,%i)\n",data->id,
+				data->roi.x, data->roi.y, data->roi.width, data->roi.height);
+		const int N_C = number_of_coarse_roi(&data->roi, stepwidth, stepheight);
 		const int A_C = (data->roi.width*data->roi.height);
+		printf("N_C=%i, A_C=%i\n\n", N_C, A_C);
+
 
 		/* Update parent node. N_C,A_C of this level is part of N_F, A_F from parent*/
 		((Blob*)node->parent->data)->area += (data->area <<1) - N_C;
@@ -442,8 +444,7 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 			node = node->parent;
 			data = (Blob*)node->data;
 
-			const int N_C = ((data->roi.width + 1 - (data->roi.x % stepwidth) )/stepwidth)
-				*((data->roi.height + 1 - (data->roi.y % stepheight) )/stepheight);
+			const int N_C = number_of_coarse_roi(&data->roi, stepwidth, stepheight);
 			const int A_C = (data->roi.width*data->roi.height);
 
 			if( node!=startnode ){//required to avoid changes over startnode
@@ -471,6 +472,38 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 
 	free( pA_F);
 }
+
+/* Returns the number of coarse pixels of a roi, see sketch for 
+	 stepwidth=3=stepheight, W=10=H and roi={4,0,4,7}:
+
+	 x - - 0 1 0 0 - x -
+	 - - - 0 0 0 0 - - -
+	 - - - 0 0 0 0 - - -
+	 - - - 0 0 0 0 - - -
+	 x - - 0 1 0 0 - x -
+	 - - - 0 0 0 0 - - -
+	 - - - 0 0 0 0 - - -
+	 - - - - - - - - - -
+	 x - - - x - - - x -
+	 - - - - - - - - - -
+*/
+static inline int number_of_coarse_roi(BlobtreeRect* roi, int sw, int sh){
+	/* Note:
+	 * Three steps for each dimension of [a1,b1]x[a2,b2], a_i < b_i (not <= !)
+	 * 1. Shift roi to [0,b-a]
+	 * 2. Decrease length if startpoint is not on coarse grid (a%sw!=0)
+	 *    => [0,b-a-m]
+	 * 3. Divide by stepwidth, stepheight [0,(b-a-m)/sw]
+	 * 4. Transform   (0) 0 0 1 1 1 2 2 2 … (Interval length remainder)
+	 *            to  (1) 1 1 2 2 2 3 3 3
+	 *            (This will be done by adding sw-1 before step 3.)
+	 *    
+	 * Do not cut of +sw in (... +sw)%sw because -1%sw = -1 != sw-1 !!
+	 * */
+	return (  (roi->width + sw-1 - (sw-1-(roi->x +sw-1 )%sw)  ) /sw)
+		*(  (roi->height + sh-1 - (sh-1-(roi->y +sh-1 )%sh)  ) /sh);
+}
+
 #endif //BLOB_DIMENSION
 #endif //BLOB_COUNT_PIXEL
 
