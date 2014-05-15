@@ -1,0 +1,1 @@
+/usr/bin/gcc  -O3 -DNDEBUG    CMakeFiles/raspivid.dir/RaspiCamControl.c.o CMakeFiles/raspivid.dir/RaspiCLI.c.o CMakeFiles/raspivid.dir/RaspiPreview.c.o CMakeFiles/raspivid.dir/RaspiVid.c.o  -o raspivid -rdynamic -L/opt/vc/lib -lmmal_core -lmmal_util -lmmal_vc_client -lvcos -lbcm_host -Wl,-rpath,/opt/vc/lib: 
