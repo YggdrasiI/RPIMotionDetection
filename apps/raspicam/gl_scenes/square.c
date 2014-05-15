@@ -101,7 +101,7 @@ static int square_redraw(RASPITEX_STATE *state)
    /* Bind the OES texture which is used to render the camera preview */
    GLCHK(glBindTexture(GL_TEXTURE_EXTERNAL_OES, state->texture));
    glLoadIdentity();
-   glRotatef(angle, 0.0, 0.0, 1.0);
+   //glRotatef(angle, 0.0, 0.0, 1.0);
    glEnableClientState(GL_VERTEX_ARRAY);
    glVertexPointer(3, GL_FLOAT, 0, vertices);
    glDisableClientState(GL_COLOR_ARRAY);

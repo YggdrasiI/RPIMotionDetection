@@ -17,7 +17,7 @@ target_link_libraries(example2 depthtree )
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpic -O3" )
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -g -O0 -fmax-errors=3 -w" )
 
-install(TARGETS threshtree depthtree example1
+install(TARGETS threshtree depthtree example1 example2
 	RUNTIME DESTINATION bin
 	LIBRARY DESTINATION lib
 	)

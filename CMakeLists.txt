@@ -16,9 +16,9 @@ execute_process( COMMAND "mkdir" "build"
 execute_process( COMMAND "${CMAKE_COMMAND}" "-DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}" ".."
 	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection/build"
 )
-execute_process( COMMAND make
-	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection/build"
-)
+#execute_process( COMMAND make
+#	WORKING_DIRECTORY "${CMAKE_HOME_DIRECTORY}/BlobDetection/build"
+#)
 
 # Add blobdetection library
 set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} ${CMAKE_HOME_DIRECTORY}/BlobDetection/build )
@@ -30,7 +30,7 @@ message(STATUS ${DEPTHLIB})
 add_custom_command(TARGET DisplayBlobs
 	PRE_BUILD
 	COMMAND make
-	WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/BlobDetection/build)
+	WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/BlobDetection/build )
 
 
 include_directories(${CMAKE_HOME_DIRECTORY}/BlobDetection)
@@ -39,3 +39,4 @@ target_link_libraries( DisplayBlobs
 	${DEPTHLIB}
 	)
 
+add_subdirectory(apps)

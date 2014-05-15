@@ -1077,6 +1077,15 @@ static void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
             }
          }
       }
+
+			//Debug: Reset parameter
+			pData->pstate->camera_parameters.awbMode = MMAL_PARAM_AWBMODE_CLOUDY;
+			pData->pstate->camera_parameters.shutter_speed = 10000;//ganz falsch?!
+			pData->pstate->camera_parameters.brightness = 50;
+			pData->pstate->camera_parameters.awb_gains_r = 1.5;
+			pData->pstate->camera_parameters.awb_gains_b = 1.2;
+			raspicamcontrol_set_all_parameters(pData->pstate->camera_component, &pData->pstate->camera_parameters);
+
    }
    else
    {

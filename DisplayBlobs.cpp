@@ -5,7 +5,7 @@
 #include "threshtree.h"
 #include "depthtree.h"
 
-#include "Fps.h"
+#include "fps.h"
 
 using namespace cv;
 
@@ -420,6 +420,7 @@ static void CB_Button1(int state, void* pointer){
 void ctrl_c_handler(int s){
 	printf("Caught signal %d\n",s);
 
+	/* Thats not necessary … */
 	depthtree_destroy_workspace( &dworkspace );
 	threshtree_destroy_workspace( &tworkspace );
 	blobtree_destroy(&blob);
@@ -516,13 +517,13 @@ int main(int argc, char** argv )
 	createTrackbar( "Min Area Level:", window_options, &of_area_depth_min, 255, CB_Filter );
 	createTrackbar( "Max Area Level:", window_options, &of_area_depth_max, 255, CB_Filter );
 	//createTrackbar( "Scale:", window_options, &output_scalefactor, 8, CB_Filter );
-
+/*
 	createButton("Bounding boxes",CB_Button1,&display_bounding_boxes,CV_CHECKBOX, display_bounding_boxes );
 	createButton("Only leafs",CB_Button1,&of_only_leafs, CV_CHECKBOX, of_only_leafs );
 	createButton("Coloured ids",CB_Button1,&display_areas,CV_CHECKBOX, display_areas );
 	createButton("Only filtered coloured ids",CB_Button1,&display_filtered_areas,CV_CHECKBOX, display_filtered_areas );
 	createButton("Own filter",CB_Button1,&of_use_own_filter, CV_CHECKBOX, of_use_own_filter );
-
+*/
 	//Loop over list [Images] or [Image_Path, Images]
 	while( loop < loopMax ){
 

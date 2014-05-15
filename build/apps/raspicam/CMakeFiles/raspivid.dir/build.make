@@ -141,12 +141,252 @@ apps/raspicam/CMakeFiles/raspivid.dir/RaspiVid.c.o.provides: apps/raspicam/CMake
 
 apps/raspicam/CMakeFiles/raspivid.dir/RaspiVid.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/RaspiVid.c.o
 
+apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o: ../apps/raspicam/main.cpp
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_5)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building CXX object apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/c++   $(CXX_DEFINES) $(CXX_FLAGS) -o CMakeFiles/raspivid.dir/main.cpp.o -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/main.cpp
+
+apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/raspivid.dir/main.cpp.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/main.cpp > CMakeFiles/raspivid.dir/main.cpp.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/raspivid.dir/main.cpp.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/c++  $(CXX_DEFINES) $(CXX_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/main.cpp -o CMakeFiles/raspivid.dir/main.cpp.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o: ../apps/raspicam/RaspiTex.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_6)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/RaspiTex.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/RaspiTex.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/RaspiTex.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/RaspiTex.c > CMakeFiles/raspivid.dir/RaspiTex.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/RaspiTex.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/RaspiTex.c -o CMakeFiles/raspivid.dir/RaspiTex.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o: ../apps/raspicam/RaspiTexUtil.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_7)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/RaspiTexUtil.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/RaspiTexUtil.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/RaspiTexUtil.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/RaspiTexUtil.c > CMakeFiles/raspivid.dir/RaspiTexUtil.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/RaspiTexUtil.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/RaspiTexUtil.c -o CMakeFiles/raspivid.dir/RaspiTexUtil.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o: ../apps/raspicam/tga.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_8)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/tga.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/tga.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/tga.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/tga.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/tga.c > CMakeFiles/raspivid.dir/tga.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/tga.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/tga.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/tga.c -o CMakeFiles/raspivid.dir/tga.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o: ../apps/raspicam/gl_scenes/models.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_9)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/gl_scenes/models.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/models.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/gl_scenes/models.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/models.c > CMakeFiles/raspivid.dir/gl_scenes/models.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/gl_scenes/models.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/models.c -o CMakeFiles/raspivid.dir/gl_scenes/models.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o: ../apps/raspicam/gl_scenes/mirror.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_10)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/mirror.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/gl_scenes/mirror.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/mirror.c > CMakeFiles/raspivid.dir/gl_scenes/mirror.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/gl_scenes/mirror.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/mirror.c -o CMakeFiles/raspivid.dir/gl_scenes/mirror.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o: ../apps/raspicam/gl_scenes/yuv.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_11)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/yuv.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/gl_scenes/yuv.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/yuv.c > CMakeFiles/raspivid.dir/gl_scenes/yuv.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/gl_scenes/yuv.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/yuv.c -o CMakeFiles/raspivid.dir/gl_scenes/yuv.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o: ../apps/raspicam/gl_scenes/sobel.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_12)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/sobel.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/gl_scenes/sobel.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/sobel.c > CMakeFiles/raspivid.dir/gl_scenes/sobel.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/gl_scenes/sobel.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/sobel.c -o CMakeFiles/raspivid.dir/gl_scenes/sobel.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o: ../apps/raspicam/gl_scenes/square.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_13)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/gl_scenes/square.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/square.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/gl_scenes/square.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/square.c > CMakeFiles/raspivid.dir/gl_scenes/square.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/gl_scenes/square.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/square.c -o CMakeFiles/raspivid.dir/gl_scenes/square.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o: apps/raspicam/CMakeFiles/raspivid.dir/flags.make
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o: ../apps/raspicam/gl_scenes/teapot.c
+	$(CMAKE_COMMAND) -E cmake_progress_report /home/olaf/software/camera/RPIMotionDetection/build/CMakeFiles $(CMAKE_PROGRESS_14)
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Building C object apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -o CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o   -c /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/teapot.c
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing C source to CMakeFiles/raspivid.dir/gl_scenes/teapot.c.i"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -E /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/teapot.c > CMakeFiles/raspivid.dir/gl_scenes/teapot.c.i
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling C source to assembly CMakeFiles/raspivid.dir/gl_scenes/teapot.c.s"
+	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && /usr/bin/gcc  $(C_DEFINES) $(C_FLAGS) -S /home/olaf/software/camera/RPIMotionDetection/apps/raspicam/gl_scenes/teapot.c -o CMakeFiles/raspivid.dir/gl_scenes/teapot.c.s
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.requires:
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.requires
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.provides: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.requires
+	$(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.provides.build
+.PHONY : apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.provides
+
+apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.provides.build: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o
+
 # Object files for target raspivid
 raspivid_OBJECTS = \
 "CMakeFiles/raspivid.dir/RaspiCamControl.c.o" \
 "CMakeFiles/raspivid.dir/RaspiCLI.c.o" \
 "CMakeFiles/raspivid.dir/RaspiPreview.c.o" \
-"CMakeFiles/raspivid.dir/RaspiVid.c.o"
+"CMakeFiles/raspivid.dir/RaspiVid.c.o" \
+"CMakeFiles/raspivid.dir/main.cpp.o" \
+"CMakeFiles/raspivid.dir/RaspiTex.c.o" \
+"CMakeFiles/raspivid.dir/RaspiTexUtil.c.o" \
+"CMakeFiles/raspivid.dir/tga.c.o" \
+"CMakeFiles/raspivid.dir/gl_scenes/models.c.o" \
+"CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o" \
+"CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o" \
+"CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o" \
+"CMakeFiles/raspivid.dir/gl_scenes/square.c.o" \
+"CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o"
 
 # External object files for target raspivid
 raspivid_EXTERNAL_OBJECTS =
@@ -155,9 +395,19 @@ apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/RaspiCamControl.c.
 apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/RaspiCLI.c.o
 apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/RaspiPreview.c.o
 apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/RaspiVid.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o
+apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o
 apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/build.make
 apps/raspicam/raspivid: apps/raspicam/CMakeFiles/raspivid.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking C executable raspivid"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --red --bold "Linking CXX executable raspivid"
 	cd /home/olaf/software/camera/RPIMotionDetection/build/apps/raspicam && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/raspivid.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.
@@ -168,6 +418,16 @@ apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivi
 apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/RaspiCLI.c.o.requires
 apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/RaspiPreview.c.o.requires
 apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/RaspiVid.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o.requires
+apps/raspicam/CMakeFiles/raspivid.dir/requires: apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o.requires
 .PHONY : apps/raspicam/CMakeFiles/raspivid.dir/requires
 
 apps/raspicam/CMakeFiles/raspivid.dir/clean:

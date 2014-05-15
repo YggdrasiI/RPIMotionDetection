@@ -225,6 +225,54 @@ RaspiPreview.c.s:
 	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiPreview.c.s
 .PHONY : RaspiPreview.c.s
 
+RaspiTex.o: RaspiTex.c.o
+.PHONY : RaspiTex.o
+
+# target to build an object file
+RaspiTex.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.o
+.PHONY : RaspiTex.c.o
+
+RaspiTex.i: RaspiTex.c.i
+.PHONY : RaspiTex.i
+
+# target to preprocess a source file
+RaspiTex.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.i
+.PHONY : RaspiTex.c.i
+
+RaspiTex.s: RaspiTex.c.s
+.PHONY : RaspiTex.s
+
+# target to generate assembly for a file
+RaspiTex.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTex.c.s
+.PHONY : RaspiTex.c.s
+
+RaspiTexUtil.o: RaspiTexUtil.c.o
+.PHONY : RaspiTexUtil.o
+
+# target to build an object file
+RaspiTexUtil.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.o
+.PHONY : RaspiTexUtil.c.o
+
+RaspiTexUtil.i: RaspiTexUtil.c.i
+.PHONY : RaspiTexUtil.i
+
+# target to preprocess a source file
+RaspiTexUtil.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.i
+.PHONY : RaspiTexUtil.c.i
+
+RaspiTexUtil.s: RaspiTexUtil.c.s
+.PHONY : RaspiTexUtil.s
+
+# target to generate assembly for a file
+RaspiTexUtil.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiTexUtil.c.s
+.PHONY : RaspiTexUtil.c.s
+
 RaspiVid.o: RaspiVid.c.o
 .PHONY : RaspiVid.o
 
@@ -249,6 +297,198 @@ RaspiVid.c.s:
 	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiVid.c.s
 .PHONY : RaspiVid.c.s
 
+gl_scenes/mirror.o: gl_scenes/mirror.c.o
+.PHONY : gl_scenes/mirror.o
+
+# target to build an object file
+gl_scenes/mirror.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.o
+.PHONY : gl_scenes/mirror.c.o
+
+gl_scenes/mirror.i: gl_scenes/mirror.c.i
+.PHONY : gl_scenes/mirror.i
+
+# target to preprocess a source file
+gl_scenes/mirror.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.i
+.PHONY : gl_scenes/mirror.c.i
+
+gl_scenes/mirror.s: gl_scenes/mirror.c.s
+.PHONY : gl_scenes/mirror.s
+
+# target to generate assembly for a file
+gl_scenes/mirror.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/mirror.c.s
+.PHONY : gl_scenes/mirror.c.s
+
+gl_scenes/models.o: gl_scenes/models.c.o
+.PHONY : gl_scenes/models.o
+
+# target to build an object file
+gl_scenes/models.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.o
+.PHONY : gl_scenes/models.c.o
+
+gl_scenes/models.i: gl_scenes/models.c.i
+.PHONY : gl_scenes/models.i
+
+# target to preprocess a source file
+gl_scenes/models.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.i
+.PHONY : gl_scenes/models.c.i
+
+gl_scenes/models.s: gl_scenes/models.c.s
+.PHONY : gl_scenes/models.s
+
+# target to generate assembly for a file
+gl_scenes/models.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.s
+.PHONY : gl_scenes/models.c.s
+
+gl_scenes/sobel.o: gl_scenes/sobel.c.o
+.PHONY : gl_scenes/sobel.o
+
+# target to build an object file
+gl_scenes/sobel.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.o
+.PHONY : gl_scenes/sobel.c.o
+
+gl_scenes/sobel.i: gl_scenes/sobel.c.i
+.PHONY : gl_scenes/sobel.i
+
+# target to preprocess a source file
+gl_scenes/sobel.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.i
+.PHONY : gl_scenes/sobel.c.i
+
+gl_scenes/sobel.s: gl_scenes/sobel.c.s
+.PHONY : gl_scenes/sobel.s
+
+# target to generate assembly for a file
+gl_scenes/sobel.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/sobel.c.s
+.PHONY : gl_scenes/sobel.c.s
+
+gl_scenes/square.o: gl_scenes/square.c.o
+.PHONY : gl_scenes/square.o
+
+# target to build an object file
+gl_scenes/square.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.o
+.PHONY : gl_scenes/square.c.o
+
+gl_scenes/square.i: gl_scenes/square.c.i
+.PHONY : gl_scenes/square.i
+
+# target to preprocess a source file
+gl_scenes/square.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.i
+.PHONY : gl_scenes/square.c.i
+
+gl_scenes/square.s: gl_scenes/square.c.s
+.PHONY : gl_scenes/square.s
+
+# target to generate assembly for a file
+gl_scenes/square.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/square.c.s
+.PHONY : gl_scenes/square.c.s
+
+gl_scenes/teapot.o: gl_scenes/teapot.c.o
+.PHONY : gl_scenes/teapot.o
+
+# target to build an object file
+gl_scenes/teapot.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.o
+.PHONY : gl_scenes/teapot.c.o
+
+gl_scenes/teapot.i: gl_scenes/teapot.c.i
+.PHONY : gl_scenes/teapot.i
+
+# target to preprocess a source file
+gl_scenes/teapot.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.i
+.PHONY : gl_scenes/teapot.c.i
+
+gl_scenes/teapot.s: gl_scenes/teapot.c.s
+.PHONY : gl_scenes/teapot.s
+
+# target to generate assembly for a file
+gl_scenes/teapot.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/teapot.c.s
+.PHONY : gl_scenes/teapot.c.s
+
+gl_scenes/yuv.o: gl_scenes/yuv.c.o
+.PHONY : gl_scenes/yuv.o
+
+# target to build an object file
+gl_scenes/yuv.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.o
+.PHONY : gl_scenes/yuv.c.o
+
+gl_scenes/yuv.i: gl_scenes/yuv.c.i
+.PHONY : gl_scenes/yuv.i
+
+# target to preprocess a source file
+gl_scenes/yuv.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.i
+.PHONY : gl_scenes/yuv.c.i
+
+gl_scenes/yuv.s: gl_scenes/yuv.c.s
+.PHONY : gl_scenes/yuv.s
+
+# target to generate assembly for a file
+gl_scenes/yuv.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/yuv.c.s
+.PHONY : gl_scenes/yuv.c.s
+
+main.o: main.cpp.o
+.PHONY : main.o
+
+# target to build an object file
+main.cpp.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.o
+.PHONY : main.cpp.o
+
+main.i: main.cpp.i
+.PHONY : main.i
+
+# target to preprocess a source file
+main.cpp.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.i
+.PHONY : main.cpp.i
+
+main.s: main.cpp.s
+.PHONY : main.s
+
+# target to generate assembly for a file
+main.cpp.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/main.cpp.s
+.PHONY : main.cpp.s
+
+tga.o: tga.c.o
+.PHONY : tga.o
+
+# target to build an object file
+tga.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/tga.c.o
+.PHONY : tga.c.o
+
+tga.i: tga.c.i
+.PHONY : tga.i
+
+# target to preprocess a source file
+tga.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/tga.c.i
+.PHONY : tga.c.i
+
+tga.s: tga.c.s
+.PHONY : tga.s
+
+# target to generate assembly for a file
+tga.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/tga.c.s
+.PHONY : tga.c.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -271,9 +511,39 @@ help:
 	@echo "... RaspiPreview.o"
 	@echo "... RaspiPreview.i"
 	@echo "... RaspiPreview.s"
+	@echo "... RaspiTex.o"
+	@echo "... RaspiTex.i"
+	@echo "... RaspiTex.s"
+	@echo "... RaspiTexUtil.o"
+	@echo "... RaspiTexUtil.i"
+	@echo "... RaspiTexUtil.s"
 	@echo "... RaspiVid.o"
 	@echo "... RaspiVid.i"
 	@echo "... RaspiVid.s"
+	@echo "... gl_scenes/mirror.o"
+	@echo "... gl_scenes/mirror.i"
+	@echo "... gl_scenes/mirror.s"
+	@echo "... gl_scenes/models.o"
+	@echo "... gl_scenes/models.i"
+	@echo "... gl_scenes/models.s"
+	@echo "... gl_scenes/sobel.o"
+	@echo "... gl_scenes/sobel.i"
+	@echo "... gl_scenes/sobel.s"
+	@echo "... gl_scenes/square.o"
+	@echo "... gl_scenes/square.i"
+	@echo "... gl_scenes/square.s"
+	@echo "... gl_scenes/teapot.o"
+	@echo "... gl_scenes/teapot.i"
+	@echo "... gl_scenes/teapot.s"
+	@echo "... gl_scenes/yuv.o"
+	@echo "... gl_scenes/yuv.i"
+	@echo "... gl_scenes/yuv.s"
+	@echo "... main.o"
+	@echo "... main.i"
+	@echo "... main.s"
+	@echo "... tga.o"
+	@echo "... tga.i"
+	@echo "... tga.s"
 .PHONY : help
 
 
