@@ -32,6 +32,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <EGL/eglext.h>
 #include "RaspiTexUtil.h"
 
+#include "RaspiImv.h"
+#include "GraphicsStub.h"
+
 /* Vertex co-ordinates:
  *
  * v0----v1
@@ -67,9 +70,12 @@ static const GLfloat tex_coords[] =
 static GLfloat angle;
 static uint32_t anim_step;
 
+static int motion_init(RASPITEX_STATE *state);
+static int motion_redraw(RASPITEX_STATE *state);
+
 static int square_init(RASPITEX_STATE *state)
 {
-   int rc = raspitexutil_gl_init_1_0(state);
+   int rc = raspitexutil_gl_init_2_0(state);
 
    if (rc != 0)
       goto end;
@@ -81,6 +87,8 @@ static int square_init(RASPITEX_STATE *state)
    glClearDepthf(1);
    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
    glLoadIdentity();
+
+	 motion_init(state);
 
 end:
    return rc;
@@ -108,7 +116,10 @@ static int square_redraw(RASPITEX_STATE *state)
    glEnableClientState(GL_TEXTURE_COORD_ARRAY);
    glTexCoordPointer(2, GL_FLOAT, 0, tex_coords);
    GLCHK(glDrawArrays(GL_TRIANGLES, 0, vcos_countof(tex_coords) / 2));
-   return 0;
+
+
+	 return	motion_redraw(state);
+   //return 0;
 }
 
 int square_open(RASPITEX_STATE *state)
@@ -118,4 +129,16 @@ int square_open(RASPITEX_STATE *state)
    state->ops.redraw = square_redraw;
    state->ops.update_texture = raspitexutil_update_texture;
    return 0;
+}
+
+
+// Optional
+static int motion_init(RASPITEX_STATE *state){
+	//InitTextures();
+	//InitShaders();
+	return 0;
+}
+static int motion_redraw(RASPITEX_STATE *state){
+	//RedrawTextures();
+	return 0;
 }

@@ -3,11 +3,11 @@
 
 # compile C with /usr/bin/gcc
 # compile CXX with /usr/bin/c++
-C_FLAGS = -O3 -DNDEBUG -I/usr/include/opencv -I/home/olaf/software/camera/RPIMotionDetection/BlobDetection -I/opt/vc/include -I/opt/vc/include/interface/vcos -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux -I/home/olaf/software/camera/RPIMotionDetection/apps/raspicam   
+C_FLAGS = -O3 -DNDEBUG -I/usr/include/opencv -I/home/olaf/software/camera/RPIMotionDetection/BlobDetection -I/opt/vc/include -I/opt/vc/include/interface/vcos -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux -I/home/olaf/software/camera/RPIMotionDetection -I/home/olaf/software/camera/RPIMotionDetection/apps/raspicam   
 
 C_DEFINES = 
 
-CXX_FLAGS = -O3 -DNDEBUG -I/usr/include/opencv -I/home/olaf/software/camera/RPIMotionDetection/BlobDetection -I/opt/vc/include -I/opt/vc/include/interface/vcos -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux -I/home/olaf/software/camera/RPIMotionDetection/apps/raspicam   
+CXX_FLAGS = -O3 -DNDEBUG -I/usr/include/opencv -I/home/olaf/software/camera/RPIMotionDetection/BlobDetection -I/opt/vc/include -I/opt/vc/include/interface/vcos -I/opt/vc/include/interface/vcos/pthreads -I/opt/vc/include/interface/vmcs_host/linux -I/home/olaf/software/camera/RPIMotionDetection -I/home/olaf/software/camera/RPIMotionDetection/apps/raspicam   
 
 CXX_DEFINES = 
 

@@ -283,7 +283,7 @@ end:
 int raspitexutil_gl_init_2_0(RASPITEX_STATE *raspitex_state)
 {
    int rc;
-   const EGLint* attribs = raspitex_state->egl_config_attribs;;
+   const EGLint* attribs = raspitex_state->egl_config_attribs;
 
    const EGLint default_attribs[] =
    {

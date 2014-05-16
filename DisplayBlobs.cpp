@@ -127,7 +127,7 @@ void update_filter( ){
 	blobtree_set_filter(frameblobs, F_TREE_DEPTH_MAX,
 			of_tree_depth_max );
 
-	/* Note: Changeing depth_map could be the more efficient approach to
+	/* Note: Change depth_map could be the more efficient approach to
 	 * get a similar filtering effect.*/
 	//filter out blobs with lower depth values.
 	blobtree_set_filter(frameblobs, F_AREA_DEPTH_MIN,

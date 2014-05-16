@@ -49,6 +49,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gl_scenes/square.h"
 #include "gl_scenes/teapot.h"
 #include "gl_scenes/yuv.h"
+#include "gl_scenes/motion.h"
 
 /**
  * \file RaspiTex.c
@@ -97,7 +98,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static COMMAND_LIST cmdline_commands[] =
 {
-   { CommandGLScene, "-glscene",  "gs",  "GL scene square,teapot,mirror,yuv,sobel", 1 },
+   { CommandGLScene, "-glscene",  "gs",  "GL scene square,teapot,mirror,yuv,sobel,motion", 1 },
    { CommandGLWin,   "-glwin",    "gw",  "GL window settings <'x,y,w,h'>", 1 },
 };
 
@@ -159,6 +160,8 @@ int raspitex_parse_cmdline(RASPITEX_STATE *state,
             state->scene_id = RASPITEX_SCENE_YUV;
          else if (strcmp(arg2, "sobel") == 0)
             state->scene_id = RASPITEX_SCENE_SOBEL;
+         else if (strcmp(arg2, "motion") == 0)
+            state->scene_id = RASPITEX_SCENE_MOTION;
          else
             vcos_log_error("Unknown scene %s", arg2);
 
@@ -585,6 +588,9 @@ int raspitex_init(RASPITEX_STATE *state)
       case RASPITEX_SCENE_SOBEL:
          rc = sobel_open(state);
          break;
+      case RASPITEX_SCENE_MOTION:
+         rc = motion_open(state);
+         break;
       default:
          rc = -1;
          break;
@@ -651,7 +657,7 @@ void raspitex_set_defaults(RASPITEX_STATE *state)
    state->scene_id = RASPITEX_SCENE_SQUARE;
 
    state->ops.create_native_window = raspitexutil_create_native_window;
-   state->ops.gl_init = raspitexutil_gl_init_1_0;
+   state->ops.gl_init = raspitexutil_gl_init_2_0;
    state->ops.update_model = raspitexutil_update_model;
    state->ops.redraw = raspitexutil_redraw;
    state->ops.capture = raspitexutil_capture_bgra;

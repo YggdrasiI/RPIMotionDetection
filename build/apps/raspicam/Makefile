@@ -153,6 +153,30 @@ raspivid/fast:
 	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/build
 .PHONY : raspivid/fast
 
+Graphics.o: Graphics.cpp.o
+.PHONY : Graphics.o
+
+# target to build an object file
+Graphics.cpp.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/Graphics.cpp.o
+.PHONY : Graphics.cpp.o
+
+Graphics.i: Graphics.cpp.i
+.PHONY : Graphics.i
+
+# target to preprocess a source file
+Graphics.cpp.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/Graphics.cpp.i
+.PHONY : Graphics.cpp.i
+
+Graphics.s: Graphics.cpp.s
+.PHONY : Graphics.s
+
+# target to generate assembly for a file
+Graphics.cpp.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/Graphics.cpp.s
+.PHONY : Graphics.cpp.s
+
 RaspiCLI.o: RaspiCLI.c.o
 .PHONY : RaspiCLI.o
 
@@ -200,6 +224,30 @@ RaspiCamControl.s: RaspiCamControl.c.s
 RaspiCamControl.c.s:
 	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiCamControl.c.s
 .PHONY : RaspiCamControl.c.s
+
+RaspiImv.o: RaspiImv.c.o
+.PHONY : RaspiImv.o
+
+# target to build an object file
+RaspiImv.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiImv.c.o
+.PHONY : RaspiImv.c.o
+
+RaspiImv.i: RaspiImv.c.i
+.PHONY : RaspiImv.i
+
+# target to preprocess a source file
+RaspiImv.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiImv.c.i
+.PHONY : RaspiImv.c.i
+
+RaspiImv.s: RaspiImv.c.s
+.PHONY : RaspiImv.s
+
+# target to generate assembly for a file
+RaspiImv.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiImv.c.s
+.PHONY : RaspiImv.c.s
 
 RaspiPreview.o: RaspiPreview.c.o
 .PHONY : RaspiPreview.o
@@ -297,6 +345,54 @@ RaspiVid.c.s:
 	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/RaspiVid.c.s
 .PHONY : RaspiVid.c.s
 
+__/__/Tracker.o: __/__/Tracker.cpp.o
+.PHONY : __/__/Tracker.o
+
+# target to build an object file
+__/__/Tracker.cpp.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/__/__/Tracker.cpp.o
+.PHONY : __/__/Tracker.cpp.o
+
+__/__/Tracker.i: __/__/Tracker.cpp.i
+.PHONY : __/__/Tracker.i
+
+# target to preprocess a source file
+__/__/Tracker.cpp.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/__/__/Tracker.cpp.i
+.PHONY : __/__/Tracker.cpp.i
+
+__/__/Tracker.s: __/__/Tracker.cpp.s
+.PHONY : __/__/Tracker.s
+
+# target to generate assembly for a file
+__/__/Tracker.cpp.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/__/__/Tracker.cpp.s
+.PHONY : __/__/Tracker.cpp.s
+
+__/__/Tracker2.o: __/__/Tracker2.cpp.o
+.PHONY : __/__/Tracker2.o
+
+# target to build an object file
+__/__/Tracker2.cpp.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/__/__/Tracker2.cpp.o
+.PHONY : __/__/Tracker2.cpp.o
+
+__/__/Tracker2.i: __/__/Tracker2.cpp.i
+.PHONY : __/__/Tracker2.i
+
+# target to preprocess a source file
+__/__/Tracker2.cpp.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/__/__/Tracker2.cpp.i
+.PHONY : __/__/Tracker2.cpp.i
+
+__/__/Tracker2.s: __/__/Tracker2.cpp.s
+.PHONY : __/__/Tracker2.s
+
+# target to generate assembly for a file
+__/__/Tracker2.cpp.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/__/__/Tracker2.cpp.s
+.PHONY : __/__/Tracker2.cpp.s
+
 gl_scenes/mirror.o: gl_scenes/mirror.c.o
 .PHONY : gl_scenes/mirror.o
 
@@ -344,6 +440,30 @@ gl_scenes/models.s: gl_scenes/models.c.s
 gl_scenes/models.c.s:
 	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/models.c.s
 .PHONY : gl_scenes/models.c.s
+
+gl_scenes/motion.o: gl_scenes/motion.c.o
+.PHONY : gl_scenes/motion.o
+
+# target to build an object file
+gl_scenes/motion.c.o:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/motion.c.o
+.PHONY : gl_scenes/motion.c.o
+
+gl_scenes/motion.i: gl_scenes/motion.c.i
+.PHONY : gl_scenes/motion.i
+
+# target to preprocess a source file
+gl_scenes/motion.c.i:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/motion.c.i
+.PHONY : gl_scenes/motion.c.i
+
+gl_scenes/motion.s: gl_scenes/motion.c.s
+.PHONY : gl_scenes/motion.s
+
+# target to generate assembly for a file
+gl_scenes/motion.c.s:
+	cd /home/olaf/software/camera/RPIMotionDetection/build && $(MAKE) -f apps/raspicam/CMakeFiles/raspivid.dir/build.make apps/raspicam/CMakeFiles/raspivid.dir/gl_scenes/motion.c.s
+.PHONY : gl_scenes/motion.c.s
 
 gl_scenes/sobel.o: gl_scenes/sobel.c.o
 .PHONY : gl_scenes/sobel.o
@@ -502,12 +622,18 @@ help:
 	@echo "... list_install_components"
 	@echo "... raspivid"
 	@echo "... rebuild_cache"
+	@echo "... Graphics.o"
+	@echo "... Graphics.i"
+	@echo "... Graphics.s"
 	@echo "... RaspiCLI.o"
 	@echo "... RaspiCLI.i"
 	@echo "... RaspiCLI.s"
 	@echo "... RaspiCamControl.o"
 	@echo "... RaspiCamControl.i"
 	@echo "... RaspiCamControl.s"
+	@echo "... RaspiImv.o"
+	@echo "... RaspiImv.i"
+	@echo "... RaspiImv.s"
 	@echo "... RaspiPreview.o"
 	@echo "... RaspiPreview.i"
 	@echo "... RaspiPreview.s"
@@ -520,12 +646,21 @@ help:
 	@echo "... RaspiVid.o"
 	@echo "... RaspiVid.i"
 	@echo "... RaspiVid.s"
+	@echo "... __/__/Tracker.o"
+	@echo "... __/__/Tracker.i"
+	@echo "... __/__/Tracker.s"
+	@echo "... __/__/Tracker2.o"
+	@echo "... __/__/Tracker2.i"
+	@echo "... __/__/Tracker2.s"
 	@echo "... gl_scenes/mirror.o"
 	@echo "... gl_scenes/mirror.i"
 	@echo "... gl_scenes/mirror.s"
 	@echo "... gl_scenes/models.o"
 	@echo "... gl_scenes/models.i"
 	@echo "... gl_scenes/models.s"
+	@echo "... gl_scenes/motion.o"
+	@echo "... gl_scenes/motion.i"
+	@echo "... gl_scenes/motion.s"
 	@echo "... gl_scenes/sobel.o"
 	@echo "... gl_scenes/sobel.i"
 	@echo "... gl_scenes/sobel.s"
