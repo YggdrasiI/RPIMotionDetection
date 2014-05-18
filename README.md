@@ -1,4 +1,4 @@
-This package contains programs which analyse the 
+This package contains programs which analyze the 
 motion vections from the h264 coarse motion estimation, see
 http://www.raspberrypi.org/vectors-from-coarse-motion-estimation/
 
@@ -7,7 +7,7 @@ Applications:
 
 1. The program DisplayBlobs shows the usage of the BlobDetection
 library. Called without any arguments it shows blobs from the
-images folder and allows the offline analysation of images
+images folder and allows the off line analysis of images
 to find good parameter sets for the detection.
 Notes:
 • Requires OpenCV
@@ -18,7 +18,7 @@ Notes:
 
 2. Raspivid (see apps/raspivid/ ) is a modification of the official
 raspivid applications. It was extended by the OpenGL functionalities 
-of raspistill. The output of founded blobs is realised as OpenGL texture,
+of raspistill. The output of founded blobs is realized as OpenGL texture,
 thus be sure to activate the OpenGL output if you start the application.
 Notes:
 • This app is currently only in an EXPERIMENTAL phase! 
