@@ -17,8 +17,9 @@ void Tracker2::trackBlobs(
 		Blobtree * frameblobs,
 		bool history )
 {
-	double max_radius_2 = m_max_radius * m_max_radius;
-	double x, y, min_x, min_y, max_x, max_y;
+
+	int/*float*/ max_radius_2 = m_max_radius * m_max_radius;
+	int /*float*/ x, y, min_x, min_y, max_x, max_y;
 
 	cBlob temp;
 	bool new_hand(true);
@@ -38,7 +39,7 @@ void Tracker2::trackBlobs(
 	}
 
 	// populate the blobs vector with the current frame
-	blobs.clear();
+	blobsTmp.clear();
 
 	BlobtreeRect *roi;
 	Node *curNode = blobtree_first(frameblobs);
@@ -59,31 +60,31 @@ void Tracker2::trackBlobs(
 		temp.min.x = min_x; temp.min.y = min_y;
 		temp.max.x = max_x; temp.max.y = max_y;
 
-		blobs.push_back(temp);
+		blobsTmp.push_back(temp);
 		curNode = blobtree_next(frameblobs);
 	}
 
 	float d1,d2;
 	// main tracking loop -- O(n^2) -- simply looks for a blob in the previous frame within a specified radius
-	for (int i = 0; i < blobs.size(); i++) {
-		cBlob &blobi = blobs[i];
+	for (int i = 0; i < blobsTmp.size(); i++) {
+		cBlob &blobi = blobsTmp[i];
 		new_hand = true;
 		for (int j = 0; j < blobs_previous.size(); j++) {
 			if (blobs_previous[j].tracked) continue;
 
-			d1=blobs[i].location.x - blobs_previous[j].location.x;
-			d2=blobs[i].location.y - blobs_previous[j].location.y;
+			d1=blobsTmp[i].location.x - blobs_previous[j].location.x;
+			d2=blobsTmp[i].location.y - blobs_previous[j].location.y;
 			if ( (d1*d1 + d2*d2) < max_radius_2) {
 				blobs_previous[j].tracked = true;
-				blobs[i].event = BLOB_MOVE;
-				blobs[i].origin.x = history ? blobs_previous[j].origin.x : blobs_previous[j].location.x;
-				blobs[i].origin.y = history ? blobs_previous[j].origin.y : blobs_previous[j].location.y;
-				blobs[i].origin.z = history ? blobs_previous[j].origin.z : blobs_previous[j].location.z;
+				blobsTmp[i].event = BLOB_MOVE;
+				blobsTmp[i].origin.x = history ? blobs_previous[j].origin.x : blobs_previous[j].location.x;
+				blobsTmp[i].origin.y = history ? blobs_previous[j].origin.y : blobs_previous[j].location.y;
+				//blobsTmp[i].origin.z = history ? blobs_previous[j].origin.z : blobs_previous[j].location.z;
 
-				blobs[i].handid = blobs_previous[j].handid;
-				blobs[i].duration = blobs_previous[j].duration;
-				blobs[i].missing_duration = 0;
-				//blobs[i].cursor = blobs_previous[j].cursor;
+				blobsTmp[i].handid = blobs_previous[j].handid;
+				blobsTmp[i].duration = blobs_previous[j].duration;
+				blobsTmp[i].missing_duration = 0;
+				//blobsTmp[i].cursor = blobs_previous[j].cursor;
 				new_hand = false;
 				break;
 			}
@@ -102,13 +103,13 @@ void Tracker2::trackBlobs(
 			}
 
 			handids[next_handid] = true;
-			blobs[i].handid = next_handid;
+			blobsTmp[i].handid = next_handid;
 			last_handid = next_handid;
 
-			blobs[i].event = BLOB_DOWN;
-			blobs[i].duration = 1;
-			blobs[i].missing_duration = 0;
-			//blobs[i].cursor = NULL;
+			blobsTmp[i].event = BLOB_DOWN;
+			blobsTmp[i].duration = 1;
+			blobsTmp[i].missing_duration = 0;
+			//blobsTmp[i].cursor = NULL;
 		}
 	}
 
@@ -124,9 +125,17 @@ void Tracker2::trackBlobs(
 				//free handid
 				handids[b.handid] = false;
 			}
-			blobs.push_back(b);
+			blobsTmp.push_back(b);
 		}
 	}
 
+	//Now wait until no other thread works with blob vector
+	//and swap with blobTmp
+	while( m_swap_mutex ){
+		usleep(1000);
+	}
+	m_swap_mutex = 1;
+	blobs.swap( blobsTmp );
+	m_swap_mutex = 0;
 }
 

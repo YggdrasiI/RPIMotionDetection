@@ -14,8 +14,8 @@ enum { BLOB_NULL, // ?
 };
 
 struct point {
-	float x, y;//avoid double for ARM?
-	float z; //depth
+ 	int /*float*/ x, y;//avoid double for ARM?
+	//int /*float*/ z; //depth
 };
 
 class cBlob {

@@ -26,11 +26,13 @@ class Tracker {
 		int m_max_radius;
 		int m_max_missing_duration;
 
-		std::vector<cBlob> blobs, blobs_previous;
+		std::vector<cBlob> blobs, blobs_previous, blobsTmp /*for swapping */;
 
 		// storage of used handids
 		bool handids[MAXHANDS];
 		int last_handid;
+
+		int m_swap_mutex;
 
 	public:
 		Tracker();
@@ -42,6 +44,7 @@ class Tracker {
 				bool history ) = 0;
 
 		void drawBlobs(cv::Mat &out);
+		void drawBlobsGL(int screenWidth, int screenHeight);
 };
 
 

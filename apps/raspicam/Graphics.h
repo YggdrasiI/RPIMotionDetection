@@ -1,9 +1,12 @@
 #ifndef GRAPHICS_H
 #define GRAPHICS_H
 
+/* Source raspicam_gpu */
+
 #include "GLES2/gl2.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
+#include "lodepng.h"
 
 #include "GraphicsStub.h"
 
@@ -55,6 +58,7 @@ public:
 	bool CreateGreyScale(int width, int height, const void* data = NULL);
 	bool GenerateFrameBuffer();
 	void SetPixels(const void* data);
+	void Save(const char* fname);
 	GLuint GetId() { return Id; }
 	GLuint GetFramebufferId() { return FramebufferId; }
 	int GetWidth() {return Width;}
@@ -62,7 +66,9 @@ public:
 };
 
 
+void SaveFrameBuffer(const char* fname);
 void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1, GfxTexture* render_target);
+void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float y1, GfxTexture* render_target);
 
 
 extern GfxTexture imvTexture;

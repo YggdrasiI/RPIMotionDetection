@@ -9,16 +9,34 @@
 
 static DepthtreeWorkspace *dworkspace = NULL;
 static Blobtree *frameblobs = NULL;
-static Tracker2 tracker;
+Tracker2 tracker;
 unsigned char depth_map[256];
-
 pthread_t blob_tid;
+
+static void eval_ids(DepthtreeWorkspace *dworkspace, unsigned char *out, int len ){
+	int *ids, *cm, *cs;
+	ids = dworkspace->ids;
+	cm = dworkspace->comp_same;
+	cs = dworkspace->comp_size;
+	while(--len){
+		if( *(cs + *ids) > 8 ){
+			*out = *(cm + *ids);
+		}else{
+			*out = 1;
+		}
+		++out;++ids;
+	}
+}
+
 void* blob_detection(void *argn){
 
       while (1){
 				if( motion_data.available ){
+
 					//swap pointers if possible
-					while(motion_data.mutex){}
+					while(motion_data.mutex){
+						usleep(1000);
+					}
 					motion_data.mutex = 1;
 					char *tmp = motion_data.imv_array_in;
 					motion_data.imv_array_in = motion_data.imv_array_buffer;
@@ -32,12 +50,15 @@ void* blob_detection(void *argn){
 
 					//1.5 (optional) OpenGl Output
 					if( true ){
-						imvTexture.SetPixels(motion_data.imv_norm);
+						/* Problem: This the texture update is outside
+						 * of the gl context thread and will be
+						 * ignored. Solution?!"
+						 * */
+						//imvTexture.SetPixels(motion_data.imv_norm);
 					}
 
-					printf("Eval blobs...\n");
 					//2. Blob detection
-					BlobtreeRect input_roi = {0,0, motion_data.width, motion_data.height -4 };//shrink height because lowest rows contains noise.
+					BlobtreeRect input_roi = {0,0, motion_data.width, motion_data.height -0 };//shrink height because lowest rows contains noise.
 					depthtree_find_blobs(frameblobs, motion_data.imv_norm,
 							motion_data.width, motion_data.height,
 							input_roi, depth_map, dworkspace);
@@ -47,10 +68,16 @@ void* blob_detection(void *argn){
 					
 					//4. Opengl Output
 
+
+					// Debug: Replace imv_norm with ids, roi has to start in (0,0) and with full width.
+					eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
+
+
 				}else{
-					printf("No data\n");
+					//printf("No new imv data\n");
+					//vcos_sleep(100);
+					usleep(100000);
 				}
-         vcos_sleep(100);
 			}
 }
 
@@ -99,7 +126,7 @@ int main(int argc, const char **argv){
 	blobtree_create(&frameblobs);
 	blobtree_set_grid(frameblobs, 1, 1);
 
-	blobtree_set_filter(frameblobs, F_AREA_MIN, 100 );
+	blobtree_set_filter(frameblobs, F_AREA_MIN, 50 );
 	blobtree_set_filter(frameblobs, F_AREA_MAX, 2000 );
 	blobtree_set_extra_filter(frameblobs, hand_filter);
 	/* Only show leafs with above filtering effects */
@@ -136,9 +163,6 @@ int main(int argc, const char **argv){
 		return -1;
 	}
 
-	//Add arguments to force opengl output of 
-	//raspivid
-
 	//start raspivid application.
 	raspivid(argc, argv);
 
@@ -146,3 +170,5 @@ int main(int argc, const char **argv){
 	depthtree_destroy_workspace( &dworkspace );
 	blobtree_destroy(&frameblobs);
 }
+
+
