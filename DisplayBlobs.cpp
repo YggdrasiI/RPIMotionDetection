@@ -70,19 +70,19 @@ static Mat input_image;
 static BlobtreeRect input_roi; // Region of interest of input image
 static bool redraw_pending = false;
 static bool display_areas = true;
-static bool display_tracker = false;
+static bool display_tracker = true;
 static bool display_filtered_areas = true;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
 static int gridwidth = 1;
 static int gridheight = gridwidth;
-static int of_area_min = 75;
+static int of_area_min = 5*4;
 static int of_area_max = 40*4;
 static int of_tree_depth_min = 1;
 static int of_tree_depth_max = 100;
 static int of_area_depth_min = 0;//2;
 static int of_area_depth_max = 255;//10;
-static bool of_only_leafs = true;
+static bool of_only_leafs = false;
 static bool of_use_own_filter = true;
 static int output_scalefactor = 1;
 
@@ -139,7 +139,7 @@ void update_filter( ){
 
 	/* Add own filter over function pointer */
 	if( of_use_own_filter ){
-		blobtree_set_extra_filter(frameblobs, my_filter2);
+		blobtree_set_extra_filter(frameblobs, hand_filter);
 	}else{
 		blobtree_set_extra_filter(frameblobs, NULL);
 	}
@@ -168,7 +168,29 @@ int detection_loop(std::string filename ){
 	 */
 	int div=30;
 	for( int i=0; i<256; i++){
-		depth_map[i] = (i<thresh?0:(i-thresh)/30+1);
+		//depth_map[i] = (i<thresh?0:(i-thresh)/30+1);
+		depth_map[i] = 0;
+		switch(i){
+			case 0:
+				depth_map[i] = 0;
+				break;
+			case 1:
+			case 2:
+			case 3:
+			case 4:
+				depth_map[i] = 1;
+				break;
+			case 5:
+			case 6:
+			case 7:
+			case 8:
+			case 9:
+			case 10:
+				depth_map[i] = (i/2)*2;
+				break;
+			default:
+				depth_map[i] = 100;
+		}
 	}
 
 	//====================================================
@@ -221,7 +243,6 @@ int detection_loop(std::string filename ){
 
 	//Update Tracker
 	update_filter();
-	tracker.setMaxRadius(20);
 	tracker.trackBlobs( frameblobs, true );
 
 	/* Textual output of whole tree of blobs. */
@@ -459,7 +480,6 @@ static void CB_Button1(int state, void* pointer){
 	if( p == &display_filtered_areas ){ display_filtered_areas = (state>0); }
 	if( p == &of_only_leafs ){ of_only_leafs = (state>0); }
 	if( p == &of_use_own_filter ){ of_use_own_filter = (state>0); }
-	if( p == &display_tracker ){ display_tracker = (state>0); }
 
 	redraw();
 }
@@ -495,7 +515,7 @@ int main(int argc, char** argv )
 	//==========================================================
 	//Setup
 
-	const int loopMax = 120;
+	const int loopMax = 520;
 	int loop = 0;
 
 	//Input handling
@@ -542,7 +562,7 @@ int main(int argc, char** argv )
 			filename.append(argv[2]);
 		}else{
 			std::ostringstream ofilename;
-#if 1
+#if 0
 			ofilename << "images/" << loop << ".png" ;
 #else
 			ofilename << "images/home/frame-";
@@ -581,7 +601,6 @@ int main(int argc, char** argv )
 	createButton("Coloured ids",CB_Button1,&display_areas,CV_CHECKBOX, display_areas );
 	createButton("Only filtered coloured ids",CB_Button1,&display_filtered_areas,CV_CHECKBOX, display_filtered_areas );
 	createButton("Own filter",CB_Button1,&of_use_own_filter, CV_CHECKBOX, of_use_own_filter );
-	createButton("Show Tracker",CB_Button1,&display_tracker, CV_CHECKBOX, display_tracker );
 #endif
 
 	//Loop over list [Images] or [Image_Path, Images]
@@ -592,7 +611,7 @@ int main(int argc, char** argv )
 			filename.append(argv[2]);
 		}else{
 			std::ostringstream ofilename;
-#if 1
+#if 0
 			ofilename << "images/" << loop << ".png" ;
 #else
 			ofilename << "images/home/frame-";

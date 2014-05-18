@@ -21,11 +21,6 @@ std::vector<cBlob>& Tracker::getBlobs()
 	return blobs;
 }
 
-void Tracker::setMaxRadius(int m){
-	if( m>-1 )
-		m_max_radius = m;
-}
-
 #ifdef WITH_OCV
 void Tracker::drawBlobs(cv::Mat &out){
 

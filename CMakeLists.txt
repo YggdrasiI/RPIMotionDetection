@@ -6,7 +6,6 @@ find_package( OpenCV REQUIRED )
 #Disable this option if not compiling on RPi.
 option(WITH_RPI "Set this option on if you compiling on the Raspberry Pi." ON)
 option(WITH_OCV "Enable this option if OpenCV library is available. Required for 'DisplayBlob' application." ON)
-option(WITH_QT "Enable if OpenCV lib was compiled with QT support. Enables checkboxes in OpenCV gui." OFF)
 
 #Set variables for options because options are not availabe in subdirectories.
 set(WITH_RPI ${WITH_RPI} CACHE BOOL "Native libs of rpi available.")
@@ -40,19 +39,16 @@ message(STATUS ${DEPTHLIB})
 if(WITH_OCV)
 
 add_executable( DisplayBlobs DisplayBlobs.cpp Tracker.cpp Tracker2.cpp )
+#add_definitions(-DWITH_OCV)
 target_link_libraries( DisplayBlobs
 	${THRESHLIB}
 	${DEPTHLIB}
 	${OpenCV_LIBS} 
 	)
 
-#add_definitions(-DWITH_OCV)
 set_target_properties( DisplayBlobs PROPERTIES
 	COMPILE_FLAGS -DWITH_OCV
 	)
-if(WITH_QT)
-add_definitions(-DWITH_QT)
-endif(WITH_QT)
 
 # Create link to simplify paths
 execute_process( COMMAND "ln" "-s" "${CMAKE_HOME_DIRECTORY}/images" "."

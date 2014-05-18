@@ -45,9 +45,6 @@ class Tracker {
 		virtual ~Tracker() = 0;
 		std::vector<cBlob>& getBlobs();
 
-		//Maximal difference between blob midpoints between different frames.
-		void setMaxRadius(int m);
-
 		virtual void trackBlobs(
 				Blobtree *frameblobs,
 				bool history ) = 0;
