@@ -23,7 +23,7 @@
 #include "depthtree.h"
 
 
-#define MAXHANDS 10
+#define MAXHANDS 40
 
 
 class Tracker {
