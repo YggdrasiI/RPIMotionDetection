@@ -8,9 +8,8 @@ option(WITH_RPI "Set this option on if you compiling on the Raspberry Pi." ON)
 option(WITH_OCV "Enable this option if OpenCV library is available. Required for 'DisplayBlob' application." ON)
 
 #Set variables for options because options are not availabe in subdirectories.
-set(WITH_RPI FORCE ${WITH_RPI})
-set(WITH_OCV FORCE ${WITH_OCV})
-
+set(WITH_RPI ${WITH_RPI} CACHE BOOL "Native libs of rpi available.")
+set(WITH_OCV ${WITH_OCV} CACHE BOOL "OpenCV libs available")
 
 ### 0. Compile BlobDetection Lib ###
 # Compile blobdetection library in subdirectory
