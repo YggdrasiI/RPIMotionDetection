@@ -24,7 +24,7 @@ Notes:
 • This app is currently only in an EXPERIMENTAL phase! 
 • Requires OpenGLES 2.0
 • Example set of arguments:
-	./raspivid -o /dev/null -x /dev/null -t 0 --preview '0,0,1280,720' \
+	./raspivid -o /dev/null -x /dev/null -t 0 --preview '0,0,800,600' \
 		--gl --glwin '0,0,800,600' --glscene motion 
 
 
