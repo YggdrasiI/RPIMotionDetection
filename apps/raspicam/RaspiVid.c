@@ -258,12 +258,14 @@ static void default_status(RASPIVID_STATE *state)
    raspitex_set_defaults(&state->raspitex_state);
 
 	 //Modify defaults
+	 /*
 	 state->camera_parameters.rotation = 90;
 	 state->camera_parameters.awbMode = MMAL_PARAM_AWBMODE_CLOUDY;
 	 state->camera_parameters.shutter_speed = 10000;//ganz falsch?!
 	 state->camera_parameters.brightness = 50;
 	 state->camera_parameters.awb_gains_r = 1.5;
 	 state->camera_parameters.awb_gains_b = 1.2;
+	 */
 
 	//CameraParameters.imageEffect = MMAL_PARAM_IMAGEFX_DENOISE;
 	//CameraParameters.exposureMode = MMAL_PARAM_EXPOSUREMODE_OFF;

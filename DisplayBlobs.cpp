@@ -6,7 +6,7 @@
 #include "depthtree.h"
 #include "Tracker2.h"
 
-#include "fps.h"
+#include "Fps.h"
 
 using namespace cv;
 
@@ -127,7 +127,7 @@ void update_filter( ){
 	blobtree_set_filter(frameblobs, F_TREE_DEPTH_MAX,
 			of_tree_depth_max );
 
-	/* Note: Change depth_map could be the more efficient approach to
+	/* Note: Changeing depth_map could be the more efficient approach to
 	 * get a similar filtering effect.*/
 	//filter out blobs with lower depth values.
 	blobtree_set_filter(frameblobs, F_AREA_DEPTH_MIN,
@@ -288,9 +288,10 @@ int fpsTest(std::string filename ){
 		}else{
 			depthtree_find_blobs(frameblobs, ptr, W, H, input_roi, depth_map, dworkspace);
 		}
+
 		//Update Tracker
-		update_filter();
-		tracker.trackBlobs( frameblobs, true );
+		//update_filter();
+		//tracker.trackBlobs( frameblobs, true );
 
 		fps.next(stdout);
 	}
@@ -489,7 +490,6 @@ static void CB_Button1(int state, void* pointer){
 void ctrl_c_handler(int s){
 	printf("Caught signal %d\n",s);
 
-	/* Thats not necessary … */
 	depthtree_destroy_workspace( &dworkspace );
 	threshtree_destroy_workspace( &tworkspace );
 	blobtree_destroy(&frameblobs);
@@ -594,13 +594,15 @@ int main(int argc, char** argv )
 	createTrackbar( "Min Area Level:", window_options, &of_area_depth_min, 255, CB_Filter );
 	createTrackbar( "Max Area Level:", window_options, &of_area_depth_max, 255, CB_Filter );
 	//createTrackbar( "Scale:", window_options, &output_scalefactor, 8, CB_Filter );
-/*
+
+#ifdef WITH_QT
 	createButton("Bounding boxes",CB_Button1,&display_bounding_boxes,CV_CHECKBOX, display_bounding_boxes );
 	createButton("Only leafs",CB_Button1,&of_only_leafs, CV_CHECKBOX, of_only_leafs );
 	createButton("Coloured ids",CB_Button1,&display_areas,CV_CHECKBOX, display_areas );
 	createButton("Only filtered coloured ids",CB_Button1,&display_filtered_areas,CV_CHECKBOX, display_filtered_areas );
 	createButton("Own filter",CB_Button1,&of_use_own_filter, CV_CHECKBOX, of_use_own_filter );
-*/
+#endif
+
 	//Loop over list [Images] or [Image_Path, Images]
 	while( loop < loopMax ){
 

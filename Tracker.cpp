@@ -4,7 +4,9 @@
 #include <unistd.h>
 
 #include "Tracker.h"
+#ifdef WITH_OPENGL
 #include "apps/raspicam/Graphics.h"
+#endif
 
 Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0)
 {
@@ -19,6 +21,7 @@ std::vector<cBlob>& Tracker::getBlobs()
 	return blobs;
 }
 
+#ifdef WITH_OPENCV
 void Tracker::drawBlobs(cv::Mat &out){
 
 	for (int i = 0; i < blobs.size(); i++) {
@@ -48,7 +51,9 @@ void Tracker::drawBlobs(cv::Mat &out){
 		}
 	}
 }
+#endif
 
+#ifdef WITH_OPENGL
 void Tracker::drawBlobsGL(int screenWidth, int screenHeight){
 
 	//Wait and look mutex.
@@ -94,3 +99,4 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight){
 
 	m_swap_mutex = 0;
 }
+#endif

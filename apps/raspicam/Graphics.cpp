@@ -7,7 +7,9 @@
 #include <unistd.h>
 #include <iostream>
 
+#ifdef WITH_OPENCV
 #include <opencv2/opencv.hpp>
+#endif
 
 #include "bcm_host.h"
 #include "Graphics.h"
@@ -136,7 +138,6 @@ void InitGraphics()
 	InitShaders();
 }
 
-static cv::Mat input_image;
 void InitTextures()
 {
 	/* Begin of row values is NOT word-aligned. Set alignment to 1 */

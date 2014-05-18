@@ -66,7 +66,7 @@ public:
 	Fps():frame(0),mod(500){ 
 			tic();
 		}
-	Fps(int _mod):frame(0),mod(_mod){ 
+	Fps(int f):frame(0),mod(f){ 
 			tic();
 		}
 };

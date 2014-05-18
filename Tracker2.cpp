@@ -1,7 +1,7 @@
 /*
- * Modification of Tracker.cpp which use an other
- * blob detection lib.
+ * Implementation of abstract Tracker class.
  */
+#include <unistd.h>
 
 #include "Tracker2.h"
 
@@ -18,8 +18,8 @@ void Tracker2::trackBlobs(
 		bool history )
 {
 
-	int/*float*/ max_radius_2 = m_max_radius * m_max_radius;
-	int /*float*/ x, y, min_x, min_y, max_x, max_y;
+	int max_radius_2 = m_max_radius * m_max_radius;
+	int x, y, min_x, min_y, max_x, max_y;
 
 	cBlob temp;
 	bool new_hand(true);
@@ -79,12 +79,10 @@ void Tracker2::trackBlobs(
 				blobsTmp[i].event = BLOB_MOVE;
 				blobsTmp[i].origin.x = history ? blobs_previous[j].origin.x : blobs_previous[j].location.x;
 				blobsTmp[i].origin.y = history ? blobs_previous[j].origin.y : blobs_previous[j].location.y;
-				//blobsTmp[i].origin.z = history ? blobs_previous[j].origin.z : blobs_previous[j].location.z;
 
 				blobsTmp[i].handid = blobs_previous[j].handid;
 				blobsTmp[i].duration = blobs_previous[j].duration;
 				blobsTmp[i].missing_duration = 0;
-				//blobsTmp[i].cursor = blobs_previous[j].cursor;
 				new_hand = false;
 				break;
 			}

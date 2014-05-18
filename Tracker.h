@@ -6,10 +6,16 @@
 #define TRACKER_H
 
 #include <stdlib.h>
+#include <vector>
+
+#ifdef WITH_OPENCV
 #include <cv.h>
 #include <cxcore.h>
 #include <opencv2/opencv.hpp>
-#include <vector>
+#endif
+
+#ifdef WITH_OPENGL
+#endif
 
 #include "Blob.h"
 
@@ -43,8 +49,14 @@ class Tracker {
 				Blobtree *frameblobs,
 				bool history ) = 0;
 
+#ifdef WITH_OPENCV
+		/* Helper function to draw blobs for debugging */
 		void drawBlobs(cv::Mat &out);
+#endif
+#ifdef WITH_OPENGL
+		/* Helper function to draw blobs for debugging */
 		void drawBlobsGL(int screenWidth, int screenHeight);
+#endif
 };
 
 
