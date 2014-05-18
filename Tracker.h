@@ -8,7 +8,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#ifdef WITH_OPENCV
+#ifdef WITH_OCV
 #include <cv.h>
 #include <cxcore.h>
 #include <opencv2/opencv.hpp>
@@ -49,7 +49,7 @@ class Tracker {
 				Blobtree *frameblobs,
 				bool history ) = 0;
 
-#ifdef WITH_OPENCV
+#ifdef WITH_OCV
 		/* Helper function to draw blobs for debugging */
 		void drawBlobs(cv::Mat &out);
 #endif

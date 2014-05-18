@@ -7,7 +7,7 @@
 #include <unistd.h>
 #include <iostream>
 
-#ifdef WITH_OPENCV
+#ifdef WITH_OCV
 #include <opencv2/opencv.hpp>
 #endif
 

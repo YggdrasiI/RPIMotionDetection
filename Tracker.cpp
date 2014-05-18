@@ -21,7 +21,7 @@ std::vector<cBlob>& Tracker::getBlobs()
 	return blobs;
 }
 
-#ifdef WITH_OPENCV
+#ifdef WITH_OCV
 void Tracker::drawBlobs(cv::Mat &out){
 
 	for (int i = 0; i < blobs.size(); i++) {
