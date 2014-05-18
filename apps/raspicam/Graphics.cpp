@@ -148,9 +148,12 @@ void InitTextures()
 
 void RedrawTextures()
 {
+#define SAVE_FRAMEBUFFER 0
+#if SAVE_FRAMEBUFFER > 0
 	static int savecounter=0;
 	if( savecounter == 400 )
 		SaveFrameBuffer("/dev/shm/fb1.png");
+#endif
 
 	imvTexture.SetPixels(motion_data.imv_norm);
 	//DrawTextureRect(&imvTexture,-1.f,-1.f,1.f,1.f,NULL);
@@ -162,10 +165,12 @@ void RedrawTextures()
 	tracker.drawBlobsGL(motion_data.width, motion_data.height);
 
 
+#if SAVE_FRAMEBUFFER > 0
 	if( savecounter == 400 )
 		SaveFrameBuffer("/dev/shm/fb2.png");
-
 	++savecounter;
+#endif
+
 }
 
 void FooBar(){
