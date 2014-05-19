@@ -131,6 +131,9 @@ unsigned lodepng_decode_file(unsigned char** out, unsigned* w, unsigned* h,
                              LodePNGColorType colortype, unsigned bitdepth);
 
 /*Same as lodepng_decode_file, but always decodes to 32-bit RGBA raw image.*/
+#ifdef __cplusplus
+extern "C"
+#endif
 unsigned lodepng_decode32_file(unsigned char** out, unsigned* w, unsigned* h,
                                const char* filename);
 
@@ -241,6 +244,9 @@ unsigned encode(const std::string& filename,
 
 #ifdef LODEPNG_COMPILE_ERROR_TEXT
 /*Returns an English description of the numerical error code.*/
+#ifdef __cplusplus
+extern "C" 
+#endif
 const char* lodepng_error_text(unsigned code);
 #endif /*LODEPNG_COMPILE_ERROR_TEXT*/
 

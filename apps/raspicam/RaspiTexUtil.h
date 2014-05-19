@@ -68,6 +68,14 @@ typedef struct RASPITEXUTIL_SHADER_PROGRAM_T
    GLint attribute_locations[SHADER_MAX_ATTRIBUTES];
 } RASPITEXUTIL_SHADER_PROGRAM_T;
 
+typedef struct RASPITEXUTIL_TEXTURE_T
+{
+	const char *texture_filename;
+	int width;
+	int height;
+	GLuint id;
+	char isRGBA; 
+} RASPITEXUTIL_TEXTURE_T;
 
 /* Uncomment to enable extra GL error checking */
 //#define CHECK_GL_ERRORS
@@ -112,5 +120,12 @@ void raspitexutil_close(RASPITEX_STATE* raspitex_state);
 /* Utility functions */
 int raspitexutil_build_shader_program(RASPITEXUTIL_SHADER_PROGRAM_T *p);
 void raspitexutil_brga_to_rgba(uint8_t *buffer, size_t size);
+
+RASPITEXUTIL_TEXTURE_T raspitexutil_create_texture_rgba(
+		const int width,
+		const int height,
+		const char linear,
+		const void* data);
+RASPITEXUTIL_TEXTURE_T raspitexutil_load_texture(const char* filename);
 
 #endif /* RASPITEX_UTIL_H_ */

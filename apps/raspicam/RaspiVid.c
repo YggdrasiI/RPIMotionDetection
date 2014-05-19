@@ -1757,7 +1757,6 @@ int raspivid(int argc, const char **argv)
          if (state.imv_filename)
 				 {
 					 //init global struct, see RaspiImv
-					 printf("Pointer to moiton_data: %p\n", &motion_data);
 					 if( init_motion_data(&motion_data, &state) ){
 						 state.inlineMotionVectors=0;
 						 //goto error;

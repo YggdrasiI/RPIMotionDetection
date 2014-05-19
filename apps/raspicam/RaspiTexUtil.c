@@ -31,6 +31,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <bcm_host.h>
 #include <GLES2/gl2.h>
 
+#include "lodepng.h"
+
 VCOS_LOG_CAT_T raspitex_log_category;
 
 /**
@@ -595,3 +597,42 @@ fail:
     return -1;
 }
 
+
+// C-Port of picam approach
+RASPITEXUTIL_TEXTURE_T raspitexutil_create_texture_rgba(
+		const int width,
+		const int height,
+		const char linear,
+		const void* data){
+	RASPITEXUTIL_TEXTURE_T ret;
+	ret.width = width;
+	ret.height = height;
+	ret.isRGBA = 1;
+	glGenTextures(1, &ret.id);
+	glBindTexture(GL_TEXTURE_2D, ret.id);
+	GLCHK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ret.width, ret.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
+
+	GLCHK(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)(linear?GL_LINEAR:GL_NEAREST)));
+	GLCHK(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)(linear?GL_LINEAR:GL_NEAREST)));
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	return ret;
+}
+
+RASPITEXUTIL_TEXTURE_T raspitexutil_load_texture(const char* filename){
+  unsigned error;
+  unsigned char* image;
+  size_t width, height;
+
+  error = lodepng_decode32_file(&image, &width, &height, filename);
+
+  if(error){
+		printf("decoder error %u: %s\n", error, lodepng_error_text(error));
+		RASPITEXUTIL_TEXTURE_T none = {0,0,-1,0};
+		return none;
+	}
+
+	RASPITEXUTIL_TEXTURE_T ret = raspitexutil_create_texture_rgba(width,height,1,image);
+  free(image);
+  return ret;
+}

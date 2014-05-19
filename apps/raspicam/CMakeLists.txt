@@ -22,9 +22,11 @@ set (GL_SCENE_SOURCES
    gl_scenes/mirror.c
    gl_scenes/yuv.c
    gl_scenes/sobel.c
-   gl_scenes/motion.c
    gl_scenes/square.c
-   gl_scenes/teapot.c)
+   gl_scenes/teapot.c
+   gl_scenes/motion.c
+   gl_scenes/pong.c
+	 )
 
 set (COMMON_SOURCES
    RaspiCamControl.c

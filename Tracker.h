@@ -25,6 +25,10 @@
 
 #define MAXHANDS 40
 
+enum Trackfilter{
+	ALL_ACTIVE,
+	NUM_TRACK_FILTER
+};
 
 class Tracker {
 	protected:
@@ -44,6 +48,7 @@ class Tracker {
 		Tracker();
 		virtual ~Tracker() = 0;
 		std::vector<cBlob>& getBlobs();
+		void getFilteredBlobs(Trackfilter filter, std::vector<cBlob> &output);
 
 		virtual void trackBlobs(
 				Blobtree *frameblobs,
@@ -55,7 +60,7 @@ class Tracker {
 #endif
 #ifdef WITH_OPENGL
 		/* Helper function to draw blobs for debugging */
-		void drawBlobsGL(int screenWidth, int screenHeight);
+		void drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw = NULL);
 #endif
 };
 

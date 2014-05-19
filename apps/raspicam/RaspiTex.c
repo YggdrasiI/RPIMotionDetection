@@ -50,6 +50,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "gl_scenes/teapot.h"
 #include "gl_scenes/yuv.h"
 #include "gl_scenes/motion.h"
+#include "gl_scenes/pong.h"
 
 /**
  * \file RaspiTex.c
@@ -98,7 +99,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static COMMAND_LIST cmdline_commands[] =
 {
-   { CommandGLScene, "-glscene",  "gs",  "GL scene square,teapot,mirror,yuv,sobel,motion", 1 },
+   { CommandGLScene, "-glscene",  "gs",  "GL scene square,teapot,mirror,yuv,sobel,motion,pong", 1 },
    { CommandGLWin,   "-glwin",    "gw",  "GL window settings <'x,y,w,h'>", 1 },
 };
 
@@ -162,6 +163,8 @@ int raspitex_parse_cmdline(RASPITEX_STATE *state,
             state->scene_id = RASPITEX_SCENE_SOBEL;
          else if (strcmp(arg2, "motion") == 0)
             state->scene_id = RASPITEX_SCENE_MOTION;
+         else if (strcmp(arg2, "pong") == 0)
+            state->scene_id = RASPITEX_SCENE_PONG;
          else
             vcos_log_error("Unknown scene %s", arg2);
 
@@ -590,6 +593,9 @@ int raspitex_init(RASPITEX_STATE *state)
          break;
       case RASPITEX_SCENE_MOTION:
          rc = motion_open(state);
+         break;
+      case RASPITEX_SCENE_PONG:
+         rc = pong_open(state);
          break;
       default:
          rc = -1;

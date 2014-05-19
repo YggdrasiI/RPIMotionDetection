@@ -21,6 +21,16 @@ std::vector<cBlob>& Tracker::getBlobs()
 	return blobs;
 }
 
+void Tracker::getFilteredBlobs(Trackfilter filter, std::vector<cBlob> &output)
+{
+	for (int i = 0; i < blobs.size(); i++) {
+		cBlob &b = blobs[i];
+		if( filter == ALL_ACTIVE && b.missing_duration == 0 && b.duration > 5){
+			output.push_back(b);
+		}
+	}
+}
+
 #ifdef WITH_OCV
 void Tracker::drawBlobs(cv::Mat &out){
 
@@ -54,7 +64,11 @@ void Tracker::drawBlobs(cv::Mat &out){
 #endif
 
 #ifdef WITH_OPENGL
-void Tracker::drawBlobsGL(int screenWidth, int screenHeight){
+//void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlobs> matched){
+void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw){
+	if( toDraw == NULL ){
+		toDraw = &blobs;
+	}
 
 	//Wait and look mutex.
 	while( m_swap_mutex ){
@@ -62,8 +76,8 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight){
 	}
 	m_swap_mutex = 1;
 
-	for (int i = 0; i < blobs.size(); i++) {
-		cBlob &b = blobs[i];
+	for (int i = 0; i < toDraw->size(); i++) {
+		cBlob &b = (*toDraw).at(i);
 		float col[3];
 #define C(r,g,b) {col[0]=(r)/255.0; col[1]=(g)/255.0; col[2]=(b)/255.0;}
 		if( b.event == BLOB_DOWN ){
@@ -76,10 +90,8 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight){
 				C(150, 150, 150);
 		}
 
-		if( ( b.missing_duration == 0 
-					&& b.duration > 5 )
-				/* || b.duration > 1 */
-				){
+		//if( ( b.missing_duration == 0 && b.duration > 5 ) /* || b.duration > 1 */){
+		if( 1 ){
 			//printf("Draw blob! [%i-%i] x [%i-%i]\n", b.min.x, b.max.x, b.min.y, b.max.y);
 			float x0,y0,x1,y1;
 			x0 = 2.0*b.min.x/screenWidth-1;
