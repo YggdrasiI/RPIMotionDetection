@@ -201,11 +201,11 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
 		// Bind Score texture
 		glActiveTexture(GL_TEXTURE0);
-//    glBindTexture(GL_TEXTURE_2D, texScore.id);
+    glBindTexture(GL_TEXTURE_2D, texScore.id);
 
     // Bind the OES texture which is used to render the camera preview
 //		glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
+//    glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 		glActiveTexture(GL_TEXTURE0);
 #else
 		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));//tex
