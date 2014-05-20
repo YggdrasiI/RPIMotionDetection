@@ -74,6 +74,7 @@ typedef struct RASPITEXUTIL_TEXTURE_T
 	int width;
 	int height;
 	GLuint id;
+	GLuint framebufferId;
 	char isRGBA; 
 } RASPITEXUTIL_TEXTURE_T;
 
@@ -127,5 +128,8 @@ RASPITEXUTIL_TEXTURE_T raspitexutil_create_texture_rgba(
 		const char linear,
 		const void* data);
 RASPITEXUTIL_TEXTURE_T raspitexutil_load_texture(const char* filename);
+void raspitexutil_create_framebuffer(RASPITEXUTIL_TEXTURE_T *tex);
+void raspitexutil_save_texture(const char* fname, RASPITEXUTIL_TEXTURE_T *tex);
+void raspitexutil_save_framebuffer(const char* fname);
 
 #endif /* RASPITEX_UTIL_H_ */

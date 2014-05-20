@@ -4,6 +4,12 @@
 #include "Graphics.h"
 #include "Pong.h"
 
+/* This array is defined in the shader description file pong.c 
+ * Update this values to update the shown score or both players.
+ * Allowed values are 0-9.
+ * */
+extern "C" int score[2];
+
 Pong::Pong(float radius, float aspect): m_aspect(aspect) {
 	m_radius[0] = radius;
 	m_radius[1] = radius*m_aspect;
@@ -22,10 +28,16 @@ void Pong::updatePosition(){
 			m_position[i] = 2*border - m_position[i];
 			m_velocity[i] = -m_velocity[i];
 			Col(255-i*255,0,i*255);
+			if( i == 0){
+				score[1] = (score[1]+1)%10;
+			}
 		}else if( m_position[i] < -border ){
 			m_position[i] = -2*border - m_position[i];
 			m_velocity[i] = -m_velocity[i];
 			Col(255-i*255,0,i*255);
+			if( i == 0){
+				score[0] = (score[0]+1)%10;
+			}
 		}else{
 			linearColor(1.03, 0.03);
 		}

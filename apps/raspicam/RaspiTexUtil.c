@@ -608,6 +608,7 @@ RASPITEXUTIL_TEXTURE_T raspitexutil_create_texture_rgba(
 	ret.width = width;
 	ret.height = height;
 	ret.isRGBA = 1;
+	ret.framebufferId = 0;
 	glGenTextures(1, &ret.id);
 	glBindTexture(GL_TEXTURE_2D, ret.id);
 	GLCHK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, ret.width, ret.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data));
@@ -619,6 +620,14 @@ RASPITEXUTIL_TEXTURE_T raspitexutil_create_texture_rgba(
 	return ret;
 }
 
+void raspitexutil_create_framebuffer(RASPITEXUTIL_TEXTURE_T *tex){
+	//Create a frame buffer that points to this texture
+	GLCHK(glGenFramebuffers(1,&tex->framebufferId));
+	GLCHK(glBindFramebuffer(GL_FRAMEBUFFER,tex->framebufferId));
+	GLCHK(glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,tex->id,0));
+	glBindFramebuffer(GL_FRAMEBUFFER,0);
+}
+
 RASPITEXUTIL_TEXTURE_T raspitexutil_load_texture(const char* filename){
   unsigned error;
   unsigned char* image;
@@ -628,11 +637,43 @@ RASPITEXUTIL_TEXTURE_T raspitexutil_load_texture(const char* filename){
 
   if(error){
 		printf("decoder error %u: %s\n", error, lodepng_error_text(error));
-		RASPITEXUTIL_TEXTURE_T none = {0,0,-1,0};
+		RASPITEXUTIL_TEXTURE_T none = {0,0,-1,0,0};
 		return none;
 	}
 
 	RASPITEXUTIL_TEXTURE_T ret = raspitexutil_create_texture_rgba(width,height,1,image);
+
   free(image);
   return ret;
+}
+
+void raspitexutil_save_texture(const char* fname, RASPITEXUTIL_TEXTURE_T *tex)
+{
+	void* image = malloc(tex->width*tex->height*4);
+	GLCHK(glBindFramebuffer(GL_FRAMEBUFFER,tex->framebufferId));
+	GLCHK(glReadPixels(0,0,tex->width,tex->height,tex->isRGBA? GL_RGBA : GL_LUMINANCE, GL_UNSIGNED_BYTE, image));
+	glBindFramebuffer(GL_FRAMEBUFFER,0);
+
+	unsigned error = lodepng_encode32_file(fname, (const unsigned char*)image, tex->width, tex->height);
+	if(error) 
+		printf("error: %d\n",error);
+
+	free(image);
+}
+
+void raspitexutil_save_framebuffer(const char* fname)
+{
+	uint32_t GScreenWidth;
+	uint32_t GScreenHeight;
+	graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+	void* image = malloc(GScreenWidth*GScreenHeight*4);
+	GLCHK(glBindFramebuffer(GL_FRAMEBUFFER,0));
+	GLCHK(glReadPixels(0,0,GScreenWidth,GScreenHeight, GL_RGBA, GL_UNSIGNED_BYTE, image));
+
+	unsigned error = lodepng_encode32_file(fname, (const unsigned char*)image, GScreenWidth, GScreenHeight);
+	if(error) 
+		printf("error: %d\n",error);
+
+	free(image);
+
 }

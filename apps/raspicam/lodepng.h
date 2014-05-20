@@ -184,6 +184,9 @@ unsigned lodepng_encode_file(const char* filename,
                              LodePNGColorType colortype, unsigned bitdepth);
 
 /*Same as lodepng_encode_file, but always encodes from 32-bit RGBA raw image.*/
+#ifdef __cplusplus
+extern "C"
+#endif
 unsigned lodepng_encode32_file(const char* filename,
                                const unsigned char* image, unsigned w, unsigned h);
 

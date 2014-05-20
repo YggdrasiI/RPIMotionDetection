@@ -148,6 +148,9 @@ void InitTextures()
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
 	imvTexture.CreateGreyScale(121,68);
 	//imvTexture.GenerateFrameBuffer();
+
+	//restore default
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
 	
 }
 
@@ -161,15 +164,15 @@ void RedrawTextures()
 
 	blobCache.clear();
 	tracker.getFilteredBlobs(ALL_ACTIVE, blobCache);
-	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache);
+	//tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache);
 	//tracker.drawBlobsGL(motion_data.width, motion_data.height, NULL);
 
-	// Draw pong ball
+	//Event handling and position update
+	pong.checkCollision(motion_data.width, motion_data.height, blobCache );
 	pong.updatePosition();
 
-	pong.checkCollision(motion_data.width, motion_data.height, blobCache );
 
-
+	// Draw pong ball
 	pong.drawBall();
 
 }
@@ -469,6 +472,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 	glEnableVertexAttribArray(loc);	check();
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
 
+	glDisableVertexAttribArray(loc);	check();//neu
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -488,6 +492,7 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 		check();
 	}
 
+	printf("BlobProgId: %i %s\n", (int)GBlobProg.GetId(), glIsProgram(GBlobProg.GetId())?"Ja":"Nein" );
 	glUseProgram(GBlobProg.GetId());	check();
 
 	glUniform2f(glGetUniformLocation(GBlobProg.GetId(),"offset"),x0,y0);

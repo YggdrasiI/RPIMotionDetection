@@ -54,7 +54,7 @@ void* blob_detection(void *argn){
 
 					//1.5 (optional) OpenGl Output
 					if( true ){
-						/* Problem: This the texture update is outside
+						/* Problem: This texture update is outside
 						 * of the gl context thread and will be
 						 * ignored. Solution?!"
 						 * */
