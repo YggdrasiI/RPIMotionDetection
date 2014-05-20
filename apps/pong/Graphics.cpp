@@ -459,12 +459,12 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"offset"),x0,y0);
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"scale"),x1-x0,y1-y0);
-	glUniform1i(glGetUniformLocation(GSimpleProg.GetId(),"tex"), 0);
+	glUniform1i(glGetUniformLocation(GSimpleProg.GetId(),"tex"), 6);
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
 
-	glActiveTexture(GL_TEXTURE0);
+	glActiveTexture(GL_TEXTURE6);
 	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
 
 	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
@@ -508,7 +508,6 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
 
 	if(render_target && false)
 	{
