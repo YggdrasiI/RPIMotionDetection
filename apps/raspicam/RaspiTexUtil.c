@@ -630,7 +630,7 @@ void raspitexutil_create_framebuffer(RASPITEXUTIL_TEXTURE_T *tex){
 
 RASPITEXUTIL_TEXTURE_T raspitexutil_load_texture(const char* filename){
   unsigned error;
-  unsigned char* image;
+  unsigned char* image = NULL;
   size_t width, height;
 
   error = lodepng_decode32_file(&image, &width, &height, filename);

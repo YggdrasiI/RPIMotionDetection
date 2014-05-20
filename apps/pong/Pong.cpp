@@ -8,7 +8,7 @@
  * Update this values to update the shown score or both players.
  * Allowed values are 0-9.
  * */
-extern "C" int score[2];
+//extern "C" int score[2];
 
 Pong::Pong(float radius, float aspect): m_aspect(aspect) {
 	m_radius[0] = radius;
@@ -29,14 +29,14 @@ void Pong::updatePosition(){
 			m_velocity[i] = -m_velocity[i];
 			Col(255-i*255,0,i*255);
 			if( i == 0){
-				score[1] = (score[1]+1)%10;
+				m_score[0] = (m_score[0]+1)%10;
 			}
 		}else if( m_position[i] < -border ){
 			m_position[i] = -2*border - m_position[i];
 			m_velocity[i] = -m_velocity[i];
 			Col(255-i*255,0,i*255);
 			if( i == 0){
-				score[0] = (score[0]+1)%10;
+				m_score[1] = (m_score[1]+1)%10;
 			}
 		}else{
 			linearColor(1.03, 0.03);
@@ -59,6 +59,10 @@ const float* const Pong::getVelocity(){
 	return &m_velocity[0];
 }
 
+const int* const Pong::getScore(){
+	return &m_score[0];
+}
+
 void Pong::setPosition(float x, float y){
 	m_position[0] = x;
 	m_position[1] = y;
@@ -70,6 +74,10 @@ void Pong::setVelocity(float x, float y){
 void Pong::scaleVelocity(float x, float y){
 	m_velocity[0] *= x;
 	m_velocity[1] *= y;
+}
+void Pong::changeVelocity(float x, float y){
+	m_velocity[0] += x;
+	m_velocity[1] += y;
 }
 
 void Pong::setRadius(float r){
@@ -115,16 +123,21 @@ bool Pong::checkCollision(int width, int height, std::vector<cBlob> &blobs){
 			//reflect pong, if x-velocity matches to x-position of blob
 			//Note, velocity is inverted due other orientation of coordinate system
 			if( iPos[0] < width/3 && m_velocity[0] > 0 ){
-				scaleVelocity(-1.0,1.0);
+				scaleVelocity(-1.02,1.0);
 				Col(0,255,0);
 				printf("Hit 1!\n");
 			}else if( iPos[0] > 2*width/3 && m_velocity[0] < 0 ){
 				Col(0,255,0);
-				scaleVelocity(-1.0,1.0);
+				scaleVelocity(-1.02,1.0);
 				printf("Hit 2!\n");
 			}
 
-			//optional use blob offset for change of y-velocity 
+			//optional: use blob offset for change of y-velocity 
+#define YLIMIT 0.05
+			float y_movement = (b.location.y - b.origin.y)/7000.0;
+			if( y_movement > 0.005 ){
+				m_velocity[1] = fmax(-YLIMIT , fmin(y_movement, YLIMIT ));
+			}
 		}
 
 	}

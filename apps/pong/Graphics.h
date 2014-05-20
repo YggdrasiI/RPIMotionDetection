@@ -54,10 +54,12 @@ public:
 	GfxTexture() : Width(0), Height(0), Id(0), FramebufferId(0) {}
 	~GfxTexture() {}
 
+	bool CreateFromFile(const char *filename);
 	bool CreateRGBA(int width, int height, const void* data = NULL);
 	bool CreateGreyScale(int width, int height, const void* data = NULL);
 	bool GenerateFrameBuffer();
 	void SetPixels(const void* data);
+	void SetInterpolation(bool interpol);
 	void Save(const char* fname);
 	GLuint GetId() { return Id; }
 	GLuint GetFramebufferId() { return FramebufferId; }
@@ -69,6 +71,7 @@ public:
 void SaveFrameBuffer(const char* fname);
 void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1, GfxTexture* render_target);
 void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float y1, GfxTexture* render_target);
+void DrawGUI(GfxTexture* scoreTexture,const int * const score, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target);
 
 
 extern GfxTexture imvTexture;

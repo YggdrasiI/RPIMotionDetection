@@ -26,9 +26,11 @@ class Pong{
 		void reset();
 		const float* const getPosition();
 		const float* const getVelocity();
+		const int* const getScore();
 		void setPosition(float x, float y);
 		void setVelocity(float x, float y);
 		void scaleVelocity(float x, float y);
+		void changeVelocity(float x, float y);
 		void setRadius(float r);
 		void setAspect(float a);
 		void drawBall();

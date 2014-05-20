@@ -37,9 +37,12 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "RaspiImv.h"
 #include "GraphicsStub.h"
 
-#define new_shader 1
+#define new_shader 0
 #if new_shader > 0
 /**
+ * Bug: Mixing samplerExternalOES with sampler2D causes problems in the
+ * next called shader -> This approach was replaced by split of shader into two parts.
+ *
  * Scoremapping:
  * •numerals texture contains 0,1,…,9
  * •scorePosLeft contains rect(x0,y0,x1,y1) and will be mapped on [0,1]² by transformation T1
@@ -73,7 +76,6 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "#extension GL_OES_EGL_image_external : require\n"
     "uniform samplerExternalOES aaatex;\n"
 		"uniform sampler2D numerals;\n"
-    "uniform float offset;\n"
     "uniform vec2 border;\n"
     "uniform vec4 scorePosLeft;\n"
     "uniform vec4 scorePosRight;\n"
@@ -82,8 +84,8 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "varying vec2 scorecoordLeft;\n"
     "varying vec2 scorecoordRight;\n"
     "void main(void) {\n"
-    "    float x = texcoord.x + 0.00 * sin(offset + (texcoord.y * waves * 2.0 * 3.141592));\n"
-    "    float y = texcoord.y + 0.00 * sin(offset + (texcoord.x * waves * 2.0 * 3.141592));\n"
+    "    float x = texcoord.x;\n"
+    "    float y = texcoord.y;\n"
     "    if (y < 1.0 && y > 0.0 && x < 1.0 && x > 0.0) {\n"
 		"     vec4 ret = texture2D(aaatex, texcoord);\n"
 		"     if( x < border.x || x > border.y ){\n"
@@ -102,7 +104,7 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "    }\n"
 		"     gl_FragColor.a = 1.0;\n"
     "}\n",
-    .uniform_names = {"aaatex", "offset", "numerals", "border", "score", "scorePosLeft", "scorePosRight"},
+    .uniform_names = {"aaatex","numerals", "border", "score", "scorePosLeft", "scorePosRight"},
     .attribute_names = {"vertex"},
 };
 #else
@@ -118,12 +120,11 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     .fragment_source =
     "#extension GL_OES_EGL_image_external : require\n"
     "uniform samplerExternalOES tex;\n"
-    "uniform float offset;\n"
     "const float waves = 2.0;\n"
     "varying vec2 texcoord;\n"
     "void main(void) {\n"
-    "    float x = texcoord.x + 0.00 * sin(offset + (texcoord.y * waves * 2.0 * 3.141592));\n"
-    "    float y = texcoord.y + 0.00 * sin(offset + (texcoord.x * waves * 2.0 * 3.141592));\n"
+    "    float x = texcoord.x;\n"
+    "    float y = texcoord.y;\n"
     "    if (y < 1.0 && y > 0.0 && x < 1.0 && x > 0.0) {\n"
 		"	      gl_FragColor = texture2D(tex, texcoord);\n"
 		"	      gl_FragColor.a = 1.0;\n"
@@ -132,12 +133,12 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n"
     "    }\n"
     "}\n",
-    .uniform_names = {"tex", "offset"},
+    .uniform_names = {"tex"},
     .attribute_names = {"vertex"},
 };
 #endif
 
-static RASPITEXUTIL_TEXTURE_T texScore;
+//static RASPITEXUTIL_TEXTURE_T texScore;
 
 static const EGLint attribute_list[] =
 {
@@ -166,10 +167,10 @@ static int pong_init(RASPITEX_STATE *state)
 
     rc = raspitexutil_build_shader_program(&pong_shader);
 
-		printf("Loading numerals\n");
-		texScore = raspitexutil_load_texture("../../images/numerals.png");
+		//printf("Loading numerals\n");
+		//texScore = raspitexutil_load_texture("../../images/numerals.png");
 		//texScore = raspitexutil_load_texture("../../images/test.png");
-		printf("Id: %i, W: %i, H:%i\n", texScore.id, texScore.width, texScore.height);
+		//printf("Id: %i, W: %i, H:%i\n", texScore.id, texScore.width, texScore.height);
 		//raspitexutil_create_framebuffer(&texScore);
 		//printf("Framebuffer created.\n");
 		//raspitexutil_save_texture("/dev/shm/texture.png", &texScore);
@@ -179,11 +180,10 @@ end:
     return rc;
 }
 
-#define BORDER 0.2
+#define BORDER 0.15
 int score[2] = {0,0};
 
 static int pong_redraw(RASPITEX_STATE *raspitex_state) {
-    static float offset = 0.0;
 
     // Start with a clear screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -210,11 +210,10 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 #else
 		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));//tex
 		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 6));//tex
-		glActiveTexture(GL_TEXTURE6);
+		glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 #endif
 
-    offset += 0.05;
     GLCHK(glUseProgram(pong_shader.program));
     GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
 
@@ -229,13 +228,12 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
     };
     GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
 #if new_shader > 0
-    GLCHK(glUniform1f(pong_shader.uniform_locations[1], offset));//offset
-    GLCHK(glUniform2f(pong_shader.uniform_locations[3], BORDER, 1.0-BORDER));//border
-    GLCHK(glUniform2f(pong_shader.uniform_locations[4], (float) score[0], (float) score[1]));//score
-    GLCHK(glUniform4f(pong_shader.uniform_locations[5], 0.0, 0.25, 0.5, 0.75)); //scorePosLeft
-    GLCHK(glUniform4f(pong_shader.uniform_locations[6], 0.5, 0.25, 1.0, 0.75)); //scorePosRight
+    GLCHK(glUniform2f(pong_shader.uniform_locations[2], BORDER, 1.0-BORDER));//border
+    GLCHK(glUniform2f(pong_shader.uniform_locations[3], (float) score[0], (float) score[1]));//score
+    GLCHK(glUniform4f(pong_shader.uniform_locations[4], 0.0, 0.25, 0.5, 0.75)); //scorePosLeft
+    GLCHK(glUniform4f(pong_shader.uniform_locations[5], 0.5, 0.25, 1.0, 0.75)); //scorePosRight
 #else
-    GLCHK(glUniform1f(pong_shader.uniform_locations[1], offset));
+
 #endif
 
 
@@ -245,26 +243,24 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
     GLCHK(glUseProgram(0));
 
-		/*glActiveTexture(GL_TEXTURE1);
-		GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
-		glActiveTexture(GL_TEXTURE0);
-		*/
 		GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
 		glActiveTexture(GL_TEXTURE0);
 
 
 #if 1
-		//GLCHK(glEnable(GL_BLEND));
-		//GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-		//GLCHK(glFlush());
+		GLCHK(glEnable(GL_BLEND));
+		GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		RedrawTextures();
 #endif
 
+#if 0
 		static int counter_fb = 0;
 		if( ++counter_fb == 100 ){
+			printf("Saving…  ");
 			raspitexutil_save_framebuffer("/dev/shm/fb.png");
 			printf("Saved framebuffer in frame %i.\n", counter_fb-1);
 		}
+#endif
 
     return 0;
 }

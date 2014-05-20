@@ -32,14 +32,17 @@ EGLContext GContext;
 GfxShader GSimpleVS;
 GfxShader GSimpleFS;
 GfxShader GBlobFS;
+GfxShader GGuiVS;
+GfxShader GGuiFS;
 
 GfxProgram GSimpleProg;
 GfxProgram GBlobProg;
+GfxProgram GGuiProg;
 
 GLuint GQuadVertexBuffer;
 
 GfxTexture imvTexture;
-
+GfxTexture numeralsTexture;
 
 void InitGraphics()
 {
@@ -148,9 +151,10 @@ void InitTextures()
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
 	imvTexture.CreateGreyScale(121,68);
 	//imvTexture.GenerateFrameBuffer();
-
+	
+	numeralsTexture.CreateFromFile("../../images/numerals.png");
+	numeralsTexture.SetInterpolation(true);
 	//restore default
-	glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
 	
 }
 
@@ -161,10 +165,13 @@ void RedrawTextures()
 
 	//imvTexture.SetPixels(motion_data.imv_norm);
 	//DrawTextureRect(&imvTexture,1.0f,-1.0f,-1.0f,1.0f,NULL);
-
+	
+	DrawGUI(&numeralsTexture,pong.getScore(),0.05f,
+			-1.0f,1.0f,1.0f,-1.0f, NULL);
+	
 	blobCache.clear();
 	tracker.getFilteredBlobs(ALL_ACTIVE, blobCache);
-	//tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache);
+	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache);
 	//tracker.drawBlobsGL(motion_data.width, motion_data.height, NULL);
 
 	//Event handling and position update
@@ -193,6 +200,10 @@ void InitShaders()
 	check();
 	GBlobFS.LoadFragmentShader("shader/blobfragshader.glsl");
 	GBlobProg.Create(&GSimpleVS,&GBlobFS);
+
+	GGuiVS.LoadVertexShader("shader/guivertshader.glsl");
+	GGuiFS.LoadFragmentShader("shader/guifragshader.glsl");
+	GGuiProg.Create(&GGuiVS,&GGuiFS);
 	check();
 
 	//create an ickle vertex buffer
@@ -350,6 +361,24 @@ bool GfxProgram::Create(GfxShader* vertex_shader, GfxShader* fragment_shader)
 	return true;	
 }
 
+bool GfxTexture::CreateFromFile(const char *filename)
+{
+  unsigned error;
+  unsigned char* image = NULL;
+  size_t width, height;
+
+  error = lodepng_decode32_file(&image, &width, &height, filename);
+
+  if(error){
+		printf("decoder error %u: %s\n", error, lodepng_error_text(error));
+		return false;
+	}
+	
+	bool ret = CreateRGBA(width,height,image);
+  free(image);
+	return ret;
+}
+
 bool GfxTexture::CreateRGBA(int width, int height, const void* data)
 {
 	Width = width;
@@ -411,6 +440,11 @@ void GfxTexture::SetPixels(const void* data)
 	check();
 }
 
+void GfxTexture::SetInterpolation(bool interpol)
+{
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
+	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
+}
 
 void GfxTexture::Save(const char* fname)
 {
@@ -492,7 +526,6 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 		check();
 	}
 
-	printf("BlobProgId: %i %s\n", (int)GBlobProg.GetId(), glIsProgram(GBlobProg.GetId())?"Ja":"Nein" );
 	glUseProgram(GBlobProg.GetId());	check();
 
 	glUniform2f(glGetUniformLocation(GBlobProg.GetId(),"offset"),x0,y0);
@@ -507,6 +540,48 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 	glEnableVertexAttribArray(loc);	check();
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
 
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	if(render_target && false)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
+	}
+}
+
+void DrawGUI(GfxTexture *scoreTexture,const int *const score, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target)
+{
+	if(render_target && false)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
+		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		check();
+	}
+
+	glUseProgram(GGuiProg.GetId());	check();
+
+	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"offset"),x0,y0);
+	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"scale"),x1-x0,y1-y0);
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, scoreTexture->GetId());
+	glUniform1i(glGetUniformLocation(GGuiProg.GetId(),"numerals"), 0);
+
+  glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"border"), border, 1.0-border);//border
+  glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"score"), (float) score[0], (float) score[1]);//score
+  glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosLeft"), 0.0, 0.25, 0.5, 0.75); //scorePosLeft
+  glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosRight"), 0.5, 0.25, 1.0, 0.75); //scorePosRight
+
+	check();
+
+	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
+
+	GLuint loc = glGetAttribLocation(GBlobProg.GetId(),"vertex");
+	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
+	glEnableVertexAttribArray(loc);	check();
+	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
+
+	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
 	if(render_target && false)
