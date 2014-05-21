@@ -9,6 +9,7 @@
 #include "lodepng.h"
 
 #include "GraphicsStub.h"
+#include "Pong.h"
 
 class GfxShader
 {
@@ -71,7 +72,7 @@ public:
 void SaveFrameBuffer(const char* fname);
 void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1, GfxTexture* render_target);
 void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float y1, GfxTexture* render_target);
-void DrawGUI(GfxTexture* scoreTexture,const int * const score, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target);
+void DrawGUI(GfxTexture* scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target);
 
 
 extern GfxTexture imvTexture;

@@ -18,7 +18,6 @@
 #include "Tracker2.h"
 extern Tracker2 tracker;
 
-#include "Pong.h"
 extern Pong pong;
 
 #define check() assert(glGetError() == 0)
@@ -166,7 +165,7 @@ void RedrawTextures()
 	//imvTexture.SetPixels(motion_data.imv_norm);
 	//DrawTextureRect(&imvTexture,1.0f,-1.0f,-1.0f,1.0f,NULL);
 	
-	DrawGUI(&numeralsTexture,pong.getScore(),0.05f,
+	DrawGUI(&numeralsTexture,&pong,0.05f,
 			-1.0f,1.0f,1.0f,-1.0f, NULL);
 	
 	blobCache.clear();
@@ -549,7 +548,7 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 	}
 }
 
-void DrawGUI(GfxTexture *scoreTexture,const int *const score, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target)
+void DrawGUI(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
 	if(render_target && false)
 	{
@@ -567,10 +566,23 @@ void DrawGUI(GfxTexture *scoreTexture,const int *const score, float border, floa
 	glBindTexture(GL_TEXTURE_2D, scoreTexture->GetId());
 	glUniform1i(glGetUniformLocation(GGuiProg.GetId(),"numerals"), 0);
 
-  glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"border"), border, 1.0-border);//border
-  glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"score"), (float) score[0], (float) score[1]);//score
-  glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosLeft"), 0.0, 0.25, 0.5, 0.75); //scorePosLeft
-  glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosRight"), 0.5, 0.25, 1.0, 0.75); //scorePosRight
+	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"border"),
+			pong->isActivePlayer(0)?border:0.0,
+			pong->isActivePlayer(1)?1.0-border:1.0 );//border
+  glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"score"),
+			(float) pong->getScore()[0],
+			(float) pong->getScore()[1]);//score
+	if( pong->isActivePlayer(1) ) {
+		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosLeft"), 0.0, 0.25, 0.5, 0.75); //scorePosLeft
+	}else{
+		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosLeft"), 0.0, 0.1, 0.1, -0.2); //scorePosLeft
+	}
+
+	if( pong->isActivePlayer(0) ){
+		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosRight"), 0.5, 0.25, 1.0, 0.75); //scorePosRight
+	}else{
+		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosRight"), 0.9, 0.1, 1.0, -0.2); //scorePosRight
+	}
 
 	check();
 

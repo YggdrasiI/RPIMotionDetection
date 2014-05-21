@@ -15,6 +15,7 @@ class Pong{
 		float m_radius[2];
 		float m_aspect;
 		float m_color[3];
+		bool m_activePlayer[2];
 #define Col(r,g,b) {m_color[0]=(r)/255.0; m_color[1]=(g)/255.0; m_color[2]=(b)/255.0;}
 
 		//C=>factor*C+abs
@@ -33,6 +34,8 @@ class Pong{
 		void changeVelocity(float x, float y);
 		void setRadius(float r);
 		void setAspect(float a);
+		void setActivePlayers(bool left, bool right);
+		bool isActivePlayer(int index);
 		void drawBall();
 
 		//width and height are the dimensions of the blob rect coordinates.

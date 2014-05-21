@@ -167,6 +167,9 @@ int main(int argc, const char **argv){
 		return -1;
 	}
 
+	// Player setup for pong
+	pong.setActivePlayers(false, true);
+
 	//start raspivid application.
 	raspivid(argc, argv);
 
