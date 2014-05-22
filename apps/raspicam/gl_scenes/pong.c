@@ -138,7 +138,10 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
 };
 #endif
 
-//static RASPITEXUTIL_TEXTURE_T texScore;
+static RASPITEXUTIL_TEXTURE_T cameraBuffer; //for fany output effects
+static unsigned char render_into_framebuffer = 0;
+static uint32_t GScreenWidth;
+static uint32_t GScreenHeight;
 
 static const EGLint attribute_list[] =
 {
@@ -175,71 +178,53 @@ static int pong_init(RASPITEX_STATE *state)
 		//printf("Framebuffer created.\n");
 		//raspitexutil_save_texture("/dev/shm/texture.png", &texScore);
 		//printf("Saved Texture\n");
+		
+		graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+		cameraBuffer = raspitexutil_create_texture_rgba(GScreenWidth, GScreenHeight, 0, NULL);
+		raspitexutil_create_framebuffer(&cameraBuffer);
 
 end:
     return rc;
 }
 
-#define BORDER 0.15
-int score[2] = {0,0};
-
 static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
     // Start with a clear screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		GLCHK(glDisable(GL_BLEND));
-#if new_shader > 0
-		/* ATTENTION, bind EXTERNAL_OES images AFTER other textures!! */
-		GLCHK(glUniform1i(pong_shader.uniform_locations[2], 0));//numerals
+		RedrawGui();
 
-		/* ATTENTION. Dont set location for EXTERNAL_OES texture. The next(!) called shader will fail.*/
-		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 6));//tex
+		if( render_into_framebuffer ){
+			/* Render OES image into framebuffer to store it for some more complex 
+			 * shaders */
 
-		// Bind Score texture
-		glActiveTexture(GL_TEXTURE6);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
+		}else{
 
-		glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, texScore.id);
+			GLCHK(glEnable(GL_BLEND));
+			GLCHK(glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA));
 
-    // Bind the OES texture which is used to render the camera preview
-//		glActiveTexture(GL_TEXTURE1);
-//    glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
-		glActiveTexture(GL_TEXTURE0);
-#else
-		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));//tex
-		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 6));//tex
-		glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
-#endif
+			GLCHK(glUseProgram(pong_shader.program));
+			glActiveTexture(GL_TEXTURE0);
+			glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
-    GLCHK(glUseProgram(pong_shader.program));
-    GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
+			GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
 
-    GLfloat varray[] = {
-        -1.0f, -1.0f,
-        1.0f,  1.0f,
-        1.0f, -1.0f,
+			static const GLfloat varray[] = {
+				-1.0f, -1.0f,
+				1.0f,  1.0f,
+				1.0f, -1.0f,
 
-        -1.0f,  1.0f,
-        1.0f,  1.0f,
-        -1.0f, -1.0f,
-    };
-    GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
-#if new_shader > 0
-    GLCHK(glUniform2f(pong_shader.uniform_locations[2], BORDER, 1.0-BORDER));//border
-    GLCHK(glUniform2f(pong_shader.uniform_locations[3], (float) score[0], (float) score[1]));//score
-    GLCHK(glUniform4f(pong_shader.uniform_locations[4], 0.0, 0.25, 0.5, 0.75)); //scorePosLeft
-    GLCHK(glUniform4f(pong_shader.uniform_locations[5], 0.5, 0.25, 1.0, 0.75)); //scorePosRight
-#else
+				-1.0f,  1.0f,
+				1.0f,  1.0f,
+				-1.0f, -1.0f,
+			};
+			GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
 
-#endif
+			GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
 
-
-    GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
-
-    GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
+			GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
+		}
 
     GLCHK(glUseProgram(0));
 
@@ -248,9 +233,10 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
 
 #if 1
-		GLCHK(glEnable(GL_BLEND));
+//		GLCHK(glEnable(GL_BLEND));
 		GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		RedrawTextures();
+		GLCHK(glDisable(GL_BLEND));
 #endif
 
 #if 0

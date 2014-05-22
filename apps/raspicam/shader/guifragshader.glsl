@@ -14,12 +14,15 @@ void main(void) {
 		if( x < border.x || x > border.y ){
 			ret.r = 1.0;
 			ret.a = 0.2;
-		}
-		if( x < scorePosLeft.z && x > scorePosLeft.x && y < scorePosLeft.w && y > scorePosLeft.y ){
-			ret += texture2D(numerals, scorecoordLeft);
-		}
-		if( x < scorePosRight.z && x > scorePosRight.x && y < scorePosRight.w && y > scorePosRight.y ){
-			ret += texture2D(numerals, scorecoordRight);
+		}else{
+			if( x < scorePosLeft.z && x > scorePosLeft.x && y < scorePosLeft.w && y > scorePosLeft.y ){
+				ret += texture2D(numerals, scorecoordLeft);
+				ret.a *= ret.a;
+			}
+			if( x < scorePosRight.z && x > scorePosRight.x && y < scorePosRight.w && y > scorePosRight.y ){
+				ret += texture2D(numerals, scorecoordRight);
+				ret.a *= ret.a;
+			}
 		}
 		ret.a = min(ret.a,0.2);
 		gl_FragColor = ret;

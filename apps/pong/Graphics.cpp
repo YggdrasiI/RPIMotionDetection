@@ -33,15 +33,20 @@ GfxShader GSimpleFS;
 GfxShader GBlobFS;
 GfxShader GGuiVS;
 GfxShader GGuiFS;
+GfxShader GPongFS;
 
 GfxProgram GSimpleProg;
 GfxProgram GBlobProg;
 GfxProgram GGuiProg;
+GfxProgram GPongProg;
 
 GLuint GQuadVertexBuffer;
 
 GfxTexture imvTexture;
 GfxTexture numeralsTexture;
+GfxTexture raspiTexture;//Texture of Logo
+GfxTexture guiTexture; //only redrawed on gui changes
+bool guiNeedRedraw = true;
 
 void InitGraphics()
 {
@@ -146,18 +151,38 @@ void InitGraphics()
 
 void InitTextures()
 {
+	graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+
 	/* Begin of row values is NOT word-aligned. Set alignment to 1 */
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
 	imvTexture.CreateGreyScale(121,68);
 	//imvTexture.GenerateFrameBuffer();
 	
+	//restore default
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
+	
 	numeralsTexture.CreateFromFile("../../images/numerals.png");
 	numeralsTexture.SetInterpolation(true);
-	//restore default
-	
+
+	raspiTexture.CreateFromFile("../../images/Raspi_Logo_128.png");
+	raspiTexture.SetInterpolation(true);
+
+	guiTexture.CreateRGBA(GScreenWidth,GScreenHeight, NULL);
 }
 
 static std::vector<cBlob> blobCache;
+
+void RedrawGui()
+{
+	DrawGui(&numeralsTexture,&pong,0.05f,
+			-1.0f,1.0f,1.0f,-1.0f, NULL);
+
+	if( !guiNeedRedraw ) return;
+	DrawGui(&numeralsTexture,&pong,0.05f,
+			-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
+
+	guiNeedRedraw = false;
+}
 
 void RedrawTextures()
 {
@@ -165,8 +190,8 @@ void RedrawTextures()
 	//imvTexture.SetPixels(motion_data.imv_norm);
 	//DrawTextureRect(&imvTexture,1.0f,-1.0f,-1.0f,1.0f,NULL);
 	
-	DrawGUI(&numeralsTexture,&pong,0.05f,
-			-1.0f,1.0f,1.0f,-1.0f, NULL);
+	//DrawGui(&numeralsTexture,&pong,0.05f,
+	//		-1.0f,1.0f,1.0f,-1.0f, NULL);
 	
 	blobCache.clear();
 	tracker.getFilteredBlobs(ALL_ACTIVE, blobCache);
@@ -203,6 +228,9 @@ void InitShaders()
 	GGuiVS.LoadVertexShader("shader/guivertshader.glsl");
 	GGuiFS.LoadFragmentShader("shader/guifragshader.glsl");
 	GGuiProg.Create(&GGuiVS,&GGuiFS);
+
+	GPongFS.LoadFragmentShader("shader/pongfragshader.glsl");
+	GPongProg.Create(&GSimpleVS,&GPongFS);
 	check();
 
 	//create an ickle vertex buffer
@@ -481,7 +509,7 @@ void SaveFrameBuffer(const char* fname)
 
 void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
-	if(render_target && false)
+	if(render_target )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
 		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
@@ -492,12 +520,12 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"offset"),x0,y0);
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"scale"),x1-x0,y1-y0);
-	glUniform1i(glGetUniformLocation(GSimpleProg.GetId(),"tex"), 6);
+	glUniform1i(glGetUniformLocation(GSimpleProg.GetId(),"tex"), 0);
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
 
-	glActiveTexture(GL_TEXTURE6);
+	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
 
 	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
@@ -505,11 +533,11 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 	glEnableVertexAttribArray(loc);	check();
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
 
-	glDisableVertexAttribArray(loc);	check();//neu
+	//glDisableVertexAttribArray(loc);	check();//neu
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if(render_target && false)
+	if(render_target )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
@@ -518,7 +546,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 
 void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
-	if(render_target && false)
+	if(render_target )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
 		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
@@ -541,16 +569,16 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	if(render_target && false)
+	if(render_target )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
 	}
 }
 
-void DrawGUI(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target)
+void DrawGui(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
-	if(render_target && false)
+	if(render_target )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
 		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
@@ -596,7 +624,47 @@ void DrawGUI(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-	if(render_target && false)
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
+	}
+}
+
+// Like DrawTextureRect with extra color information
+void DrawPongRect(GfxTexture* texture, float r, float g, float b,
+		float x0, float y0, float x1, float y1, GfxTexture* render_target)
+{
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
+		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		check();
+	}
+
+	glUseProgram(GPongProg.GetId());	check();
+
+	glUniform2f(glGetUniformLocation(GPongProg.GetId(),"offset"),x0,y0);
+	glUniform2f(glGetUniformLocation(GPongProg.GetId(),"scale"),x1-x0,y1-y0);
+	glUniform1i(glGetUniformLocation(GPongProg.GetId(),"tex"), 0);
+	glUniform3f(glGetUniformLocation(GPongProg.GetId(),"colorMod"),r,g,b);
+	check();
+
+	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
+
+	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
+	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
+	glEnableVertexAttribArray(loc);	check();
+	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
+
+	//glDisableVertexAttribArray(loc);	check();//neu
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if(render_target )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );

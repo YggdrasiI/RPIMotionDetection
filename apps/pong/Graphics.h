@@ -72,9 +72,11 @@ public:
 void SaveFrameBuffer(const char* fname);
 void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1, GfxTexture* render_target);
 void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float y1, GfxTexture* render_target);
-void DrawGUI(GfxTexture* scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target);
-
+void DrawGui(GfxTexture* scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target);
+void DrawPongRect(GfxTexture* texture, float r, float g, float b,
+		float x0, float y0, float x1, float y1, GfxTexture* render_target);
 
 extern GfxTexture imvTexture;
+extern GfxTexture raspiTexture;
 
 #endif

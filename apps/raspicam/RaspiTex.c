@@ -96,11 +96,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define CommandGLScene   1
 #define CommandGLWin     2
+#define CommandPlayerDummy     3
 
 static COMMAND_LIST cmdline_commands[] =
 {
    { CommandGLScene, "-glscene",  "gs",  "GL scene square,teapot,mirror,yuv,sobel,motion,pong", 1 },
    { CommandGLWin,   "-glwin",    "gw",  "GL window settings <'x,y,w,h'>", 1 },
+   { CommandPlayerDummy,   "-player",    "pl",  "Pong players [both,left,right]", 0 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -171,6 +173,11 @@ int raspitex_parse_cmdline(RASPITEX_STATE *state,
          used = 2;
          break;
       }
+      case CommandPlayerDummy: // Empty handle, to omit abort 
+			{
+         used = 2;
+         break;
+			}
    }
    return used;
 }
@@ -207,6 +214,7 @@ static void update_fps()
       frame_count = 0;
       time_start = time_now;
       vcos_log_info("%3.2f FPS", fps);
+      printf("%3.2f FPS\n", fps); fflush(stdout);
    }
 }
 
@@ -339,6 +347,7 @@ static int raspitex_draw(RASPITEX_STATE *state, MMAL_BUFFER_HEADER_T *buf)
       raspitex_do_capture(state);
 
       eglSwapBuffers(state->display, state->surface);
+			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       update_fps();
    }
    else

@@ -17,6 +17,7 @@ void BeginFrame();
 void EndFrame();
 
 void InitTextures();
+void RedrawGui();
 void RedrawTextures();
 void FooBar();
 

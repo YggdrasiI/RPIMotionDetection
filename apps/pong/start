@@ -1,0 +1,8 @@
+#!/bin/bash
+
+PLAYER=both #both|left|right
+test "$1" ==  "" || PLAYER="$1"
+
+echo "Start with player $PLAYER"
+
+./pong --player ${PLAYER} --hflip -rot 90 -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null

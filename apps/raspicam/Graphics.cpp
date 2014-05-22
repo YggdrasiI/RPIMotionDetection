@@ -146,6 +146,11 @@ void InitTextures()
 	//imvTexture.GenerateFrameBuffer();
 }
 
+void RedrawGui()
+{
+	// no gui in this app
+}
+
 void RedrawTextures()
 {
 	static int savecounter=0;

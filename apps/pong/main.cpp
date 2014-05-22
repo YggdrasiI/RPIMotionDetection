@@ -167,8 +167,35 @@ int main(int argc, const char **argv){
 		return -1;
 	}
 
-	// Player setup for pong
-	pong.setActivePlayers(false, true);
+	/* Parse input arguments (similar to RaspiVid, but less smart )*/
+   int valid = 1;
+   int i;
+
+   for (i = 1; i < argc-1 && valid; ++i)
+	 {
+		 int command_id, num_parameters;
+
+		 if (!argv[i])
+			 continue;
+
+		 // Player setup for pong
+		 if ( strcmp(argv[i],"--player") == 0 || strcmp(argv[i],"-pl") == 0 ){
+			 if( strcmp( argv[i+1], "left" ) == 0 ){
+				 pong.setActivePlayers(true, false);
+				 continue;
+			 }
+			 if( strcmp( argv[i+1], "right" ) == 0 ){
+				 pong.setActivePlayers(false, true);
+				 continue;
+			 }
+			 if( strcmp( argv[i+1], "both" ) == 0 ){
+				 pong.setActivePlayers(true, true);
+				 continue;
+			 }
+		 }
+	 }
+
+
 
 	//start raspivid application.
 	raspivid(argc, argv);

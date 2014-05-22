@@ -6,6 +6,16 @@
 
 #include "../../Blob.h"
 
+#define SCORE_MAX 9 //0,…,9
+#define PLAYER_MAX 2
+
+/* Maximal vertical velocity */
+#define YLIMIT 0.05
+
+/* Shrink available area for ball */
+#define SCREEN_BORDER_SKIP 0.0
+
+
 class Pong{
 	private:
 		/* Position varies in [-1,1]^2 and ignores the aspect ratio */
@@ -15,7 +25,7 @@ class Pong{
 		float m_radius[2];
 		float m_aspect;
 		float m_color[3];
-		bool m_activePlayer[2];
+		bool m_activePlayer[PLAYER_MAX];
 #define Col(r,g,b) {m_color[0]=(r)/255.0; m_color[1]=(g)/255.0; m_color[2]=(b)/255.0;}
 
 		//C=>factor*C+abs
@@ -23,6 +33,7 @@ class Pong{
 
 	public:
 		Pong(float radius, float aspect);
+		void changeScore(const unsigned int index, int change);
 		void updatePosition();
 		void reset();
 		const float* const getPosition();
@@ -35,7 +46,7 @@ class Pong{
 		void setRadius(float r);
 		void setAspect(float a);
 		void setActivePlayers(bool left, bool right);
-		bool isActivePlayer(int index);
+		bool isActivePlayer(unsigned int index);
 		void drawBall();
 
 		//width and height are the dimensions of the blob rect coordinates.
