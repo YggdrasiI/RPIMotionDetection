@@ -71,7 +71,7 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
 
     .fragment_source =
     "#extension GL_OES_EGL_image_external : require\n"
-    "uniform samplerExternalOES aaatex;\n"
+    "uniform samplerExternalOES tex;\n"
 		"uniform sampler2D numerals;\n"
     "uniform float offset;\n"
     "uniform vec2 border;\n"
@@ -85,7 +85,7 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "    float x = texcoord.x + 0.00 * sin(offset + (texcoord.y * waves * 2.0 * 3.141592));\n"
     "    float y = texcoord.y + 0.00 * sin(offset + (texcoord.x * waves * 2.0 * 3.141592));\n"
     "    if (y < 1.0 && y > 0.0 && x < 1.0 && x > 0.0) {\n"
-		"     vec4 ret = texture2D(aaatex, texcoord);\n"
+		"     vec4 ret = texture2D(tex, texcoord);\n"
 		"     if( x < border.x || x > border.y ){\n"
 		"      ret.r += 0.2;\n"
 		"     }\n"
@@ -102,7 +102,8 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "    }\n"
 		"     gl_FragColor.a = 1.0;\n"
     "}\n",
-    .uniform_names = {"aaatex", "offset", "numerals", "border", "score", "scorePosLeft", "scorePosRight"},
+		/* ATTENTION: List all textures at the beginning of the array!! */
+    .uniform_names = {"tex", "numerals", "offset", "border", "score", "scorePosLeft", "scorePosRight"},
     .attribute_names = {"vertex"},
 };
 #else
@@ -190,32 +191,25 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
 		GLCHK(glDisable(GL_BLEND));
 #if new_shader > 0
-		/* ATTENTION, bind EXTERNAL_OES images AFTER other textures!! */
-		GLCHK(glUniform1i(pong_shader.uniform_locations[2], 0));//numerals
 
-		/* ATTENTION. Dont set location for EXTERNAL_OES texture. The next(!) called shader will fail.*/
-		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 6));//tex
+		GLCHK(glUseProgram(pong_shader.program));
+
+		GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));
+		GLCHK(glUniform1i(pong_shader.uniform_locations[1], 1));
 
 		// Bind Score texture
-		glActiveTexture(GL_TEXTURE6);
+		glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
-		glActiveTexture(GL_TEXTURE0);
+		glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, texScore.id);
 
-    // Bind the OES texture which is used to render the camera preview
-//		glActiveTexture(GL_TEXTURE1);
-//    glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
-		glActiveTexture(GL_TEXTURE0);
 #else
-		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));//tex
-		//GLCHK(glUniform1i(pong_shader.uniform_locations[0], 6));//tex
 		glActiveTexture(GL_TEXTURE6);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 #endif
 
     offset += 0.05;
-    GLCHK(glUseProgram(pong_shader.program));
     GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
 
     GLfloat varray[] = {
@@ -229,7 +223,7 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
     };
     GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
 #if new_shader > 0
-    GLCHK(glUniform1f(pong_shader.uniform_locations[1], offset));//offset
+    GLCHK(glUniform1f(pong_shader.uniform_locations[2], offset));//offset
     GLCHK(glUniform2f(pong_shader.uniform_locations[3], BORDER, 1.0-BORDER));//border
     GLCHK(glUniform2f(pong_shader.uniform_locations[4], (float) score[0], (float) score[1]));//score
     GLCHK(glUniform4f(pong_shader.uniform_locations[5], 0.0, 0.25, 0.5, 0.75)); //scorePosLeft
@@ -243,8 +237,6 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
     GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
 
-    GLCHK(glUseProgram(0));
-
 		/*glActiveTexture(GL_TEXTURE1);
 		GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
 		glActiveTexture(GL_TEXTURE0);
@@ -256,7 +248,6 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 #if 1
 		//GLCHK(glEnable(GL_BLEND));
 		//GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-		//GLCHK(glFlush());
 		RedrawTextures();
 #endif
 
@@ -279,3 +270,4 @@ int pong_open(RASPITEX_STATE *state)
 	state->ops.update_texture = raspitexutil_update_texture;
 	return 0;
 }
+
