@@ -1,4 +1,8 @@
 #!/bin/bash
+# Note:
+# To set the Resolution to 800x600 call 'tvservice -e "DMT 9"'
+# To set the Resolution to 1280x720 call 'tvservice -e "DMT 32"'
+# Higher resolutions consume a lot of gpu memory.
 
 PLAYER=both #both|left|right
 test "$1" ==  "" || PLAYER="$1"

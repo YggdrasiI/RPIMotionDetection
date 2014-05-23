@@ -16,7 +16,7 @@ void ReleaseGraphics();
 void BeginFrame();
 void EndFrame();
 
-void InitTextures();
+void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight);
 void RedrawGui();
 void RedrawTextures();
 void FooBar();

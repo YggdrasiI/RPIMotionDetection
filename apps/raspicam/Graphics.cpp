@@ -138,7 +138,7 @@ void InitGraphics()
 	InitShaders();
 }
 
-void InitTextures()
+void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 {
 	/* Begin of row values is NOT word-aligned. Set alignment to 1 */
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 

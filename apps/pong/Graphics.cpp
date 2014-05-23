@@ -151,9 +151,12 @@ void InitGraphics()
 	InitShaders();
 }
 
-void InitTextures()
+void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 {
-	graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+	//gl window size could differ...
+	//graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+	GScreenWidth = glWinWidth;
+	GScreenHeight = glWinHeight;
 
 	/* Begin of row values is NOT word-aligned. Set alignment to 1 */
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
@@ -513,9 +516,9 @@ void GfxTexture::fromRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
 
 void SaveFrameBuffer(const char* fname)
 {
-	uint32_t GScreenWidth;
-	uint32_t GScreenHeight;
-	graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+	//uint32_t GScreenWidth;
+	//uint32_t GScreenHeight;
+	//graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
 	void* image = malloc(GScreenWidth*GScreenHeight*4);
 	glBindFramebuffer(GL_FRAMEBUFFER,0);
 	check();

@@ -115,7 +115,6 @@ RASPITEXUTIL_TEXTURE_T guiBuffer; //connected with GfxTexture in C++ class
 static unsigned char render_into_framebuffer = 0;
 static uint32_t GScreenWidth;
 static uint32_t GScreenHeight;
-static RASPITEXUTIL_TEXTURE_T texScore;
 
 static const EGLint attribute_list[] =
 {
@@ -138,22 +137,18 @@ static int pong_init(RASPITEX_STATE *state)
     if (rc != 0)
        goto end;
 
+		//gl window size could differ...
+		//graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+		GScreenWidth = state->width;
+		GScreenHeight = state->height;
+
 		//Call initialisation functions in c++ part (Graphics.cpp)
-		InitTextures();
+		InitTextures(GScreenWidth, GScreenHeight);
 		InitShaders();
 
     rc = raspitexutil_build_shader_program(&pong_shader);
 
-		//printf("Loading numerals\n");
-		texScore = raspitexutil_load_texture("../../images/numerals.png");
-		//texScore = raspitexutil_load_texture("../../images/test.png");
-		//printf("Id: %i, W: %i, H:%i\n", texScore.id, texScore.width, texScore.height);
-		//raspitexutil_create_framebuffer(&texScore);
-		//printf("Framebuffer created.\n");
-		//raspitexutil_save_texture("/dev/shm/texture.png", &texScore);
-		//printf("Saved Texture\n");
-		
-		graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
+
 		cameraBuffer = raspitexutil_create_texture_rgba(GScreenWidth, GScreenHeight, 0, NULL);
 		raspitexutil_create_framebuffer(&cameraBuffer);
 
@@ -163,14 +158,13 @@ end:
 
 #if 1
 static int pong_redraw(RASPITEX_STATE *raspitex_state) {
-    static float offset = 0.0;
 
     // Start with a clear screen
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		GLCHK(glDisable(GL_BLEND));
 		RedrawGui();
-
 		//GLCHK(glDisable(GL_BLEND));
+		
 		GLCHK(glUseProgram(pong_shader.program));
 
 		GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));
@@ -183,8 +177,6 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 		glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
 
-    offset += 0.05;
-    //GLCHK(glUseProgram(pong_shader.program));
     GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
 
     GLfloat varray[] = {
@@ -197,19 +189,17 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
         -1.0f, -1.0f,
     };
     GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
-#define BORDER 0.15
-    //GLCHK(glUniform1f(pong_shader.uniform_locations[2], offset));//offset
-
     GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
 
     GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
-
 		GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
 		glActiveTexture(GL_TEXTURE0);
 
-#if 1
+
+		GLCHK(glEnable(GL_BLEND));
+		GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		RedrawTextures();
-#endif
+		GLCHK(glDisable(GL_BLEND));
 
     return 0;
 }

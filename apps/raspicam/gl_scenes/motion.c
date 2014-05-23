@@ -95,7 +95,8 @@ static int motion_init(RASPITEX_STATE *state)
 
     rc = raspitexutil_build_shader_program(&motion_shader);
 
-		InitTextures();
+		//Call initialisation functions in c++ part (Graphics.cpp)
+		InitTextures(state->width, state->height);
 		InitShaders();
 end:
     return rc;
