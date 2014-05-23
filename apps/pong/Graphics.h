@@ -8,6 +8,8 @@
 #include "EGL/eglext.h"
 #include "lodepng.h"
 
+#include "RaspiTexUtil.h"
+
 #include "GraphicsStub.h"
 #include "Pong.h"
 
@@ -47,9 +49,9 @@ class GfxTexture
 	int Width;
 	int Height;
 	GLuint Id;
+	GLuint FramebufferId;
 	bool IsRGBA;
 
-	GLuint FramebufferId;
 public:
 
 	GfxTexture() : Width(0), Height(0), Id(0), FramebufferId(0) {}
@@ -66,6 +68,8 @@ public:
 	GLuint GetFramebufferId() { return FramebufferId; }
 	int GetWidth() {return Width;}
 	int GetHeight() {return Height;}
+	void toRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex);
+	void fromRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex);
 };
 
 

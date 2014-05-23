@@ -12,9 +12,9 @@
 #endif
 
 #include "bcm_host.h"
-#include "Graphics.h"
 #include "RaspiImv.h"
 
+#include "Graphics.h"
 #include "Tracker2.h"
 extern Tracker2 tracker;
 
@@ -46,6 +46,8 @@ GfxTexture imvTexture;
 GfxTexture numeralsTexture;
 GfxTexture raspiTexture;//Texture of Logo
 GfxTexture guiTexture; //only redrawed on gui changes
+extern "C" RASPITEXUTIL_TEXTURE_T  guiBuffer;
+
 bool guiNeedRedraw = true;
 
 void InitGraphics()
@@ -168,14 +170,16 @@ void InitTextures()
 	raspiTexture.SetInterpolation(true);
 
 	guiTexture.CreateRGBA(GScreenWidth,GScreenHeight, NULL);
+	guiTexture.GenerateFrameBuffer();
+	guiTexture.toRaspiTexture(&guiBuffer);
 }
 
 static std::vector<cBlob> blobCache;
 
 void RedrawGui()
 {
-	DrawGui(&numeralsTexture,&pong,0.05f,
-			-1.0f,1.0f,1.0f,-1.0f, NULL);
+	//DrawGui(&numeralsTexture,&pong,0.05f,
+//			-1.0f,1.0f,1.0f,-1.0f, NULL);
 
 	if( !guiNeedRedraw ) return;
 	DrawGui(&numeralsTexture,&pong,0.05f,
@@ -487,6 +491,24 @@ void GfxTexture::Save(const char* fname)
 		printf("error: %d\n",error);
 
 	free(image);
+}
+
+//copy metadata from GfxTexture obj to c struct
+void GfxTexture::toRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
+	tex->width = Width;
+	tex->height = Height;
+	tex->id = Id;
+	tex->framebufferId = FramebufferId;
+	tex->isRGBA = IsRGBA?1:0;
+}
+
+//copy metadata from c ctruct to GfxTexture obj.
+void GfxTexture::fromRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
+	Width = tex->width;
+	Height = tex->height;
+	Id = tex->id;
+	FramebufferId = tex->framebufferId;
+	IsRGBA = tex->isRGBA?1:0;
 }
 
 void SaveFrameBuffer(const char* fname)

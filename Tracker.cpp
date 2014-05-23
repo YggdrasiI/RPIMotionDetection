@@ -23,9 +23,12 @@ std::vector<cBlob>& Tracker::getBlobs()
 
 void Tracker::getFilteredBlobs(Trackfilter filter, std::vector<cBlob> &output)
 {
+	/* I-Frames are without motions. Allow one missing frame. 
+	 * A general skipping of I-Frames would be a better solution.
+	 */
 	for (int i = 0; i < blobs.size(); i++) {
 		cBlob &b = blobs[i];
-		if( filter == ALL_ACTIVE && b.missing_duration == 0 && b.duration > 5){
+		if( filter == ALL_ACTIVE && b.missing_duration < 2 && b.duration > 5){
 			output.push_back(b);
 		}
 	}

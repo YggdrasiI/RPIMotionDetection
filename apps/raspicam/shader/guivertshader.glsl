@@ -9,7 +9,7 @@ uniform vec4 scorePosLeft;
 uniform vec4 scorePosRight;
 void main(void) {
    /*texcoord = 0.5 * (1.0 - vertex );*/
-   texcoord = vertex.xy;
+   texcoord = 1.0-vertex.xy;
    vec2 leftWH = vec2( scorePosLeft.z-scorePosLeft.x, scorePosLeft.a - scorePosLeft.y );
    vec2 leftPos = vec2( (texcoord.x-scorePosLeft.x)/(leftWH.x), (texcoord.y-scorePosLeft.y)/(leftWH.y) );
    scorecoordLeft.x = score.x*0.1+leftPos.x*0.1;
