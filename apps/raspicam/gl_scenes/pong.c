@@ -56,7 +56,7 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "varying vec2 texcoord;\n"
     "void main(void) {\n"
 		"    vec4 gui = texture2D(guitex, texcoord);\n"
-		"    vec4 blob = texture2D(blobstex, texcoord);\n"
+		"    vec4 blob = texture2D(blobstex, -texcoord);\n"
 		"    gl_FragColor.rgb = mix(texture2D(aaatex, texcoord).rgb, gui.rgb, gui.a );\n"
 		"    gl_FragColor.rgb = mix(gl_FragColor.rgb, blob.rgb, blob.a );\n"
 		"    gl_FragColor.a = 1.0;\n"
@@ -162,8 +162,8 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
 #if 0
 		static int counter_fb = 0;
-		if( ++counter_fb == 2000 ){
-			printf("Saving…  ");
+		if( ++counter_fb == 400 ){
+			printf("Saving…  "); fflush(stdout);
 			raspitexutil_save_framebuffer("/dev/shm/fb.png");
 			printf("Saved framebuffer in frame %i.\n", counter_fb-1);
 		}

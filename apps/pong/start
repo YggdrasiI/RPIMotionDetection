@@ -13,13 +13,13 @@ test "$2" ==  "" || PLAYER="$2"
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
 
 if [ "$RESOLUTION" = "high" ] ; then
-./pong --player ${PLAYER} --hflip -rot 90 -x /dev/null -t 0  --preview '0,0,1920,1080' --gl --glwin '0,0,1920,1080' --glscene pong -o /dev/null
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1920,1080' --gl --glwin '0,0,1920,1080' --glscene pong -o /dev/null
 fi
 
 if [ "$RESOLUTION" = "med" ] ; then
-./pong --player ${PLAYER} --hflip -rot 90 -x /dev/null -t 0  --preview '0,0,1280x1024' --gl --glwin '0,0,1280x1024' --glscene pong -o /dev/null
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1280x1024' --gl --glwin '0,0,1280x1024' --glscene pong -o /dev/null
 fi
 
 if [ "$RESOLUTION" = "low" ] ; then
-./pong --player ${PLAYER} --hflip -rot 90 -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null
 fi

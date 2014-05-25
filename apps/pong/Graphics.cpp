@@ -212,7 +212,7 @@ void RedrawTextures()
 {
 
 	//imvTexture.SetPixels(motion_data.imv_norm);
-	//DrawTextureRect(&imvTexture,1.0f,-1.0f,-1.0f,1.0f,NULL);
+	//DrawTextureRect(&imvTexture,-1.0,1.0f,-1.0f,-1.0f,1.0f,NULL);
 	
 	//DrawGui(&numeralsTexture,&pong,0.05f,
 	//		-1.0f,1.0f,1.0f,-1.0f, NULL);
@@ -556,7 +556,7 @@ void SaveFrameBuffer(const char* fname)
 
 }
 
-void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1, GfxTexture* render_target)
+void DrawTextureRect(GfxTexture* texture, float alpha, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
 	if(render_target )
 	{
@@ -570,6 +570,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"offset"),x0,y0);
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"scale"),x1-x0,y1-y0);
 	glUniform1i(glGetUniformLocation(GSimpleProg.GetId(),"tex"), 0);
+	glUniform1f(glGetUniformLocation(GSimpleProg.GetId(),"alpha"),alpha);
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
@@ -639,26 +640,28 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 		check();
 	}
 
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	if( numRects > 0 ){
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	glUseProgram(GBlobsProg.GetId());	check();
+		glUseProgram(GBlobsProg.GetId());	check();
 
-	GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
-	GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
+		GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
+		GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
 
-	glEnableVertexAttribArray(vloc);	
-	glEnableVertexAttribArray(cloc);	check();
+		glEnableVertexAttribArray(vloc);	
+		glEnableVertexAttribArray(cloc);	check();
 
-  glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-  glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
+		glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+		glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
 
-	glDrawArrays ( GL_TRIANGLES, 0, 6 ); check();
+		glDrawArrays ( GL_TRIANGLES, 0, numRects*6 ); check();
 
-	glDisableVertexAttribArray(vloc);	
-	glDisableVertexAttribArray(cloc);	check();
+		glDisableVertexAttribArray(vloc);	
+		glDisableVertexAttribArray(cloc);	check();
 
-	glDisable(GL_BLEND);
+		glDisable(GL_BLEND);
+	}
 
 	if(render_target )
 	{

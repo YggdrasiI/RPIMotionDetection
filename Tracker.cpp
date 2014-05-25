@@ -107,8 +107,8 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 			x1 = 2.0*b.max.x/screenWidth-1;
 			y1 = 2.0*b.max.y/screenHeight-1;
 			/* Flip x0 with x1 to get same flipping as video frame */
-			//x0 = -x0; x1 = -x1;
-			y0 = -y0; y1 = -y1;
+			x0 = -x0; x1 = -x1;
+			//y0 = -y0; y1 = -y1;
 
 			//printf("  [%f-%f] x [%f-%f]\n", x0, x1, y0, y1);
 			//DrawBlobRect( col[0], col[1], col[2], x0,y0, x1, y1, NULL);
@@ -136,9 +136,7 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 	}
 	m_swap_mutex = 0;
 
-	if( quadIndex ){
-			DrawBlobRects(&points[0], &colors[0], quadIndex, target);
-	}
+	DrawBlobRects(&points[0], &colors[0], quadIndex, target);
 
 }
 #endif

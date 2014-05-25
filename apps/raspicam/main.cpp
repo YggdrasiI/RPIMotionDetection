@@ -67,7 +67,7 @@ void* blob_detection(void *argn){
 					tracker.trackBlobs( frameblobs, true );
 					
 					//4. Opengl Output
-
+					// see gl_scenes/motion.c
 
 					// Debug: Replace imv_norm with ids, roi has to start in (0,0) and with full width.
 					eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);

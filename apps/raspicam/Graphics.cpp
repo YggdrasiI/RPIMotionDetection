@@ -156,31 +156,30 @@ void RedrawGui()
 
 void RedrawTextures()
 {
-	static int savecounter=0;
-	if( savecounter == 400 )
-		SaveFrameBuffer("/dev/shm/fb1.png");
 
 	imvTexture.SetPixels(motion_data.imv_norm);
-	//DrawTextureRect(&imvTexture,-1.f,-1.f,1.f,1.f,NULL);
+	//DrawTextureRect(&imvTexture,-1.0, -1.f,-1.f,1.f,1.f,NULL);
 	//Use Scaling to flip horizontal
-	//DrawTextureRect(&imvTexture,.5f,-.5f,-.5f,.5f,NULL);
-	DrawTextureRect(&imvTexture,1.0f,-1.0f,-1.0f,1.0f,NULL);
+	//DrawTextureRect(&imvTexture,-1.0, .5f,-.5f,-.5f,.5f,NULL);
+	DrawTextureRect(&imvTexture,0.4, 1.0f,-1.0f,-1.0f,1.0f,NULL);
 
-	//DrawBlobRect(0.5,0.1,0.1,.5f,-.5f,-.5f,.5f,NULL);
 	tracker.drawBlobsGL(motion_data.width, motion_data.height);
 
 
+#if 0
+	static int savecounter=0;
 	if( savecounter == 400 )
-		SaveFrameBuffer("/dev/shm/fb2.png");
-
+		SaveFrameBuffer("/dev/shm/fb1.png");
 	++savecounter;
+#endif
 }
 
 void InitShaders()
 {
 	//load the test shaders
 	GSimpleVS.LoadVertexShader("shader/simplevertshader.glsl");
-	GSimpleFS.LoadFragmentShader("shader/simplefragshader.glsl");
+	//GSimpleFS.LoadFragmentShader("shader/simplefragshader.glsl");
+	GSimpleFS.LoadFragmentShader("shader/blobids_fragshader.glsl");
 	GSimpleProg.Create(&GSimpleVS,&GSimpleFS);
 	check();
 	GBlobFS.LoadFragmentShader("shader/blobfragshader.glsl");
@@ -442,9 +441,9 @@ void SaveFrameBuffer(const char* fname)
 
 }
 
-void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1, GfxTexture* render_target)
+void DrawTextureRect(GfxTexture* texture, float alpha, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
-	if(render_target && false)
+	if(render_target)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
 		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
@@ -456,6 +455,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"offset"),x0,y0);
 	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"scale"),x1-x0,y1-y0);
 	glUniform1i(glGetUniformLocation(GSimpleProg.GetId(),"tex"), 0);
+	glUniform1f(glGetUniformLocation(GSimpleProg.GetId(),"alpha"),alpha);
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
@@ -471,7 +471,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if(render_target && false)
+	if(render_target)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
@@ -480,7 +480,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 
 void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
-	if(render_target && false)
+	if(render_target)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
 		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
@@ -504,7 +504,7 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	if(render_target && false)
+	if(render_target)
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
@@ -517,24 +517,36 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
 		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
+		
 		check();
 	}
 
-	glUseProgram(GBlobsProg.GetId());	check();
+	if( numRects > 0 ){
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-	GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
-	GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
+		glUseProgram(GBlobsProg.GetId());	check();
 
-	glEnableVertexAttribArray(vloc);	
-	glEnableVertexAttribArray(cloc);	check();
+		GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
+		GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
 
-  glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-  glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
+		glEnableVertexAttribArray(vloc);	
+		glEnableVertexAttribArray(cloc);	check();
 
-	glDrawArrays ( GL_TRIANGLES, 0, 6 ); check();
+		glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+		glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
 
-	glDisableVertexAttribArray(vloc);	
-	glDisableVertexAttribArray(cloc);	check();
+		glDrawArrays ( GL_TRIANGLES, 0, numRects*6 ); check();
+
+		glDisableVertexAttribArray(vloc);	
+		glDisableVertexAttribArray(cloc);	check();
+
+		glDisable(GL_BLEND);
+	}
 
 	if(render_target )
 	{

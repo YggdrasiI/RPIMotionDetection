@@ -53,22 +53,12 @@ static RASPITEXUTIL_SHADER_PROGRAM_T motion_shader = {
     .fragment_source =
     "#extension GL_OES_EGL_image_external : require\n"
     "uniform samplerExternalOES tex;\n"
-    "uniform float offset;\n"
-    "const float waves = 2.0;\n"
     "varying vec2 texcoord;\n"
     "void main(void) {\n"
-    "    float x = texcoord.x + 0.00 * sin(offset + (texcoord.y * waves * 2.0 * 3.141592));\n"
-    "    float y = texcoord.y + 0.00 * sin(offset + (texcoord.x * waves * 2.0 * 3.141592));\n"
-    "    if (y < 1.0 && y > 0.0 && x < 1.0 && x > 0.0) {\n"
-    "       vec2 pos = vec2(x, y);\n"
     "       gl_FragColor = texture2D(tex, texcoord);\n"
     "       gl_FragColor.a = 0.5;\n"
-    "    }\n"
-    "    else {\n"
-    "       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n"
-    "    }\n"
     "}\n",
-    .uniform_names = {"tex", "offset"},
+    .uniform_names = {"tex"},
     .attribute_names = {"vertex"},
 };
 
@@ -103,7 +93,6 @@ end:
 }
 
 static int motion_redraw(RASPITEX_STATE *raspitex_state) {
-    static float offset = 0.0;
 
     // Start with a clear screen
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -112,7 +101,6 @@ static int motion_redraw(RASPITEX_STATE *raspitex_state) {
 		glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
-    offset += 0.05;
     GLCHK(glUseProgram(motion_shader.program));
     GLCHK(glEnableVertexAttribArray(motion_shader.attribute_locations[0]));
 
@@ -126,7 +114,6 @@ static int motion_redraw(RASPITEX_STATE *raspitex_state) {
         -1.0f, -1.0f,
     };
     GLCHK(glVertexAttribPointer(motion_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
-    GLCHK(glUniform1f(motion_shader.uniform_locations[1], offset));
     GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
 
     GLCHK(glDisableVertexAttribArray(motion_shader.attribute_locations[0]));
@@ -136,6 +123,8 @@ static int motion_redraw(RASPITEX_STATE *raspitex_state) {
 		GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
 		RedrawTextures();
 		GLCHK(glDisable(GL_BLEND));
+
+		update_fps();
 
     return 0;
 }

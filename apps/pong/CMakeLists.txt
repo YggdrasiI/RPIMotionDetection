@@ -64,7 +64,7 @@ execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/../raspicam/shad
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
 	)
 
-#Create symbolic link to start skript
+#Create symbolic link to start script
 execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/start" "."
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
 	)
