@@ -764,3 +764,10 @@ void DrawPongRect(GfxTexture* texture, float r, float g, float b,
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
 	}
 }
+
+int GetShader(){
+	const int* score = pong.getScore();
+	return  ((score[0]+score[1])/3) %SHADER_TYPE_NUM;
+
+	return ShaderNormal;
+}

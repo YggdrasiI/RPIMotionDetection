@@ -10,6 +10,16 @@ extern "C"
 {
 #endif
 
+enum SHADER_TYPE {
+ShaderNormal,
+ShaderSobel,
+ShaderHSV,
+ShaderMirror,
+SHADER_TYPE_NUM,
+} SHADER_TYPE ;
+
+int /*SHADER_TYPE*/ GetShader();
+
 void InitGraphics();
 void InitShaders();
 void ReleaseGraphics();

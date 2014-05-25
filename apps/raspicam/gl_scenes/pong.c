@@ -51,8 +51,8 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
 #else
 		"file:shader/gl_scenes/pong1.vert.glsl",
 #endif
-#if 0
     .fragment_source =
+#if 0
     "#extension GL_OES_EGL_image_external : require\n"
     "uniform samplerExternalOES tex;\n"
 		"uniform sampler2D guitex;\n"
@@ -68,7 +68,27 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
 #else
 		"file:shader/gl_scenes/pong1.frag.glsl",
 #endif
-    .uniform_names = {"tex", "guitex","blobstex"},
+    .uniform_names = {"tex", "guitex", "blobstex"},
+    .attribute_names = {"vertex"},
+};
+
+static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader_sobel = {
+    .vertex_source = "file:shader/gl_scenes/pong2.vert.glsl",
+    .fragment_source = "file:shader/gl_scenes/pong2.frag.glsl",
+    .uniform_names = {"tex", "guitex", "blobstex", "texelsize"},
+    .attribute_names = {"vertex"},
+};
+
+static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader_hsv = {
+    .vertex_source = "file:shader/gl_scenes/pong3.vert.glsl",
+    .fragment_source = "file:shader/gl_scenes/pong3.frag.glsl",
+    .uniform_names = {"tex", "guitex", "blobstex"},
+    .attribute_names = {"vertex"},
+};
+static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader_mirror = {
+    .vertex_source = "file:shader/gl_scenes/pong4.vert.glsl",
+    .fragment_source = "file:shader/gl_scenes/pong4.frag.glsl",
+    .uniform_names = {"tex", "guitex", "blobstex", "offset"},
     .attribute_names = {"vertex"},
 };
 
@@ -87,6 +107,16 @@ static const EGLint attribute_list[] =
 	EGL_ALPHA_SIZE, 8,
 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 	EGL_NONE
+};
+
+static GLfloat varray[] = {
+	-1.0f, -1.0f,
+	1.0f,  1.0f,
+	1.0f, -1.0f,
+
+	-1.0f,  1.0f,
+	1.0f,  1.0f,
+	-1.0f, -1.0f,
 };
 
 /**
@@ -110,6 +140,18 @@ static int pong_init(RASPITEX_STATE *state)
 		InitShaders();
 
     rc = raspitexutil_build_shader_program(&pong_shader);
+    if (rc != 0)
+       goto end;
+
+    rc = raspitexutil_build_shader_program(&pong_shader_sobel);
+    if (rc != 0)
+       goto end;
+
+    rc = raspitexutil_build_shader_program(&pong_shader_hsv);
+    if (rc != 0)
+       goto end;
+
+    rc = raspitexutil_build_shader_program(&pong_shader_mirror);
 
 
 		cameraBuffer = raspitexutil_create_texture_rgba(GScreenWidth, GScreenHeight, 0, NULL);
@@ -119,48 +161,163 @@ end:
     return rc;
 }
 
+/* Normal/Unfiltered output of video texture */
+static void pong_video1(RASPITEX_STATE *raspitex_state) {
+
+	GLCHK(glUseProgram(pong_shader.program));
+
+	GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));
+	GLCHK(glUniform1i(pong_shader.uniform_locations[1], 1));
+	GLCHK(glUniform1i(pong_shader.uniform_locations[2], 2));
+
+	// Bind Score texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, blobsBuffer.id);
+
+	GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
+
+	GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
+	GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
+
+	GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
+	GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
+	glActiveTexture(GL_TEXTURE0);
+
+}
+
+/* Sobel output of video texture */
+static void pong_video2(RASPITEX_STATE *raspitex_state) {
+
+	GLCHK(glUseProgram(pong_shader_sobel.program));
+
+	GLCHK(glUniform1i(pong_shader_sobel.uniform_locations[0], 0));
+	GLCHK(glUniform1i(pong_shader_sobel.uniform_locations[1], 1));
+	GLCHK(glUniform1i(pong_shader_sobel.uniform_locations[2], 2));
+
+	glUniform2f(pong_shader_sobel.uniform_locations[3],
+			1.f/raspitex_state->width, 1.f/raspitex_state->height );
+
+	// Bind Score texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, blobsBuffer.id);
+
+	GLCHK(glEnableVertexAttribArray(pong_shader_sobel.attribute_locations[0]));
+
+	GLCHK(glVertexAttribPointer(pong_shader_sobel.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
+	GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
+
+	GLCHK(glDisableVertexAttribArray(pong_shader_sobel.attribute_locations[0]));
+	GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
+	glActiveTexture(GL_TEXTURE0);
+
+}
+
+/* HSV conversion of rgb image */
+static void pong_video3(RASPITEX_STATE *raspitex_state) {
+
+	GLCHK(glUseProgram(pong_shader_hsv.program));
+
+	GLCHK(glUniform1i(pong_shader_hsv.uniform_locations[0], 0));
+	GLCHK(glUniform1i(pong_shader_hsv.uniform_locations[1], 1));
+	GLCHK(glUniform1i(pong_shader_hsv.uniform_locations[2], 2));
+
+	// Bind Score texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, blobsBuffer.id);
+
+	GLCHK(glEnableVertexAttribArray(pong_shader_hsv.attribute_locations[0]));
+
+	GLCHK(glVertexAttribPointer(pong_shader_hsv.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
+	GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
+
+	GLCHK(glDisableVertexAttribArray(pong_shader_hsv.attribute_locations[0]));
+	GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
+	glActiveTexture(GL_TEXTURE0);
+
+}
+
+/* Adaption of mirror scene shader */
+static void pong_video4(RASPITEX_STATE *raspitex_state) {
+	static float offset = 0.0;
+	offset += 0.05;
+
+	GLCHK(glUseProgram(pong_shader_mirror.program));
+
+	GLCHK(glUniform1i(pong_shader_mirror.uniform_locations[0], 0));
+	GLCHK(glUniform1i(pong_shader_mirror.uniform_locations[1], 1));
+	GLCHK(glUniform1i(pong_shader_mirror.uniform_locations[2], 2));
+
+	glUniform1f(pong_shader_mirror.uniform_locations[3], offset);
+
+	// Bind Score texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
+
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
+
+	glActiveTexture(GL_TEXTURE2);
+	glBindTexture(GL_TEXTURE_2D, blobsBuffer.id);
+
+	GLCHK(glEnableVertexAttribArray(pong_shader_mirror.attribute_locations[0]));
+
+	GLCHK(glVertexAttribPointer(pong_shader_mirror.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
+	GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
+
+	GLCHK(glDisableVertexAttribArray(pong_shader_mirror.attribute_locations[0]));
+	GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
+	glActiveTexture(GL_TEXTURE0);
+
+}
+
+
 static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
     // Start with a clear screen
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		//GLCHK(glDisable(GL_BLEND));
 		RedrawGui();
-		//GLCHK(glDisable(GL_BLEND));
+
+		int select = 0;
+		if( raspitex_state->ops.args[1] ){
+			select = raspitex_state->ops.args[1]; 
+		}else if( raspitex_state->ops.args[0] ){
+			//Ask pong object which shader should be used
+			select = GetShader();
+		}
 		
-		GLCHK(glUseProgram(pong_shader.program));
-
-		GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));
-		GLCHK(glUniform1i(pong_shader.uniform_locations[1], 1));
-		GLCHK(glUniform1i(pong_shader.uniform_locations[2], 2));
-
-		// Bind Score texture
-		glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
-
-		glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
-
-		glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_2D, blobsBuffer.id);
-
-    GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
-
-    GLfloat varray[] = {
-        -1.0f, -1.0f,
-        1.0f,  1.0f,
-        1.0f, -1.0f,
-
-        -1.0f,  1.0f,
-        1.0f,  1.0f,
-        -1.0f, -1.0f,
-    };
-    GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
-    GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
-
-    GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
-		GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
-		glActiveTexture(GL_TEXTURE0);
-
+		switch( select ){
+			case ShaderMirror:
+				pong_video4(raspitex_state);
+				break;
+			case ShaderHSV:
+				pong_video3(raspitex_state);
+				break;
+			case ShaderSobel:
+				pong_video2(raspitex_state);
+				break;
+			case ShaderNormal:
+			default:
+				pong_video1(raspitex_state);
+				break;
+		}
 
 		GLCHK(glEnable(GL_BLEND));
 		GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));

@@ -98,6 +98,9 @@ typedef struct RASPITEX_SCENE_OPS
 
    /// Called when the scene is unloaded
    void (*close)(struct RASPITEX_STATE *state);
+
+	 /// Optional arguments
+	 int args[3];
 } RASPITEX_SCENE_OPS;
 
 typedef struct RASPITEX_CAPTURE

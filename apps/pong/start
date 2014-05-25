@@ -10,19 +10,25 @@ test "$1" ==  "" || RESOLUTION="$1"
 PLAYER=both #both|left|right
 test "$2" ==  "" || PLAYER="$2"
 
-WAIT=7000
+# Timeout for camera calibration
+WAIT=5000
+
+# --pongUseShader select one shader for the whole game
+# --pongCycleShaders [Num] switch shader after N scoring points
+# Definition of the shaders: apps/raspivid/shaders/gl_scenes/pong*.glsl
+SHADEROPTIONS=--pongCycleShaders
 
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
 echo "Waiting $WAIT ms on camera initialisation"
 
 if [ "$RESOLUTION" = "high" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1920,1080' --gl --glwin '0,0,1920,1080' --glscene pong -o /dev/null --waitAndFix ${WAIT}
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1920,1080' --gl --glwin '0,0,1920,1080' --glscene pong -o /dev/null --waitAndFix ${WAIT} ${SHADEROPTIONS}
 fi
 
 if [ "$RESOLUTION" = "med" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1280x1024' --gl --glwin '0,0,1280x1024' --glscene pong -o /dev/null --waitAndFix ${WAIT}
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1280x1024' --gl --glwin '0,0,1280x1024' --glscene pong -o /dev/null --waitAndFix ${WAIT} ${SHADEROPTIONS}
 fi
 
 if [ "$RESOLUTION" = "low" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null --waitAndFix ${WAIT}
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null --waitAndFix ${WAIT} ${SHADEROPTIONS}
 fi

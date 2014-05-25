@@ -97,12 +97,17 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CommandGLScene   1
 #define CommandGLWin     2
 #define CommandPlayerDummy     3
+#define CommandSceneArg0     4
+#define CommandSceneArg1     5
+#define CommandSceneArg2     6 //unused
 
 static COMMAND_LIST cmdline_commands[] =
 {
    { CommandGLScene, "-glscene",  "gs",  "GL scene square,teapot,mirror,yuv,sobel,motion,pong", 1 },
    { CommandGLWin,   "-glwin",    "gw",  "GL window settings <'x,y,w,h'>", 1 },
    { CommandPlayerDummy,   "-player",    "pl",  "Pong players [both,left,right]", 0 },
+   { CommandSceneArg0,   "-pongCycleShaders",    "pcs",  "Cycle through all available shaders.", 0 },
+   { CommandSceneArg1,   "-pongUseShader",    "pus",  "Select manually a shader 1,2,...", 1 },
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);
@@ -177,6 +182,23 @@ int raspitex_parse_cmdline(RASPITEX_STATE *state,
 			{
          used = 2;
          break;
+			}
+      case CommandSceneArg0: 
+			{
+				state->ops.args[0] = 1;
+				used = 1;
+				break;
+			}
+      case CommandSceneArg1: 
+			{
+				int tmp;
+				tmp = sscanf(arg2, "%d", &state->ops.args[1]);
+				if (tmp != 1)
+				{
+					state->ops.args[1] = 0;
+				}
+				used = 2;
+				break;
 			}
    }
    return used;
@@ -687,6 +709,10 @@ void raspitex_set_defaults(RASPITEX_STATE *state)
    state->ops.gl_term = raspitexutil_gl_term;
    state->ops.destroy_native_window = raspitexutil_destroy_native_window;
    state->ops.close = raspitexutil_close;
+
+	 state->ops.args[0] = 0;
+	 state->ops.args[1] = 0;
+	 state->ops.args[2] = 0;
 }
 
 /* Stops the rendering loop and destroys MMAL resources

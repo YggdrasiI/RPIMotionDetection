@@ -554,3 +554,8 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
 	}
 }
+
+
+int GetShader(){
+	return ShaderNormal;
+}
