@@ -19,7 +19,6 @@ void EndFrame();
 void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight);
 void RedrawGui();
 void RedrawTextures();
-void FooBar();
 
 #ifdef __cplusplus
 }

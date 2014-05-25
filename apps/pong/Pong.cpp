@@ -30,9 +30,9 @@ void Pong::changeScore(const unsigned int index, int change){
 	guiNeedRedraw = true;
 }
 
-void Pong::updatePosition(){
-	m_position[0] += m_velocity[0];
-	m_position[1] += m_velocity[1];
+void Pong::updatePosition(float dt){
+	m_position[0] += m_velocity[0]*dt;
+	m_position[1] += m_velocity[1]*dt;
 	//check boundaries
 	for( int i=0; i<2; ++i){
 		const float border = 1.0-SCREEN_BORDER_SKIP-m_radius[i]; 

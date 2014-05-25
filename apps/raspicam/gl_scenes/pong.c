@@ -39,7 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define WITH_TWO_TEXTURES 1
 
-#if 1
 static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     .vertex_source =
     "attribute vec2 vertex;\n"
@@ -53,65 +52,22 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     "#extension GL_OES_EGL_image_external : require\n"
     "uniform samplerExternalOES aaatex;\n"
 		"uniform sampler2D guitex;\n"
+		"uniform sampler2D blobstex;\n"
     "varying vec2 texcoord;\n"
-    "const float waves = 2.0;\n"
     "void main(void) {\n"
-    "    float x = texcoord.x ;\n"
-    "    float y = texcoord.y ;\n"
-    "    if (y < 1.0 && y > 0.0 && x < 1.0 && x > 0.0) {\n"
-		"     vec4 gui = texture2D(guitex, texcoord);\n"
-		"     gl_FragColor.rgb = mix(texture2D(aaatex, texcoord).rgb, gui.rgb, gui.a );\n"
-    "    }\n"
-    "    else {\n"
-    "       gl_FragColor = vec4(0.0, 0.0, 0.5, 1.0);\n"
-    "    }\n"
+		"    vec4 gui = texture2D(guitex, texcoord);\n"
+		"    vec4 blob = texture2D(blobstex, texcoord);\n"
+		"    gl_FragColor.rgb = mix(texture2D(aaatex, texcoord).rgb, gui.rgb, gui.a );\n"
+		"    gl_FragColor.rgb = mix(gl_FragColor.rgb, blob.rgb, blob.a );\n"
 		"    gl_FragColor.a = 1.0;\n"
     "}\n",
-    .uniform_names = {"aaatex", "guitex"},
+    .uniform_names = {"aaatex", "guitex","blobstex"},
     .attribute_names = {"vertex"},
 };
-#else
-static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
-    .vertex_source =
-    "attribute vec2 vertex;\n"
-    "varying vec2 texcoord;"
-    "void main(void) {\n"
-    "   texcoord = 0.5 * (1.0 - vertex );\n"
-    "   gl_Position = vec4(vertex, 0.0, 1.0);\n"
-    "}\n",
 
-    .fragment_source =
-    "#extension GL_OES_EGL_image_external : require\n"
-    "uniform samplerExternalOES tex;\n"
-		"uniform sampler2D texGui;\n"
-    "const float waves = 2.0;\n"
-    "varying vec2 texcoord;\n"
-    "void main(void) {\n"
-    "    float x = texcoord.x;\n"
-    "    float y = texcoord.y;\n"
-    "    if (y < 1.0 && y > 0.0 && x < 1.0 && x > 0.0) {\n"
-#if WITH_TWO_TEXTURES > 0		
-		"	      gl_FragColor = mix(texture2D(tex, texcoord),texture2D(texGui, texcoord),0.5);\n"
-#else
-		"	      gl_FragColor = texture2D(tex, texcoord);\n"
-#endif
-		"	      gl_FragColor.a = 1.0;\n"
-    "    }\n"
-    "    else {\n"
-    "       gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0);\n"
-    "    }\n"
-    "}\n",
-#if WITH_TWO_TEXTURES > 0		
-    .uniform_names = {"tex", "texGui"},
-#else
-    .uniform_names = {"tex"},
-#endif
-    .attribute_names = {"vertex"},
-};
-#endif
-
-static RASPITEXUTIL_TEXTURE_T cameraBuffer; //for fany output effects
+static RASPITEXUTIL_TEXTURE_T cameraBuffer; //for fancy output effects, unused
 RASPITEXUTIL_TEXTURE_T guiBuffer; //connected with GfxTexture in C++ class
+RASPITEXUTIL_TEXTURE_T blobsBuffer; //connected with GfxTexture in C++ class
 static unsigned char render_into_framebuffer = 0;
 static uint32_t GScreenWidth;
 static uint32_t GScreenHeight;
@@ -156,12 +112,11 @@ end:
     return rc;
 }
 
-#if 1
 static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
     // Start with a clear screen
     //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		GLCHK(glDisable(GL_BLEND));
+		//GLCHK(glDisable(GL_BLEND));
 		RedrawGui();
 		//GLCHK(glDisable(GL_BLEND));
 		
@@ -169,6 +124,7 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
 		GLCHK(glUniform1i(pong_shader.uniform_locations[0], 0));
 		GLCHK(glUniform1i(pong_shader.uniform_locations[1], 1));
+		GLCHK(glUniform1i(pong_shader.uniform_locations[2], 2));
 
 		// Bind Score texture
 		glActiveTexture(GL_TEXTURE0);
@@ -176,6 +132,9 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 
 		glActiveTexture(GL_TEXTURE1);
     glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
+
+		glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, blobsBuffer.id);
 
     GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
 
@@ -201,83 +160,17 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 		RedrawTextures();
 		GLCHK(glDisable(GL_BLEND));
 
-    return 0;
-}
-#else
-static int pong_redraw(RASPITEX_STATE *raspitex_state) {
-
-    // Start with a clear screen
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-		GLCHK(glDisable(GL_BLEND));
-		RedrawGui();
-
-		if( render_into_framebuffer ){
-			/* Render OES image into framebuffer to store it for some more complex 
-			 * shaders */
-
-		}else{
-
-			GLCHK(glEnable(GL_BLEND));
-			GLCHK(glBlendFunc(GL_ONE_MINUS_DST_ALPHA, GL_DST_ALPHA));
-
-			GLCHK(glUseProgram(pong_shader.program));
-
-#if WITH_TWO_TEXTURES > 0
-			GLCHK(glUniform1f(pong_shader.uniform_locations[0], 0));
-			GLCHK(glUniform1f(pong_shader.uniform_locations[1], 1));
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
-			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
-#else
-			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
-#endif
-
-			GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
-
-			static const GLfloat varray[] = {
-				-1.0f, -1.0f,
-				1.0f,  1.0f,
-				1.0f, -1.0f,
-
-				-1.0f,  1.0f,
-				1.0f,  1.0f,
-				-1.0f, -1.0f,
-			};
-			GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
-
-			GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
-
-			GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
-		}
-
-    //GLCHK(glUseProgram(0));
-
-		GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
-		glActiveTexture(GL_TEXTURE0);
-
-
-#if 1
-//		GLCHK(glEnable(GL_BLEND));
-		GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
-		//RedrawTextures();
-		GLCHK(glDisable(GL_BLEND));
-#endif
-
 #if 0
 		static int counter_fb = 0;
-		if( ++counter_fb == 1000 ){
+		if( ++counter_fb == 2000 ){
 			printf("Saving…  ");
 			raspitexutil_save_framebuffer("/dev/shm/fb.png");
 			printf("Saved framebuffer in frame %i.\n", counter_fb-1);
 		}
 #endif
 
-    return 0;
+		return 0;
 }
-#endif
 
 int pong_open(RASPITEX_STATE *state)
 {

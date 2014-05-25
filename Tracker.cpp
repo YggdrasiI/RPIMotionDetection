@@ -67,7 +67,7 @@ void Tracker::drawBlobs(cv::Mat &out){
 #endif
 
 #ifdef WITH_OPENGL
-void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw){
+void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw, GfxTexture *target){
 	if( toDraw == NULL ){
 		toDraw = &blobs;
 	}
@@ -107,8 +107,8 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 			x1 = 2.0*b.max.x/screenWidth-1;
 			y1 = 2.0*b.max.y/screenHeight-1;
 			/* Flip x0 with x1 to get same flipping as video frame */
-			x0 = -x0;
-			x1 = -x1;
+			//x0 = -x0; x1 = -x1;
+			y0 = -y0; y1 = -y1;
 
 			//printf("  [%f-%f] x [%f-%f]\n", x0, x1, y0, y1);
 			//DrawBlobRect( col[0], col[1], col[2], x0,y0, x1, y1, NULL);
@@ -124,12 +124,12 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 			*p++ = x1; *p++ = y1;
 
 			// Colors for all 6 Vertices
-			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
-			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
-			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
-			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
-			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
-			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.7;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.7;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.7;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.7;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.7;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.7;
 
 			++quadIndex;
 		}
@@ -137,7 +137,7 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 	m_swap_mutex = 0;
 
 	if( quadIndex ){
-			DrawBlobRects(&points[0], &colors[0], quadIndex, NULL);
+			DrawBlobRects(&points[0], &colors[0], quadIndex, target);
 	}
 
 }

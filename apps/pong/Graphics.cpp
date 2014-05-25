@@ -20,6 +20,10 @@ extern Tracker2 tracker;
 
 extern Pong pong;
 
+//statics from RaspiTex.c
+//extern "C" long long time_diff;
+extern "C" long long update_fps();
+
 #define check() assert(glGetError() == 0)
 
 uint32_t GScreenWidth;
@@ -49,7 +53,9 @@ GfxTexture imvTexture;
 GfxTexture numeralsTexture;
 GfxTexture raspiTexture;//Texture of Logo
 GfxTexture guiTexture; //only redrawed on gui changes
+GfxTexture blobsTexture; //lower resolution as video frame (similar to guiTexture)
 extern "C" RASPITEXUTIL_TEXTURE_T  guiBuffer;
+extern "C" RASPITEXUTIL_TEXTURE_T  blobsBuffer;
 
 bool guiNeedRedraw = true;
 
@@ -177,16 +183,23 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 
 	//guiTexture.CreateRGBA(GScreenWidth,GScreenHeight, NULL);
 	guiTexture.CreateRGBA(800,600, NULL);
+	guiTexture.SetInterpolation(false);
 	guiTexture.GenerateFrameBuffer();
 	guiTexture.toRaspiTexture(&guiBuffer);
+
+	blobsTexture.CreateRGBA(800,600, NULL);
+	blobsTexture.SetInterpolation(false);
+	blobsTexture.GenerateFrameBuffer();
+	blobsTexture.toRaspiTexture(&blobsBuffer);
 }
 
 static std::vector<cBlob> blobCache;
 
 void RedrawGui()
 {
-	//DrawGui(&numeralsTexture,&pong,0.05f,
-//			-1.0f,1.0f,1.0f,-1.0f, NULL);
+	blobCache.clear();
+	tracker.getFilteredBlobs(ALL_ACTIVE, blobCache);
+	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache, &blobsTexture);
 
 	if( !guiNeedRedraw ) return;
 	DrawGui(&numeralsTexture,&pong,0.05f,
@@ -203,26 +216,27 @@ void RedrawTextures()
 	
 	//DrawGui(&numeralsTexture,&pong,0.05f,
 	//		-1.0f,1.0f,1.0f,-1.0f, NULL);
-	
+
+	/*
 	blobCache.clear();
 	tracker.getFilteredBlobs(ALL_ACTIVE, blobCache);
-	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache);
-	//tracker.drawBlobsGL(motion_data.width, motion_data.height, NULL);
+	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache, NULL);
+	*/
 
-	//Event handling and position update
+	/* Call update_fps from RaspiTex.c, which returns  time_diff
+	 * as difference to previous measurement. Uses static variables -> Don't call update_fps twice...
+	 * dt=1 means redrawing with 30fps.
+	 *
+	 */
+	float dt = update_fps()/33.3f; // /1000.0*30.0;
+
+	//Event handling (with old position) and position update
 	pong.checkCollision(motion_data.width, motion_data.height, blobCache );
-	pong.updatePosition();
+	pong.updatePosition(dt);
 
 
 	// Draw pong ball
 	pong.drawBall();
-
-}
-
-void FooBar(){
-	printf("Save Framebuffer...\n");
-	SaveFrameBuffer("/dev/shm/fb.png");
-	printf("... finished.\n");
 
 }
 
@@ -617,8 +631,16 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
 		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
+		
 		check();
 	}
+
+	glEnable(GL_BLEND);
+	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glUseProgram(GBlobsProg.GetId());	check();
 
@@ -635,6 +657,8 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 
 	glDisableVertexAttribArray(vloc);	
 	glDisableVertexAttribArray(cloc);	check();
+
+	glDisable(GL_BLEND);
 
 	if(render_target )
 	{

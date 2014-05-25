@@ -15,6 +15,7 @@
 #endif
 
 #ifdef WITH_OPENGL
+class GfxTexture; 
 #endif
 
 #include "Blob.h"
@@ -60,7 +61,7 @@ class Tracker {
 #endif
 #ifdef WITH_OPENGL
 		/* Helper function to draw blobs for debugging */
-		void drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw = NULL);
+		void drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
 #endif
 };
 

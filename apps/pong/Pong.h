@@ -34,7 +34,7 @@ class Pong{
 	public:
 		Pong(float radius, float aspect);
 		void changeScore(const unsigned int index, int change);
-		void updatePosition();
+		void updatePosition(float dt = 1.0f);
 		void reset();
 		const float* const getPosition();
 		const float* const getVelocity();

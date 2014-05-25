@@ -176,13 +176,6 @@ void RedrawTextures()
 	++savecounter;
 }
 
-void FooBar(){
-	printf("Save Framebuffer...\n");
-	SaveFrameBuffer("/dev/shm/fb.png");
-	printf("... finished.\n");
-
-}
-
 void InitShaders()
 {
 	//load the test shaders

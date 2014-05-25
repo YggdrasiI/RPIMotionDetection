@@ -191,18 +191,24 @@ void raspitex_display_help()
    raspicli_display_help(cmdline_commands, cmdline_commands_size);
 }
 
-static void update_fps()
+long long update_fps()
 {
    static int frame_count = 0;
    static long long time_start = 0;
-   long long time_now;
+   long long time_diff = 0; //in milliseconds
+   static long long time_now = 0;
    struct timeval te;
    float fps;
 
    frame_count++;
 
    gettimeofday(&te, NULL);
-   time_now = te.tv_sec * 1000LL + te.tv_usec / 1000;
+	 if( time_now ){
+			time_diff = te.tv_sec * 1000LL + te.tv_usec / 1000 - time_now;
+			time_now += time_diff;
+	 }else{
+		 time_now = te.tv_sec * 1000LL + te.tv_usec / 1000;
+	 }
 
    if (time_start == 0)
    {
@@ -216,6 +222,8 @@ static void update_fps()
       vcos_log_info("%3.2f FPS", fps);
       printf("%3.2f FPS\n", fps); fflush(stdout);
    }
+
+	 return time_diff;
 }
 
 /**
@@ -348,7 +356,7 @@ static int raspitex_draw(RASPITEX_STATE *state, MMAL_BUFFER_HEADER_T *buf)
 
       eglSwapBuffers(state->display, state->surface);
 			glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-      update_fps();
+      //update_fps();
    }
    else
    {
