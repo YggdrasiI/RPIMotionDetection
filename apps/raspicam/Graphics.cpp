@@ -29,9 +29,12 @@ EGLContext GContext;
 GfxShader GSimpleVS;
 GfxShader GSimpleFS;
 GfxShader GBlobFS;
+GfxShader GBlobsVS;
+GfxShader GBlobsFS;
 
 GfxProgram GSimpleProg;
 GfxProgram GBlobProg;
+GfxProgram GBlobsProg;
 
 GLuint GQuadVertexBuffer;
 
@@ -189,6 +192,10 @@ void InitShaders()
 	check();
 	GBlobFS.LoadFragmentShader("shader/blobfragshader.glsl");
 	GBlobProg.Create(&GSimpleVS,&GBlobFS);
+	GBlobsVS.LoadVertexShader("shader/blobsvertshader.glsl");
+	GBlobsFS.LoadFragmentShader("shader/blobsfragshader.glsl");
+	GBlobsProg.Create(&GBlobsVS,&GBlobsFS);
+
 	check();
 
 	//create an ickle vertex buffer
@@ -505,6 +512,38 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	if(render_target && false)
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
+	}
+}
+
+void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxTexture* render_target)
+{
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
+		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		check();
+	}
+
+	glUseProgram(GBlobsProg.GetId());	check();
+
+	GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
+	GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
+
+	glEnableVertexAttribArray(vloc);	
+	glEnableVertexAttribArray(cloc);	check();
+
+  glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+  glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
+
+	glDrawArrays ( GL_TRIANGLES, 0, 6 ); check();
+
+	glDisableVertexAttribArray(vloc);	
+	glDisableVertexAttribArray(cloc);	check();
+
+	if(render_target )
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );

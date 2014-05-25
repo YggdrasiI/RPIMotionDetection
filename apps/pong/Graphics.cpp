@@ -31,6 +31,8 @@ EGLContext GContext;
 GfxShader GSimpleVS;
 GfxShader GSimpleFS;
 GfxShader GBlobFS;
+GfxShader GBlobsVS;
+GfxShader GBlobsFS;
 GfxShader GGuiVS;
 GfxShader GGuiFS;
 GfxShader GPongFS;
@@ -39,6 +41,7 @@ GfxProgram GSimpleProg;
 GfxProgram GBlobProg;
 GfxProgram GGuiProg;
 GfxProgram GPongProg;
+GfxProgram GBlobsProg;
 
 GLuint GQuadVertexBuffer;
 
@@ -172,7 +175,8 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 	raspiTexture.CreateFromFile("../../images/Raspi_Logo_128.png");
 	raspiTexture.SetInterpolation(true);
 
-	guiTexture.CreateRGBA(GScreenWidth,GScreenHeight, NULL);
+	//guiTexture.CreateRGBA(GScreenWidth,GScreenHeight, NULL);
+	guiTexture.CreateRGBA(800,600, NULL);
 	guiTexture.GenerateFrameBuffer();
 	guiTexture.toRaspiTexture(&guiBuffer);
 }
@@ -232,12 +236,17 @@ void InitShaders()
 	GBlobFS.LoadFragmentShader("shader/blobfragshader.glsl");
 	GBlobProg.Create(&GSimpleVS,&GBlobFS);
 
+	GBlobsVS.LoadVertexShader("shader/blobsvertshader.glsl");
+	GBlobsFS.LoadFragmentShader("shader/blobsfragshader.glsl");
+	GBlobsProg.Create(&GBlobsVS,&GBlobsFS);
+
 	GGuiVS.LoadVertexShader("shader/guivertshader.glsl");
 	GGuiFS.LoadFragmentShader("shader/guifragshader.glsl");
 	GGuiProg.Create(&GGuiVS,&GGuiFS);
 
 	GPongFS.LoadFragmentShader("shader/pongfragshader.glsl");
 	GPongProg.Create(&GSimpleVS,&GPongFS);
+
 	check();
 
 	//create an ickle vertex buffer
@@ -470,14 +479,15 @@ void GfxTexture::SetPixels(const void* data)
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Width, Height, IsRGBA ? GL_RGBA : GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 	check();
 	glBindTexture(GL_TEXTURE_2D, 0);
-	//glFlush();
 	check();
 }
 
 void GfxTexture::SetInterpolation(bool interpol)
 {
+	glBindTexture(GL_TEXTURE_2D, Id);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
+	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
 void GfxTexture::Save(const char* fname)
@@ -593,6 +603,38 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
+	}
+}
+
+void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxTexture* render_target)
+{
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
+		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		check();
+	}
+
+	glUseProgram(GBlobsProg.GetId());	check();
+
+	GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
+	GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
+
+	glEnableVertexAttribArray(vloc);	
+	glEnableVertexAttribArray(cloc);	check();
+
+  glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+  glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
+
+	glDrawArrays ( GL_TRIANGLES, 0, 6 ); check();
+
+	glDisableVertexAttribArray(vloc);	
+	glDisableVertexAttribArray(cloc);	check();
 
 	if(render_target )
 	{

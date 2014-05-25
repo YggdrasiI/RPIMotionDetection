@@ -67,7 +67,6 @@ void Tracker::drawBlobs(cv::Mat &out){
 #endif
 
 #ifdef WITH_OPENGL
-//void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlobs> matched){
 void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw){
 	if( toDraw == NULL ){
 		toDraw = &blobs;
@@ -75,9 +74,15 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 
 	//Wait and look mutex.
 	while( m_swap_mutex ){
-		usleep(1000);
+		usleep(900);
 	}
 	m_swap_mutex = 1;
+
+	GLfloat points[toDraw->size()*12];
+	GLfloat colors[toDraw->size()*24];
+	int quadIndex = 0;
+	GLfloat *p = &points[0];
+	GLfloat *c = &colors[0];
 
 	for (int i = 0; i < toDraw->size(); i++) {
 		cBlob &b = (*toDraw).at(i);
@@ -93,8 +98,8 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 				C(150, 150, 150);
 		}
 
-		//if( ( b.missing_duration == 0 && b.duration > 5 ) /* || b.duration > 1 */){
-		if( 1 ){
+		if( 1 )
+		{
 			//printf("Draw blob! [%i-%i] x [%i-%i]\n", b.min.x, b.max.x, b.min.y, b.max.y);
 			float x0,y0,x1,y1;
 			x0 = 2.0*b.min.x/screenWidth-1;
@@ -106,12 +111,34 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 			x1 = -x1;
 
 			//printf("  [%f-%f] x [%f-%f]\n", x0, x1, y0, y1);
-			DrawBlobRect( col[0], col[1], col[2],
-					x0,y0, x1, y1,
-					NULL);
+			//DrawBlobRect( col[0], col[1], col[2], x0,y0, x1, y1, NULL);
+
+			// Triangle A-B-C
+			*p++ = x0; *p++ = y0;
+			*p++ = x0; *p++ = y1;
+			*p++ = x1; *p++ = y0;
+
+			// Triangle C-B-D
+			*p++ = x1; *p++ = y0;
+			*p++ = x0; *p++ = y1;
+			*p++ = x1; *p++ = y1;
+
+			// Colors for all 6 Vertices
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
+			*c++ = col[0]; *c++ = col[1]; *c++ = col[2]; *c++ = 0.4;
+
+			++quadIndex;
 		}
 	}
-
 	m_swap_mutex = 0;
+
+	if( quadIndex ){
+			DrawBlobRects(&points[0], &colors[0], quadIndex, NULL);
+	}
+
 }
 #endif
