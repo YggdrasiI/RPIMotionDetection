@@ -15,6 +15,7 @@
 /* Shrink available area for ball */
 #define SCREEN_BORDER_SKIP 0.0
 
+/* Game start waits on this flag */
 
 class Pong{
 	private:
@@ -52,6 +53,7 @@ class Pong{
 		//width and height are the dimensions of the blob rect coordinates.
 		bool checkCollision(int width, int height,  std::vector<cBlob> &blobs);
 
+		bool wait_on_camera_init;
 };
 
 #endif

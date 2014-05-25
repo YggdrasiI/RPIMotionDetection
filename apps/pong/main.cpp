@@ -72,7 +72,6 @@ void* blob_detection(void *argn){
 					
 					//4. Opengl Output
 
-
 					// Debug: Replace imv_norm with ids, roi has to start in (0,0) and with full width.
 					//eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
 
@@ -194,8 +193,6 @@ int main(int argc, const char **argv){
 			 }
 		 }
 	 }
-
-
 
 	//start raspivid application.
 	raspivid(argc, argv);

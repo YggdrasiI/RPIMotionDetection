@@ -148,8 +148,9 @@ static void display_valid_parameters(char *app_name);
 #define CommandSplitWait    21
 #define CommandCircular     22
 #define CommandIMV          23
-#define CommandGL           24
-#define CommandGLCapture    25
+#define CommandWaitAndFix   24
+#define CommandGL           25
+#define CommandGLCapture    26
 
 static COMMAND_LIST cmdline_commands[] =
 {
@@ -177,6 +178,7 @@ static COMMAND_LIST cmdline_commands[] =
    { CommandSplitWait,     "-split",      "sp", "In wait mode, create new output file for each start event", 0},
    { CommandCircular,      "-circular",   "c",  "Run encoded data through circular buffer until triggered then save", 0},
    { CommandIMV,           "-vectors",    "x",  "Output filename <filename> for inline motion vectors", 1 },
+   { CommandWaitAndFix,    "-waitAndFix", "waf","Wait <t>ms before capture, fix AGC afterwards", 1},
    { CommandGL,      "-gl",         "g",  "Draw preview to texture instead of using video render component", 0},
    { CommandGLCapture, "-glcapture","gc", "Capture the GL frame-buffer instead of the camera image", 0},
 };
@@ -244,6 +246,10 @@ static void default_status(RASPIVID_STATE *state)
 
    state->inlineMotionVectors = 0;
 	 state->callback_data.imv_handler =  handle_imv_data;
+
+	 state->waitAndFix = 0;
+	 state->fixWait = 0;
+	 state->waitMethodAfterFix = 0;
 
    state->useGL = 0;
    state->glCapture = 0;
@@ -606,7 +612,19 @@ static int parse_cmdline(int argc, const char **argv, RASPIVID_STATE *state)
          break;
       }
 
-      default:
+			case CommandWaitAndFix:
+			{
+				if (sscanf(argv[i + 1], "%u", &state->fixWait) != 1)
+					valid = 0;
+				else
+				{
+					state->waitAndFix=1;
+					i++;
+				}
+				break;
+			}
+
+			default:
       {
          // Try parsing for any image specific parameters
          // result indicates how many parameters were used up, 0,1,2
@@ -980,14 +998,6 @@ static void encoder_buffer_callback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
             }
          }
       }
-
-			//Debug: Reset parameter
-			pData->pstate->camera_parameters.awbMode = MMAL_PARAM_AWBMODE_CLOUDY;
-			pData->pstate->camera_parameters.shutter_speed = 10000;//ganz falsch?!
-			pData->pstate->camera_parameters.brightness = 50;
-			pData->pstate->camera_parameters.awb_gains_r = 1.5;
-			pData->pstate->camera_parameters.awb_gains_b = 1.2;
-			raspicamcontrol_set_all_parameters(pData->pstate->camera_component, &pData->pstate->camera_parameters);
 
    }
    else
@@ -1522,7 +1532,15 @@ static int wait_for_next_change(RASPIVID_STATE *state)
    int64_t current_time =  vcos_getmicrosecs64()/1000;
 
    if (complete_time == -1)
-      complete_time =  current_time + state->timeout;
+	 {
+		 if(state->waitAndFix)
+		 {
+			 complete_time =  current_time + state->timeout + state->fixWait;
+		 }
+		 else{
+			 complete_time =  current_time + state->timeout;      
+		 }
+	 }
 
    // if we have run out of time, flag we need to exit
    if (current_time >= complete_time && state->timeout != 0)
@@ -1836,6 +1854,18 @@ int raspivid(int argc, const char **argv)
          // Enable the encoder output port and tell it its callback function
          status = mmal_port_enable(encoder_output_port, encoder_buffer_callback);
 
+				 /* if we want waitAndFix */
+				 if(state.waitAndFix)
+				 {
+					 int tmp=state.timeout;
+					 state.timeout=state.fixWait;
+					 state.fixWait=tmp;
+					 state.waitMethodAfterFix = state.waitMethod;
+					 state.waitMethod = WAIT_METHOD_NONE;
+					 state.bCapturingAfterFix = state.bCapturing;
+					 state.bCapturing = 1;
+				 }
+
          /* If GL preview is requested then start the GL threads */
          if (state.useGL && (raspitex_start(&state.raspitex_state) != 0))
             goto error;
@@ -1898,7 +1928,7 @@ int raspivid(int argc, const char **argv)
                   }
 
                   // In circular buffer mode, exit and save the buffer (make sure we do this after having paused the capture
-                  if(state.bCircularBuffer && !state.bCapturing)
+                  if(state.bCircularBuffer && !state.bCapturing && state.waitAndFix!=1)
                   {
                      break;
                   }
@@ -1928,12 +1958,48 @@ int raspivid(int argc, const char **argv)
                      initialCapturing=0;
                   }
                   running = wait_for_next_change(&state);
-               }
 
-               if (state.verbose)
-                  fprintf(stderr, "Finished capture\n");
-            }
-            else
+									/* if we want waitAndFix */
+									if(state.waitAndFix==1)
+									{
+										state.waitAndFix++;
+										int tmp=state.timeout;
+										state.timeout=state.fixWait;
+										state.fixWait=tmp;
+										state.waitMethod=state.waitMethodAfterFix;
+										state.bCapturing = state.bCapturingAfterFix;
+
+										MMAL_PARAMETER_EXPOSUREMODE_T exp_mode = {{MMAL_PARAMETER_EXPOSURE_MODE,sizeof(exp_mode)}, MMAL_PARAM_EXPOSUREMODE_OFF};
+										if(mmal_port_parameter_set(state.camera_component->control, &exp_mode.hdr) == MMAL_SUCCESS )
+										{
+											if (state.verbose)
+												fprintf(stderr, "Finish auto exposure continue with EXPOSUREMODE_OFF\n");
+											running=1;
+											printf("Finish auto exposure continue with EXPOSUREMODE_OFF\n");
+
+#if 0
+											// Test other parameter
+											state->camera_parameters.shutter_speed = 10000;//ganz falsch?!
+											state->camera_parameters.brightness = 50;
+											state->camera_parameters.awb_gains_r = 1.5;
+											state->camera_parameters.awb_gains_b = 1.2;
+											raspicamcontrol_set_all_parameters(pData->pstate->camera_component, &pData->pstate->camera_parameters);
+#endif
+											
+										}
+										else
+										{
+											if (state.verbose)
+												fprintf(stderr, "Failed to set EXPOSUREMODE_OFF\n"); 
+										}
+									}
+
+							 }
+
+							 if (state.verbose)
+								 fprintf(stderr, "Finished capture\n");
+						}
+						else
             {
                if (state.timeout)
                   vcos_sleep(state.timeout);

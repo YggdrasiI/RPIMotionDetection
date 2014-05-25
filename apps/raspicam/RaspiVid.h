@@ -104,6 +104,12 @@ struct RASPIVID_STATE_S
    int inlineMotionVectors;             /// Encoder outputs inline Motion Vectors
    char *imv_filename;                  /// filename of inline Motion Vectors output
 
+	 int waitAndFix;
+	 int fixWait;
+	 int waitMethodAfterFix;
+	 int bCapturingAfterFix;
+
+
    int useGL;                          /// Render preview using OpenGL
    int glCapture;                      /// Save the GL frame-buffer instead of camera output
 };

@@ -10,16 +10,19 @@ test "$1" ==  "" || RESOLUTION="$1"
 PLAYER=both #both|left|right
 test "$2" ==  "" || PLAYER="$2"
 
+WAIT=7000
+
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
+echo "Waiting $WAIT ms on camera initialisation"
 
 if [ "$RESOLUTION" = "high" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1920,1080' --gl --glwin '0,0,1920,1080' --glscene pong -o /dev/null
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1920,1080' --gl --glwin '0,0,1920,1080' --glscene pong -o /dev/null --waitAndFix ${WAIT}
 fi
 
 if [ "$RESOLUTION" = "med" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1280x1024' --gl --glwin '0,0,1280x1024' --glscene pong -o /dev/null
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1280x1024' --gl --glwin '0,0,1280x1024' --glscene pong -o /dev/null --waitAndFix ${WAIT}
 fi
 
 if [ "$RESOLUTION" = "low" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null
+./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null --waitAndFix ${WAIT}
 fi

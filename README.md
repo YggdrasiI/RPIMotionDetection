@@ -42,6 +42,8 @@ Notes:
 	./start
 • Add the arguments "low" and "right" to start the game in a lower resolution and
 	only one player.
+• Start of game is delayed until the camera was calibrated
+  and at least two blobs was detected.
 
 
 Compiling:

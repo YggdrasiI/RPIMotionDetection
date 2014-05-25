@@ -8,7 +8,7 @@
 extern GfxTexture raspiTexture;//Texture of Logo
 extern bool guiNeedRedraw;
 
-Pong::Pong(float radius, float aspect): m_aspect(aspect) {
+Pong::Pong(float radius, float aspect): m_aspect(aspect), wait_on_camera_init(true) {
 	m_radius[0] = radius;
 	m_radius[1] = radius*m_aspect;
 	m_activePlayer[0] = true;
@@ -31,6 +31,10 @@ void Pong::changeScore(const unsigned int index, int change){
 }
 
 void Pong::updatePosition(float dt){
+	 if( wait_on_camera_init ){
+			return;
+	 }
+
 	m_position[0] += m_velocity[0]*dt;
 	m_position[1] += m_velocity[1]*dt;
 	//check boundaries
@@ -151,6 +155,13 @@ bool Pong::checkCollision(int width, int height, std::vector<cBlob> &blobs){
 	int iRadius[2] = { m_radius[0]*width, m_radius[1]*height };
 	bool hit = false;
 	float y_movement = 0.0f;
+
+	/* Count blobs and start game if game was paused.
+	 * Requires detection of 2 Blobs.
+	 * */
+	if( wait_on_camera_init && blobs.size()>1){
+			wait_on_camera_init = false;
+	}
 
 	for (int i = 0; i < blobs.size(); i++) {
 		cBlob &b = blobs[i];
