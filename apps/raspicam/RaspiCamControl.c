@@ -152,7 +152,7 @@ static COMMAND_LIST  cmdline_commands[] =
    {CommandVFlip,       "-vflip",     "vf", "Set vertical flip", 0},
    {CommandROI,         "-roi",       "roi","Set region of interest (x,y,w,d as normalised coordinates [0.0-1.0])", 1},
    {CommandShutterSpeed,"-shutter",   "ss", "Set shutter speed in microseconds", 1},
-   {CommandAwbGains,    "-awbgains",  "awbg", "Set AWB gains - AWB mode must be off", 2}
+   {CommandAwbGains,    "-awbgains",  "awbg", "Set AWB gains - AWB mode must be off", 1}
 };
 
 static int cmdline_commands_size = sizeof(cmdline_commands) / sizeof(cmdline_commands[0]);

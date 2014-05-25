@@ -41,27 +41,34 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader = {
     .vertex_source =
+#if 0
     "attribute vec2 vertex;\n"
     "varying vec2 texcoord;\n"
     "void main(void) {\n"
     "   texcoord = 0.5 * (1.0 - vertex );\n"
     "   gl_Position = vec4(vertex, 0.0, 1.0);\n"
     "}\n",
-
+#else
+		"file:shader/gl_scenes/pong1.vert.glsl",
+#endif
+#if 0
     .fragment_source =
     "#extension GL_OES_EGL_image_external : require\n"
-    "uniform samplerExternalOES aaatex;\n"
+    "uniform samplerExternalOES tex;\n"
 		"uniform sampler2D guitex;\n"
 		"uniform sampler2D blobstex;\n"
     "varying vec2 texcoord;\n"
     "void main(void) {\n"
 		"    vec4 gui = texture2D(guitex, texcoord);\n"
 		"    vec4 blob = texture2D(blobstex, -texcoord);\n"
-		"    gl_FragColor.rgb = mix(texture2D(aaatex, texcoord).rgb, gui.rgb, gui.a );\n"
+		"    gl_FragColor.rgb = mix(texture2D(tex, texcoord).rgb, gui.rgb, gui.a );\n"
 		"    gl_FragColor.rgb = mix(gl_FragColor.rgb, blob.rgb, blob.a );\n"
 		"    gl_FragColor.a = 1.0;\n"
     "}\n",
-    .uniform_names = {"aaatex", "guitex","blobstex"},
+#else
+		"file:shader/gl_scenes/pong1.frag.glsl",
+#endif
+    .uniform_names = {"tex", "guitex","blobstex"},
     .attribute_names = {"vertex"},
 };
 

@@ -223,6 +223,26 @@ error:
    return -1;
 }
 
+/* Load shader 'filename'
+ * Returns NULL if file can not be loaded.
+ * Do not forget to freeing up memory after usage...
+ */
+static char* loadShaderFile(const char *filename){
+printf("Loading %s\n", filename);
+	FILE* f = fopen(filename, "rb");
+	vcos_assert(f);
+	fseek(f,0,SEEK_END);
+	int sz = ftell(f);
+	fseek(f,0,SEEK_SET);
+	char* str_out = malloc( (sz+1)*sizeof(char) );
+	fread(str_out,1,sz,f);
+	str_out[sz] = 0; //null terminate it!
+	fclose(f);
+
+	//printf("Loaded file:\n%s\n\n", str_out);
+	return str_out;
+}
+
 /* Creates the RGBA and luma textures with some default parameters
  * @param raspitex_state A pointer to the GL preview state.
  * @return Zero if successful.
@@ -511,13 +531,36 @@ int raspitexutil_build_shader_program(RASPITEXUTIL_SHADER_PROGRAM_T *p)
     vcos_assert(p->vertex_source);
     vcos_assert(p->fragment_source);
 
-    if (! (p && p->vertex_source && p->fragment_source))
+		/*load shader from file if source variable contains
+		 * filename */
+		char *vertex_source;
+		char *fragment_source;
+
+		if( strlen(p->vertex_source)>5 
+				&& strncmp("file:",p->vertex_source,5) == 0 ){
+      vcos_log_trace("Loading vertex shader file '%s'", p->vertex_source+5);
+			vertex_source = loadShaderFile(p->vertex_source+5);
+		}else{
+			vertex_source = (char*) p->vertex_source;
+		}
+		if( strlen(p->fragment_source)>5 
+				&& strncmp("file:",p->fragment_source,5) == 0 ){
+      vcos_log_trace("Loading fragment shader file '%s'", p->fragment_source+5);
+			fragment_source = loadShaderFile(p->fragment_source+5);
+		}else{
+			fragment_source = (char*) p->fragment_source;
+		}
+
+    vcos_assert(vertex_source);
+    vcos_assert(fragment_source);
+
+    if (! (p && vertex_source && fragment_source))
         goto fail;
 
     p->vs = p->fs = 0;
 
     p->vs = glCreateShader(GL_VERTEX_SHADER);
-    glShaderSource(p->vs, 1, &p->vertex_source, NULL);
+    glShaderSource(p->vs, 1, (const char**) &vertex_source, NULL);
     glCompileShader(p->vs);
     glGetShaderiv(p->vs, GL_COMPILE_STATUS, &status);
     if (! status) {
@@ -527,7 +570,7 @@ int raspitexutil_build_shader_program(RASPITEXUTIL_SHADER_PROGRAM_T *p)
     }
 
     p->fs = glCreateShader(GL_FRAGMENT_SHADER);
-    glShaderSource(p->fs, 1, &p->fragment_source, NULL);
+    glShaderSource(p->fs, 1, (const char**) &fragment_source, NULL);
     glCompileShader(p->fs);
 
     glGetShaderiv(p->fs, GL_COMPILE_STATUS, &status);
@@ -584,10 +627,26 @@ int raspitexutil_build_shader_program(RASPITEXUTIL_SHADER_PROGRAM_T *p)
         }
     }
 
+		/* Free shaders if files was loaded */
+		if( vertex_source != p->vertex_source ){
+			free( vertex_source);
+		}
+		if( fragment_source != p->fragment_source ){
+			free( fragment_source);
+		}
+
     return 0;
 
 fail:
     vcos_log_error("%s: Failed to build shader program", VCOS_FUNCTION);
+
+		/* Free shaders if files was loaded */
+		if( vertex_source != p->vertex_source ){
+			free( (char*) vertex_source);
+		}
+		if( fragment_source != p->fragment_source ){
+			free( (char*) fragment_source);
+		}
     if (p)
     {
         glDeleteProgram(p->program);

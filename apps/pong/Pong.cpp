@@ -69,6 +69,7 @@ void Pong::reset(){
 	m_color[0] = 1.0; m_color[1] = 1.0; m_color[2] = 1.0;
 
 	scaleVelocity(2.0,2.0);
+	wait_on_camera_init = true;
 }
 
 const float* const Pong::getPosition(){
