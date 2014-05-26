@@ -135,7 +135,7 @@ int main(int argc, const char **argv){
 
 	//init depth map
 	for( int i=0; i<256; i++){
-		depth_map[i] = (i<20?0:i/4+1);
+		depth_map[i] = (i<10?0:i/4+1);
 	}
 	//Create thread for blob detection.
 	int err = pthread_create(&blob_tid, NULL, &blob_detection, NULL);
@@ -143,6 +143,10 @@ int main(int argc, const char **argv){
 		printf("\nFailed to create blob thread :[%s]", strerror(err));
 		return -1;
 	}
+
+	//Setup tracker
+	tracker.setMaxRadius(15);
+	tracker.setOldestDurationFilter(2);
 
 	//start raspivid application.
 	raspivid(argc, argv);

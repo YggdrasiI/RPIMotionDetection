@@ -154,6 +154,8 @@ void RedrawGui()
 	// no gui in this app
 }
 
+static std::vector<cBlob> blobCache;
+
 void RedrawTextures()
 {
 
@@ -163,7 +165,10 @@ void RedrawTextures()
 	//DrawTextureRect(&imvTexture,-1.0, .5f,-.5f,-.5f,.5f,NULL);
 	DrawTextureRect(&imvTexture,0.4, 1.0f,-1.0f,-1.0f,1.0f,NULL);
 
-	tracker.drawBlobsGL(motion_data.width, motion_data.height);
+	blobCache.clear();
+	tracker.getFilteredBlobs(ALL_ACTIVE|N_OLDEST, blobCache);
+	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache);
+	//tracker.drawBlobsGL(motion_data.width, motion_data.height);
 
 
 #if 0

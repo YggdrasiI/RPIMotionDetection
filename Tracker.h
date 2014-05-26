@@ -27,8 +27,10 @@ class GfxTexture;
 #define MAXHANDS 40
 
 enum Trackfilter{
-	ALL_ACTIVE,
-	NUM_TRACK_FILTER
+	ALL = 1,
+	ALL_ACTIVE = 2 ,
+	N_OLDEST = 4 ,
+	//NUM_TRACK_FILTER
 };
 
 class Tracker {
@@ -36,6 +38,8 @@ class Tracker {
 
 		int m_max_radius;
 		int m_max_missing_duration;
+		int m_use_N_oldest_blobs;
+		int m_minimal_frames_till_active;
 
 		std::vector<cBlob> blobs, blobs_previous, blobsTmp /*for swapping */;
 
@@ -49,7 +53,7 @@ class Tracker {
 		Tracker();
 		virtual ~Tracker() = 0;
 		std::vector<cBlob>& getBlobs();
-		void getFilteredBlobs(Trackfilter filter, std::vector<cBlob> &output);
+		void getFilteredBlobs(int /*Trackfilter*/ filter, std::vector<cBlob> &output);
 
 		virtual void trackBlobs(
 				Blobtree *frameblobs,
@@ -57,8 +61,23 @@ class Tracker {
 		
 		/* Set maximal differcene between midpoints of blobs between
 		 * two frames F_i and F_{i+k}, k<= m_max_missing_duration */
-		int setMaxRadius(int max_radius);
-		int setMaxMissingDuration(int max_missing_duration);
+		void setMaxRadius(int max_radius);
+
+		/* Set number of frames which a blobs waits for
+		 * an new nearby detection */
+		void setMaxMissingDuration(int max_missing_duration);
+
+		/* Set the number of frames after which a blob
+		 * gets active. */
+		void setMinimalDurationFilter(int M_frames_minimal);
+
+		/* Just returns the N oldest blobs. This reduce the
+		 * number of blobs during choppy frames. Internally,
+		 * the blobs will be still saved. Thus, this setting
+		 * requires a high minimalDurationFilter() value.
+		 */
+		void setOldestDurationFilter(int N_oldest_blobs);
+
 
 #ifdef WITH_OCV
 		/* Helper function to draw blobs for debugging */

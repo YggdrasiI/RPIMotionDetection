@@ -3,12 +3,20 @@
  */
 #include <unistd.h>
 
+#include <algorithm> //for std::sort
+
 #include "Tracker.h"
 #ifdef WITH_OPENGL
 #include "apps/raspicam/Graphics.h"
 #endif
 
-Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0)
+//bool oldest_sort_function (cBlob &a,cBlob &b) { return (a.duration>b.duration); }
+bool oldest_sort_function (cBlob a,cBlob b) { return (a.duration>b.duration); }
+
+
+Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0),
+	m_use_N_oldest_blobs(0),
+	m_minimal_frames_till_active(10)
 {
 	for(int i=0; i<MAXHANDS; i++) handids[i] = false;
 	last_handid = 0;
@@ -21,23 +29,57 @@ std::vector<cBlob>& Tracker::getBlobs()
 	return blobs;
 }
 
-int Tracker::setMaxRadius(int max_radius){
+void Tracker::setMaxRadius(int max_radius){
 	 m_max_radius = max_radius;
 }
-int Tracker::setMaxMissingDuration(int max_missing_duration){
+void Tracker::setMaxMissingDuration(int max_missing_duration){
 	m_max_missing_duration = max_missing_duration;
 }
 
-void Tracker::getFilteredBlobs(Trackfilter filter, std::vector<cBlob> &output)
+void Tracker::setMinimalDurationFilter(int M_frames_minimal){
+	m_minimal_frames_till_active = M_frames_minimal;
+}
+
+void Tracker::setOldestDurationFilter(int N_oldest_blobs){
+	m_use_N_oldest_blobs = N_oldest_blobs;
+}
+
+
+void Tracker::getFilteredBlobs(int /*Trackfilter*/ filter, std::vector<cBlob> &output)
 {
 	/* I-Frames are without motions. Allow one missing frame. 
 	 * A general skipping of I-Frames would be a better solution.
 	 */
 	for (int i = 0; i < blobs.size(); i++) {
 		cBlob &b = blobs[i];
-		if( filter == ALL_ACTIVE && b.missing_duration < 2 && b.duration > 5){
+		if( ( filter & ALL_ACTIVE
+					&& b.missing_duration < m_max_missing_duration
+					&& b.duration > m_minimal_frames_till_active ) 
+				|| ( filter & ALL ) )
+		{
 			output.push_back(b);
 		}
+	}
+
+	/* More filtering */
+
+	/* Reduce output on n oldest blobs (and all blobs
+	 * with the same duration as the n-th blob)
+	 */
+	if( filter & N_OLDEST 
+			&& m_use_N_oldest_blobs > 0
+			&& output.size() > m_use_N_oldest_blobs )
+	{
+		std::sort (output.begin(), output.end(), oldest_sort_function);
+		int last_index = m_use_N_oldest_blobs-1;
+		std::vector<cBlob>::iterator it=output.begin()+(m_use_N_oldest_blobs-1);
+		const int limit_duration = (*it).duration;
+		++it;
+		while( it!=output.end() && (*it).duration == limit_duration ){
+			++it;
+		}
+		printf("Remove %i blobs from list \n", output.end()-it);
+		output.erase(it,output.end());
 	}
 }
 
@@ -58,7 +100,7 @@ void Tracker::drawBlobs(cv::Mat &out){
 		}
 
 		if( b.missing_duration == 0 
-				&& b.duration > 5
+				&& b.duration > m_minimal_frames_till_active
 				){
 #if 1
 			cv::line(out,
