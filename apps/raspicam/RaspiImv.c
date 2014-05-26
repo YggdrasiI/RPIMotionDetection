@@ -1,9 +1,13 @@
 //#include "RaspiVid.h"
+#include "norm2.h"
 #include "RaspiImv.h"
 
 MOTION_DATA motion_data = {0, NULL, NULL, 0,0,0,0 };
 
 int init_motion_data(MOTION_DATA *md, RASPIVID_STATE *state){
+	
+	//prefill some global arrays for fast 2-norm evaluation.
+	norm2_init_arrays();
 
 	md->width = (state->width+15)/16 + 1;//1920 => 121
 	md->height = (state->height+15)/16;
@@ -57,6 +61,7 @@ void imv_eval_norm(MOTION_DATA *md){
 	unsigned char* curNorm = md->imv_norm;
 
 #if 0
+#if 0
 	int j,i,J,I;
 	for( j=0,J=md->height; j<J; ++j){
 		for( i=0,I=md->width-1; i<I; ++i){
@@ -73,13 +78,27 @@ void imv_eval_norm(MOTION_DATA *md){
 		}
 	}
 #endif
-
-#if 0
+#else
 	while( curImv<curImvEnd ){
 		*curNorm = abs(curImv->x_vector) + abs(curImv->y_vector);
 		++curImv;
 		++curNorm;
 	}
 #endif
+
+}
+
+/* Eval 2-norm of imv vector. 
+ * */
+void imv_eval_norm2(MOTION_DATA *md){
+	INLINE_MOTION_VECTOR *curImv = (INLINE_MOTION_VECTOR*) md->imv_array_buffer; 
+	INLINE_MOTION_VECTOR *curImvEnd = curImv+md->imv_array_len;
+	unsigned char* curNorm = md->imv_norm;
+
+	while( curImv<curImvEnd ){
+		*curNorm = norm2(curImv->x_vector,curImv->y_vector);
+		++curImv;
+		++curNorm;
+	}
 
 }

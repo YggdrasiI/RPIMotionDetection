@@ -41,6 +41,7 @@ set (COMMON_SOURCES
 	${RELDIR}/tga.c
 	${RELDIR}/RaspiImv.c
 	${RELDIR}/lodepng.cpp
+	${RELDIR}/norm2.c
 	../../Tracker2.cpp ../../Tracker.cpp 
 	)
 

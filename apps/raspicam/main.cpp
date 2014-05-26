@@ -44,9 +44,10 @@ void* blob_detection(void *argn){
 					motion_data.available = 0;
 					motion_data.mutex = 0;
 
-					//1. Convert imv vector to 1-norm.
+					//1. Convert imv vector to norm.
 					//Note: Some uness. operations if gridwidth>1.
-					imv_eval_norm(&motion_data);
+					//imv_eval_norm(&motion_data);
+					imv_eval_norm2(&motion_data);
 
 					//1.5 (optional) OpenGl Output
 					if( true ){
@@ -70,7 +71,7 @@ void* blob_detection(void *argn){
 					// see gl_scenes/motion.c
 
 					// Debug: Replace imv_norm with ids, roi has to start in (0,0) and with full width.
-					eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
+					//eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
 
 
 				}else{
