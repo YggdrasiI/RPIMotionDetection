@@ -71,7 +71,7 @@ void* blob_detection(void *argn){
 					// see gl_scenes/motion.c
 
 					// Debug: Replace imv_norm with ids, roi has to start in (0,0) and with full width.
-					//eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
+					eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
 
 
 				}else{
@@ -127,35 +127,15 @@ int main(int argc, const char **argv){
 	blobtree_create(&frameblobs);
 	blobtree_set_grid(frameblobs, 1, 1);
 
-	blobtree_set_filter(frameblobs, F_AREA_MIN, 50 );
-	blobtree_set_filter(frameblobs, F_AREA_MAX, 2000 );
+	blobtree_set_filter(frameblobs, F_AREA_MIN, 100 );
+	blobtree_set_filter(frameblobs, F_AREA_MAX, 1000 );
 	blobtree_set_extra_filter(frameblobs, hand_filter);
 	/* Only show leafs with above filtering effects */
 	blobtree_set_filter(frameblobs, F_ONLY_LEAFS, 1);
 
-	//init depth map, [0,1,1,1,1,2,3,3,4,4,5, 100,100,…]
+	//init depth map
 	for( int i=0; i<256; i++){
-		switch(i){
-			case 0:
-				depth_map[i] = 0;
-				break;
-			case 1:
-			case 2:
-			case 3:
-			case 4:
-				depth_map[i] = 1;
-				break;
-			case 5:
-			case 6:
-			case 7:
-			case 8:
-			case 9:
-			case 10:
-				depth_map[i] = (i/2)*2;
-				break;
-			default:
-				depth_map[i] = 100;
-		}
+		depth_map[i] = (i<20?0:i/4+1);
 	}
 	//Create thread for blob detection.
 	int err = pthread_create(&blob_tid, NULL, &blob_detection, NULL);
