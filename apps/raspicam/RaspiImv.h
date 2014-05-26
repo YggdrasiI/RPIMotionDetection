@@ -70,6 +70,7 @@ void handle_imv_data(char *data, size_t data_len);
 int init_motion_data(MOTION_DATA *md, RASPIVID_STATE *state);
 void uninit_motion_data(MOTION_DATA *md, RASPIVID_STATE *state);
 void imv_eval_norm(MOTION_DATA *md);
+void imv_eval_norm2(MOTION_DATA *md);
 
 
 

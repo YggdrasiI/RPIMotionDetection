@@ -1975,7 +1975,6 @@ int raspivid(int argc, const char **argv)
 											if (state.verbose)
 												fprintf(stderr, "Finish auto exposure continue with EXPOSUREMODE_OFF\n");
 											running=1;
-											printf("Finish auto exposure continue with EXPOSUREMODE_OFF\n");
 
 #if 0
 											// Test other parameter

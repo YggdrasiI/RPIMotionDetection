@@ -16,7 +16,7 @@ WAIT=5000
 # --pongUseShader select one shader for the whole game
 # --pongCycleShaders [Num] switch shader after N scoring points
 # Definition of the shaders: apps/raspivid/shaders/gl_scenes/pong*.glsl
-SHADEROPTIONS=--pongCycleShaders
+SHADEROPTIONS="--pongUseShader 0"
 
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
 echo "Waiting $WAIT ms on camera initialisation"

@@ -37,6 +37,7 @@ set (COMMON_SOURCES
 	 ${GL_SCENE_SOURCES} RaspiImv.c
 	 main.cpp 
 	 ../../Tracker2.cpp ../../Tracker.cpp 
+	 norm2.c
 	 Graphics.cpp 
 	 lodepng.cpp
 	 )

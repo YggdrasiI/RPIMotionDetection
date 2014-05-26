@@ -281,7 +281,8 @@ bool GfxShader::LoadVertexShader(const char* filename)
 	}
 	else
 	{
-		printf("Compiled vertex shader %s:\n%s\n", filename, Src);
+		//printf("Compiled vertex shader %s:\n%s\n", filename, Src);
+		printf("Compiled vertex shader %s.\n", filename);
 	}
 
 	return true;
@@ -320,7 +321,8 @@ bool GfxShader::LoadFragmentShader(const char* filename)
 	}
 	else
 	{
-		printf("Compiled fragment shader %s:\n%s\n", filename, Src);
+		//printf("Compiled fragment shader %s:\n%s\n", filename, Src);
+		printf("Compiled fragment shader %s.\n", filename);
 	}
 
 	return true;

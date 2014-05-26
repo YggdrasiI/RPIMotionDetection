@@ -46,6 +46,7 @@ void Pong::updatePosition(float dt){
 			Col(255-i*255,0,i*255);
 			if( i == 0 && m_activePlayer[1] ){
 				scaleVelocity(0.8,1.0);
+				m_velocity[0] = fmin(m_velocity[0],0.02);
 				changeScore(0,1);
 			}
 		}else if( m_position[i] < -border ){
@@ -64,11 +65,10 @@ void Pong::updatePosition(float dt){
 
 void Pong::reset(){
 	m_position[0] = 0.0; m_position[1] = 0.0;
-	m_velocity[0] = 0.01; m_velocity[1] = 0.005;
+	m_velocity[0] = 0.03; m_velocity[1] = 0.01;
 	m_score[0] = 0; m_score[1] = 0;
 	m_color[0] = 1.0; m_color[1] = 1.0; m_color[2] = 1.0;
 
-	scaleVelocity(2.0,2.0);
 	wait_on_camera_init = true;
 }
 
@@ -173,7 +173,7 @@ bool Pong::checkCollision(int width, int height, std::vector<cBlob> &blobs){
 			//reflect pong, if x-velocity matches to x-position of blob
 			//Note, velocity is inverted due other orientation of coordinate system
 			if( iPos[0] < width/3 && m_velocity[0] > 0 && m_activePlayer[1] ){
-				scaleVelocity(-1.05,1.0);
+				scaleVelocity(-1.07,1.0);
 				Col(0,255,0);
 				y_movement = (b.location.y - b.origin.y)/300.0;
 				printf("Hit 1!\n");
@@ -181,7 +181,7 @@ bool Pong::checkCollision(int width, int height, std::vector<cBlob> &blobs){
 				break;
 			}else if( iPos[0] > 2*width/3 && m_velocity[0] < 0 && m_activePlayer[0]  ){
 				Col(0,255,0);
-				scaleVelocity(-1.05,1.0);
+				scaleVelocity(-1.07,1.0);
 				y_movement = (b.location.y - b.origin.y)/300.0;
 				printf("Hit 2!\n");
 				hit = true;
