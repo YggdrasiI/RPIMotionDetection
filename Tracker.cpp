@@ -21,6 +21,13 @@ std::vector<cBlob>& Tracker::getBlobs()
 	return blobs;
 }
 
+int Tracker::setMaxRadius(int max_radius){
+	 m_max_radius = max_radius;
+}
+int Tracker::setMaxMissingDuration(int max_missing_duration){
+	m_max_missing_duration = max_missing_duration;
+}
+
 void Tracker::getFilteredBlobs(Trackfilter filter, std::vector<cBlob> &output)
 {
 	/* I-Frames are without motions. Allow one missing frame. 

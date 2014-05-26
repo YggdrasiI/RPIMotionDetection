@@ -54,6 +54,11 @@ class Tracker {
 		virtual void trackBlobs(
 				Blobtree *frameblobs,
 				bool history ) = 0;
+		
+		/* Set maximal differcene between midpoints of blobs between
+		 * two frames F_i and F_{i+k}, k<= m_max_missing_duration */
+		int setMaxRadius(int max_radius);
+		int setMaxMissingDuration(int max_missing_duration);
 
 #ifdef WITH_OCV
 		/* Helper function to draw blobs for debugging */

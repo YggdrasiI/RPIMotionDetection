@@ -70,21 +70,22 @@ static Mat input_image;
 static BlobtreeRect input_roi; // Region of interest of input image
 static bool redraw_pending = false;
 static bool display_areas = true;
-static bool display_tracker = true;
+static bool display_tracker = false;
 static bool display_filtered_areas = true;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
 static int gridwidth = 1;
 static int gridheight = gridwidth;
-static int of_area_min = 5*4;
-static int of_area_max = 40*4;
+static int of_area_min = 40;
+static int of_area_max = 40;
 static int of_tree_depth_min = 1;
 static int of_tree_depth_max = 100;
 static int of_area_depth_min = 0;//2;
 static int of_area_depth_max = 255;//10;
 static bool of_only_leafs = false;
-static bool of_use_own_filter = true;
+static bool of_use_own_filter = false;
 static int output_scalefactor = 1;
+static bool invert_depth_map = false;
 
 
 // Thresh 
@@ -113,11 +114,13 @@ void update_filter( ){
 
 	//filter out small blobs
 	blobtree_set_filter(frameblobs, F_AREA_MIN,
-			(of_area_min * of_area_min)/16 );
+			//(of_area_min * of_area_min)/16 );
+			of_area_min * 10 );
 
 	//filter out big blobs
 	blobtree_set_filter(frameblobs, F_AREA_MAX,
-			(of_area_max * of_area_max)/16 );
+			//(of_area_max * of_area_max)/16 );
+			of_area_max * 500 );
 
 	//filter out top level frameblobs for whole image
 	blobtree_set_filter(frameblobs, F_TREE_DEPTH_MIN,
@@ -168,7 +171,9 @@ int detection_loop(std::string filename ){
 	 */
 	int div=30;
 	for( int i=0; i<256; i++){
-		//depth_map[i] = (i<thresh?0:(i-thresh)/30+1);
+#if 1
+		depth_map[i] = (i<thresh?0:(i-thresh)/30+1);
+#else
 		depth_map[i] = 0;
 		switch(i){
 			case 0:
@@ -190,6 +195,11 @@ int detection_loop(std::string filename ){
 				break;
 			default:
 				depth_map[i] = 100;
+		}
+#endif
+
+		if( invert_depth_map ){
+			depth_map[i] = 255 - depth_map[i];
 		}
 	}
 
@@ -243,6 +253,7 @@ int detection_loop(std::string filename ){
 
 	//Update Tracker
 	update_filter();
+	tracker.setMaxRadius( max((H+W)/40,7) );
 	tracker.trackBlobs( frameblobs, true );
 
 	/* Textual output of whole tree of blobs. */
@@ -263,7 +274,12 @@ int fpsTest(std::string filename ){
 
 	image_filename = filename;
 	int div=30;
-	for( int i=0; i<256; i++){ depth_map[i] = (i<thresh?0:(i-thresh)/30+1); }
+	for( int i=0; i<256; i++){
+		depth_map[i] = (i<thresh?0:(i-thresh)/30+1); 
+		if( invert_depth_map ){
+			depth_map[i] = 255 - depth_map[i];
+		}
+	}
 
 	//====================================================
 	const int W = input_image.size().width;
@@ -480,6 +496,13 @@ static void CB_Button1(int state, void* pointer){
 	if( p == &display_filtered_areas ){ display_filtered_areas = (state>0); }
 	if( p == &of_only_leafs ){ of_only_leafs = (state>0); }
 	if( p == &of_use_own_filter ){ of_use_own_filter = (state>0); }
+	if( p == &display_tracker ){ display_tracker = (state>0); }
+	if( p == &invert_depth_map ){ 
+		invert_depth_map = (state>0);
+		for( int i=0; i<256; i++){
+			depth_map[i] = 255-depth_map[i];
+		}
+	}
 
 	redraw();
 }
@@ -515,7 +538,7 @@ int main(int argc, char** argv )
 	//==========================================================
 	//Setup
 
-	const int loopMax = 520;
+	const int loopMax = 120;
 	int loop = 0;
 
 	//Input handling
@@ -562,7 +585,7 @@ int main(int argc, char** argv )
 			filename.append(argv[2]);
 		}else{
 			std::ostringstream ofilename;
-#if 0
+#if 1
 			ofilename << "images/" << loop << ".png" ;
 #else
 			ofilename << "images/home/frame-";
@@ -587,12 +610,12 @@ int main(int argc, char** argv )
 
 	createTrackbar( "Thresh:", window_options, &thresh, 255, CB_Thresh );
 	createTrackbar( "Gridwidth:", window_options, &gridwidth, 5, CB_Thresh );
-	createTrackbar( "4*sqrt(Min Area):", window_options, &of_area_min, 400, CB_Filter );
-	createTrackbar( "4*sqrt(Max Area):", window_options, &of_area_max, 400, CB_Filter );
+	createTrackbar( "1/10*(Min Area):", window_options, &of_area_min, 1000, CB_Filter );
+	createTrackbar( "1/500*(Max Area):", window_options, &of_area_max, 1000, CB_Filter );
 	createTrackbar( "Min Tree Depth:", window_options, &of_tree_depth_min, 100, CB_Filter );
 	createTrackbar( "Max Tree Depth:", window_options, &of_tree_depth_max, 100, CB_Filter );
-	createTrackbar( "Min Area Level:", window_options, &of_area_depth_min, 255, CB_Filter );
-	createTrackbar( "Max Area Level:", window_options, &of_area_depth_max, 255, CB_Filter );
+	createTrackbar( "Min Level:", window_options, &of_area_depth_min, 255, CB_Filter );
+	createTrackbar( "Max Level:", window_options, &of_area_depth_max, 255, CB_Filter );
 	//createTrackbar( "Scale:", window_options, &output_scalefactor, 8, CB_Filter );
 
 #ifdef WITH_QT
@@ -601,6 +624,8 @@ int main(int argc, char** argv )
 	createButton("Coloured ids",CB_Button1,&display_areas,CV_CHECKBOX, display_areas );
 	createButton("Only filtered coloured ids",CB_Button1,&display_filtered_areas,CV_CHECKBOX, display_filtered_areas );
 	createButton("Own filter",CB_Button1,&of_use_own_filter, CV_CHECKBOX, of_use_own_filter );
+	createButton("Show Tracker",CB_Button1,&display_tracker, CV_CHECKBOX, display_tracker );
+	createButton("Invert depth map",CB_Button1,&invert_depth_map, CV_CHECKBOX, invert_depth_map );
 #endif
 
 	//Loop over list [Images] or [Image_Path, Images]
@@ -611,7 +636,7 @@ int main(int argc, char** argv )
 			filename.append(argv[2]);
 		}else{
 			std::ostringstream ofilename;
-#if 0
+#if 1
 			ofilename << "images/" << loop << ".png" ;
 #else
 			ofilename << "images/home/frame-";
