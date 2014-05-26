@@ -5,6 +5,7 @@
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
 
+
 #ifdef __cplusplus
 extern "C" 
 {
@@ -16,7 +17,7 @@ ShaderSobel,
 ShaderHSV,
 ShaderMirror,
 SHADER_TYPE_NUM,
-} SHADER_TYPE ;
+};
 
 int /*SHADER_TYPE*/ GetShader();
 

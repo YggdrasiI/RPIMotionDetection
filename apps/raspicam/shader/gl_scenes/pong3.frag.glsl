@@ -29,7 +29,7 @@ void main(void)
 	//Skin colors are nearby 0-1jump => shift values 
 	//hsv.x = fract(hsv.x + 0.3);
 
-	gl_FragColor.rgb = 1.0 - hsv.bgr;
+	gl_FragColor.rgb = 0.5*(1.0 - hsv.bgr);
 
 	vec4 gui = texture2D(guitex, texcoord);
 	vec4 blob = texture2D(blobstex, -texcoord);
