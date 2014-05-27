@@ -168,7 +168,7 @@ void RedrawTextures()
 	DrawTextureRect(&imvTexture,0.4, 1.0f,-1.0f,-1.0f,1.0f,NULL);
 
 	blobCache.clear();
-	tracker.getFilteredBlobs(ALL_ACTIVE|N_OLDEST, blobCache);
+	tracker.getFilteredBlobs(TRACK_ALL_ACTIVE|LIMIT_ON_N_OLDEST, blobCache);
 	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache);
 	//tracker.drawBlobsGL(motion_data.width, motion_data.height);
 

@@ -253,11 +253,12 @@ int detection_loop(std::string filename ){
 
 	//Update Tracker
 	update_filter();
+	tracker.setMaxRadius(40);
 	tracker.setMaxRadius( max((H+W)/40,7) );
 	tracker.trackBlobs( frameblobs, true );
 
 	/* Textual output of whole tree of blobs. */
-	print_tree(frameblobs->tree->root,0);
+	//print_tree(frameblobs->tree->root,0);
 
 	return 0;
 }
@@ -416,7 +417,10 @@ static void redraw(){
 
 	if( display_tracker ){
 		if( display_bounding_boxes ){
-			tracker.drawBlobs( color );
+			static std::vector<cBlob> blobCache;
+			blobCache.clear();
+			tracker.getFilteredBlobs(TRACK_ALL_ACTIVE/*|TRACK_PENDING*/, blobCache);
+			tracker.drawBlobs( color, &blobCache );
 		}
 	}else{
 		BlobtreeRect *roi;

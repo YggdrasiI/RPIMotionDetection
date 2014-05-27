@@ -32,7 +32,8 @@ find_library(DEPTHLIB NAMES libdepthtree.so )
 message(STATUS ${THRESHLIB})
 message(STATUS ${DEPTHLIB})
 
-
+# Use newer c++ standard (for shared pointers)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x" )
 
 ### 1. Test application for BlobDetection library ###
 # The images directory contains a few images 

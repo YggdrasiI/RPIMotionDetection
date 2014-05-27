@@ -8,16 +8,17 @@
 #ifdef WITH_HISTORY
 #include <deque>
 #include <cassert>
+#include <memory>
 #endif
  
 
 // event types
-enum { BLOB_NULL, // ?
-	BLOB_DOWN, // New blob detected
-	BLOB_MOVE, // Blob moved
-	BLOB_PENDING, // Blob missing. Waiting N frames to recapture blob.
-	BLOB_UP,	// blob was missed for N frames and is now marked for removing.
-	NUM_BLOB_TYPES
+enum { BLOB_NULL = 0, // ?
+	BLOB_DOWN = 1, // New blob detected
+	BLOB_MOVE = 2, // Blob moved
+	BLOB_PENDING = 4, // Blob missing. Waiting N frames to recapture blob.
+	BLOB_UP = 8,	// blob was missed for N frames and is now marked for removing.
+	//NUM_BLOB_TYPES
 };
 
 /* Use int to omit floating point operations */
@@ -27,6 +28,15 @@ struct point {
 
 class cBlob {
 	private:
+	public:
+		/* Test if some copy occurs */
+		/*
+		cBlob(const cBlob& src){
+			printf("Copy Blob %i\n",src.handid);
+			memcpy((void*)this,&src,sizeof(cBlob));
+			history = NULL;
+		};*/
+		//cBlob& operator = (const cBlob&);
 
 	protected:
 
@@ -40,11 +50,12 @@ class cBlob {
 		int missing_duration; //blob is missed for missing_duration frames.
 
 #ifdef WITH_HISTORY
-		std::deque<cBlob> *history;
+		//std::deque<cBlob> *history;
+		std::shared_ptr< std::deque<cBlob> > history;//;
 		void transfer_history(cBlob &previousBlob){
-			assert( history == NULL );
+			//assert( history == NULL );
 			history = previousBlob.history;
-			previousBlob.history = NULL;
+			//previousBlob.history = NULL;
 		}
 
 		/*Note: Only add (old) blob b to history container
@@ -53,25 +64,26 @@ class cBlob {
 		 * container.
 		 */
 		void update_history(cBlob &b){
-			if( history == NULL ){
-				history = new std::deque<cBlob>(10); 
-			}else if( history->size() >= MAX_HISTORY_LEN ){
-				history->pop_back();
+			if( history.get() == nullptr ){
+				//history = std::shared_ptr<std::deque<cBlob>>(new std::deque<cBlob>(10)); 
+				history = std::shared_ptr<std::deque<cBlob>>(new std::deque<cBlob>(0)); 
+			}else if( history.get()->size() >= MAX_HISTORY_LEN ){
+				history.get()->pop_back();
 			}
-			history->push_front(b);
+			history.get()->push_front(b);//copy b, thus increases the occuring of the pointer.
 		}
 #endif
 
 		cBlob()
 #ifdef WITH_HISTORY
-			:history(NULL)
+			:history(nullptr)
 #endif
 		{
 		};
 		~cBlob()
 		{
 #ifdef WITH_HISTORY
-			delete history;
+			//delete history;
 #endif
 		};
 

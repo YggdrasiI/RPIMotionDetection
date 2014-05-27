@@ -27,10 +27,13 @@ class GfxTexture;
 #define MAXHANDS 40
 
 enum Trackfilter{
-	ALL = 1,
-	ALL_ACTIVE = 2 ,
-	N_OLDEST = 4 ,
-	//NUM_TRACK_FILTER
+	TRACK_DOWN = BLOB_DOWN,
+	TRACK_MOVE = BLOB_MOVE,
+	TRACK_PENDING = BLOB_PENDING,
+	TRACK_UP = BLOB_UP,
+	TRACK_ALL = BLOB_DOWN|BLOB_MOVE|BLOB_PENDING|BLOB_UP,
+	TRACK_ALL_ACTIVE = 16,
+	LIMIT_ON_N_OLDEST = 32 ,
 };
 
 class Tracker {
@@ -81,14 +84,14 @@ class Tracker {
 
 #ifdef WITH_OCV
 		/* Helper function to draw blobs for debugging */
-		void drawBlobs(cv::Mat &out);
+		void drawBlobs(cv::Mat &out, std::vector<cBlob> *toDraw = NULL);
 #endif
 #ifdef WITH_OPENGL
 		/* Helper function to draw blobs for debugging */
 		void drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
 
 #ifdef WITH_HISTORY
-void drawHistory( cBlob &blob, GfxTexture *target);
+void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
 #endif
 
 #endif
