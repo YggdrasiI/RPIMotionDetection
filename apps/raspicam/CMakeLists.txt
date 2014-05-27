@@ -38,6 +38,8 @@ set (COMMON_SOURCES
 	 main.cpp 
 	 ../../Tracker2.cpp ../../Tracker.cpp 
 	 norm2.c
+	 DrawingFunctions.cpp
+	 GfxProgram.cpp
 	 Graphics.cpp 
 	 lodepng.cpp
 	 )

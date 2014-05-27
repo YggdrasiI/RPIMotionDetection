@@ -15,39 +15,41 @@
 #include "RaspiImv.h"
 
 #include "Graphics.h"
+#include "DrawingFunctions.h"
 #include "Tracker2.h"
 extern Tracker2 tracker;
-
 extern Pong pong;
 
 //statics from RaspiTex.c
 //extern "C" long long time_diff;
 extern "C" long long update_fps();
 
-#define check() assert(glGetError() == 0)
+//List of Gfx*Objects which will be used in this app.
+extern uint32_t GScreenWidth;
+extern uint32_t GScreenHeight;
+extern EGLDisplay GDisplay;
+extern EGLSurface GSurface;
+extern EGLContext GContext;
 
-uint32_t GScreenWidth;
-uint32_t GScreenHeight;
-EGLDisplay GDisplay;
-EGLSurface GSurface;
-EGLContext GContext;
+extern GfxShader GSimpleVS;
+extern GfxShader GSimpleFS;
+extern GfxShader GBlobFS;
+extern GfxShader GBlobsVS;
+extern GfxShader GBlobsFS;
+extern GfxShader GPongFS;
+extern GfxShader GColouredLinesFS;
 
-GfxShader GSimpleVS;
-GfxShader GSimpleFS;
-GfxShader GBlobFS;
-GfxShader GBlobsVS;
-GfxShader GBlobsFS;
+extern GfxProgram GSimpleProg;
+extern GfxProgram GBlobProg;
+extern GfxProgram GPongProg;
+extern GfxProgram GBlobsProg;
+extern GfxProgram GColouredLinesProg;
+
+extern GLuint GQuadVertexBuffer;
+
 GfxShader GGuiVS;
 GfxShader GGuiFS;
-GfxShader GPongFS;
-
-GfxProgram GSimpleProg;
-GfxProgram GBlobProg;
 GfxProgram GGuiProg;
-GfxProgram GPongProg;
-GfxProgram GBlobsProg;
-
-GLuint GQuadVertexBuffer;
 
 GfxTexture imvTexture;
 GfxTexture numeralsTexture;
@@ -58,6 +60,8 @@ extern "C" RASPITEXUTIL_TEXTURE_T  guiBuffer;
 extern "C" RASPITEXUTIL_TEXTURE_T  blobsBuffer;
 
 bool guiNeedRedraw = true;
+static std::vector<cBlob> blobCache;
+
 
 void InitGraphics()
 {
@@ -193,13 +197,12 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 	blobsTexture.toRaspiTexture(&blobsBuffer);
 }
 
-static std::vector<cBlob> blobCache;
 
 void RedrawGui()
 {
 	blobCache.clear();
-	tracker.getFilteredBlobs(ALL_ACTIVE, blobCache);
-	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache, &blobsTexture);
+	tracker.getFilteredBlobs(TRACK_ALL_ACTIVE, blobCache);
+	tracker.drawBlobsGL(motion_data.width, motion_data.height, false, &blobCache, &blobsTexture);
 
 	if( !guiNeedRedraw ) return;
 	DrawGui(&numeralsTexture,&pong,0.05f,
@@ -261,6 +264,9 @@ void InitShaders()
 	GPongFS.LoadFragmentShader("shader/pongfragshader.glsl");
 	GPongProg.Create(&GSimpleVS,&GPongFS);
 
+	GColouredLinesFS.LoadFragmentShader("shader/colouredlinesfragshader.glsl");
+	GColouredLinesProg.Create(&GBlobsVS,&GColouredLinesFS);
+
 	check();
 
 	//create an ickle vertex buffer
@@ -278,399 +284,22 @@ void InitShaders()
 	check();
 }
 
-void BeginFrame()
-{
-	// Prepare viewport
-	glViewport ( 0, 0, GScreenWidth, GScreenHeight );
-	check();
-
-	// Clear the background
-	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-	check();
-}
-
-void EndFrame()
-{
-	eglSwapBuffers(GDisplay,GSurface);
-	check();
-}
-
 void ReleaseGraphics()
 {
 
 }
 
-// printShaderInfoLog
-// From OpenGL Shading Language 3rd Edition, p215-216
-// Display (hopefully) useful error messages if shader fails to compile
-void printShaderInfoLog(GLint shader)
-{
-	int infoLogLen = 0;
-	int charsWritten = 0;
-	GLchar *infoLog;
 
-	glGetShaderiv(shader, GL_INFO_LOG_LENGTH, &infoLogLen);
+int GetShader(){
+	const int* score = pong.getScore();
+	return  ((score[0]+score[1])/3) %SHADER_TYPE_NUM;
 
-	if (infoLogLen > 0)
-	{
-		infoLog = new GLchar[infoLogLen];
-		// error check for fail to allocate memory omitted
-		glGetShaderInfoLog(shader, infoLogLen, &charsWritten, infoLog);
-		std::cout << "InfoLog : " << std::endl << infoLog << std::endl;
-		delete [] infoLog;
-	}
+	return ShaderNormal;
 }
 
-bool GfxShader::LoadVertexShader(const char* filename)
-{
-	//cheeky bit of code to read the whole file into memory
-	assert(!Src);
-	FILE* f = fopen(filename, "rb");
-	assert(f);
-	fseek(f,0,SEEK_END);
-	int sz = ftell(f);
-	fseek(f,0,SEEK_SET);
-	Src = new GLchar[sz+1];
-	fread(Src,1,sz,f);
-	Src[sz] = 0; //null terminate it!
-	fclose(f);
 
-	//now create and compile the shader
-	GlShaderType = GL_VERTEX_SHADER;
-	Id = glCreateShader(GlShaderType);
-	glShaderSource(Id, 1, (const GLchar**)&Src, 0);
-	glCompileShader(Id);
-	check();
 
-	//compilation check
-	GLint compiled;
-	glGetShaderiv(Id, GL_COMPILE_STATUS, &compiled);
-	if(compiled==0)
-	{
-		printf("Failed to compile vertex shader %s:\n%s\n", filename, Src);
-		printShaderInfoLog(Id);
-		glDeleteShader(Id);
-		return false;
-	}
-	else
-	{
-		//printf("Compiled vertex shader %s:\n%s\n", filename, Src);
-		printf("Compiled vertex shader %s.\n", filename);
-	}
-
-	return true;
-}
-
-bool GfxShader::LoadFragmentShader(const char* filename)
-{
-	//cheeky bit of code to read the whole file into memory
-	assert(!Src);
-	FILE* f = fopen(filename, "rb");
-	assert(f);
-	fseek(f,0,SEEK_END);
-	int sz = ftell(f);
-	fseek(f,0,SEEK_SET);
-	Src = new GLchar[sz+1];
-	fread(Src,1,sz,f);
-	Src[sz] = 0; //null terminate it!
-	fclose(f);
-
-	//now create and compile the shader
-	GlShaderType = GL_FRAGMENT_SHADER;
-	Id = glCreateShader(GlShaderType);
-	glShaderSource(Id, 1, (const GLchar**)&Src, 0);
-	glCompileShader(Id);
-	check();
-
-	//compilation check
-	GLint compiled;
-	glGetShaderiv(Id, GL_COMPILE_STATUS, &compiled);
-	if(compiled==0)
-	{
-		printf("Failed to compile fragment shader %s:\n%s\n", filename, Src);
-		printShaderInfoLog(Id);
-		glDeleteShader(Id);
-		return false;
-	}
-	else
-	{
-		//printf("Compiled fragment shader %s:\n%s\n", filename, Src);
-		printf("Compiled fragment shader %s.\n", filename);
-	}
-
-	return true;
-}
-
-bool GfxProgram::Create(GfxShader* vertex_shader, GfxShader* fragment_shader)
-{
-	VertexShader = vertex_shader;
-	FragmentShader = fragment_shader;
-	Id = glCreateProgram();
-	glAttachShader(Id, VertexShader->GetId());
-	glAttachShader(Id, FragmentShader->GetId());
-	glLinkProgram(Id);
-	check();
-	printf("Created program id %d from vs %d and fs %d\n", GetId(), VertexShader->GetId(), FragmentShader->GetId());
-
-	// Prints the information log for a program object
-	char log[1024];
-	glGetProgramInfoLog(Id,sizeof log,NULL,log);
-	printf("%d:program:\n%s\n", Id, log);
-
-	return true;	
-}
-
-bool GfxTexture::CreateFromFile(const char *filename)
-{
-  unsigned error;
-  unsigned char* image = NULL;
-  size_t width, height;
-
-  error = lodepng_decode32_file(&image, &width, &height, filename);
-
-  if(error){
-		printf("decoder error %u: %s\n", error, lodepng_error_text(error));
-		return false;
-	}
-	
-	bool ret = CreateRGBA(width,height,image);
-  free(image);
-	return ret;
-}
-
-bool GfxTexture::CreateRGBA(int width, int height, const void* data)
-{
-	Width = width;
-	Height = height;
-	glGenTextures(1, &Id);
-	check();
-	glBindTexture(GL_TEXTURE_2D, Id);
-	check();
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	check();
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)GL_NEAREST);
-	check();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	IsRGBA = true;
-	return true;
-}
-
-bool GfxTexture::CreateGreyScale(int width, int height, const void* data)
-{
-	Width = width;
-	Height = height;
-	glGenTextures(1, &Id);
-	check();
-	glBindTexture(GL_TEXTURE_2D, Id);
-	check();
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, Width, Height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-	check();
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)GL_NEAREST);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)GL_NEAREST);
-	check();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	IsRGBA = false;
-	return true;
-}
-
-bool GfxTexture::GenerateFrameBuffer()
-{
-	//Create a frame buffer that points to this texture
-	glGenFramebuffers(1,&FramebufferId);
-	check();
-	glBindFramebuffer(GL_FRAMEBUFFER,FramebufferId);
-	check();
-	glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,Id,0);
-	check();
-	glBindFramebuffer(GL_FRAMEBUFFER,0);
-	check();
-	return true;
-}
-
-void GfxTexture::SetPixels(const void* data)
-{
-	glBindTexture(GL_TEXTURE_2D, Id);
-	check();
-	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Width, Height, IsRGBA ? GL_RGBA : GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
-	check();
-	glBindTexture(GL_TEXTURE_2D, 0);
-	check();
-}
-
-void GfxTexture::SetInterpolation(bool interpol)
-{
-	glBindTexture(GL_TEXTURE_2D, Id);
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
-	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
-	glBindTexture(GL_TEXTURE_2D, 0);
-}
-
-void GfxTexture::Save(const char* fname)
-{
-	void* image = malloc(Width*Height*4);
-	glBindFramebuffer(GL_FRAMEBUFFER,FramebufferId);
-	check();
-	glReadPixels(0,0,Width,Height,IsRGBA ? GL_RGBA : GL_LUMINANCE, GL_UNSIGNED_BYTE, image);
-	check();
-	glBindFramebuffer(GL_FRAMEBUFFER,0);
-
-	unsigned error = lodepng::encode(fname, (const unsigned char*)image, Width, Height, IsRGBA ? LCT_RGBA : LCT_GREY);
-	if(error) 
-		printf("error: %d\n",error);
-
-	free(image);
-}
-
-//copy metadata from GfxTexture obj to c struct
-void GfxTexture::toRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
-	tex->width = Width;
-	tex->height = Height;
-	tex->id = Id;
-	tex->framebufferId = FramebufferId;
-	tex->isRGBA = IsRGBA?1:0;
-}
-
-//copy metadata from c ctruct to GfxTexture obj.
-void GfxTexture::fromRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
-	Width = tex->width;
-	Height = tex->height;
-	Id = tex->id;
-	FramebufferId = tex->framebufferId;
-	IsRGBA = tex->isRGBA?1:0;
-}
-
-void SaveFrameBuffer(const char* fname)
-{
-	//uint32_t GScreenWidth;
-	//uint32_t GScreenHeight;
-	//graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
-	void* image = malloc(GScreenWidth*GScreenHeight*4);
-	glBindFramebuffer(GL_FRAMEBUFFER,0);
-	check();
-	glReadPixels(0,0,GScreenWidth,GScreenHeight, GL_RGBA, GL_UNSIGNED_BYTE, image);
-
-	unsigned error = lodepng::encode(fname, (const unsigned char*)image, GScreenWidth, GScreenHeight, LCT_RGBA);
-	if(error) 
-		printf("error: %d\n",error);
-
-	free(image);
-
-}
-
-void DrawTextureRect(GfxTexture* texture, float alpha, float x0, float y0, float x1, float y1, GfxTexture* render_target)
-{
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
-		check();
-	}
-
-	glUseProgram(GSimpleProg.GetId());	check();
-
-	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"offset"),x0,y0);
-	glUniform2f(glGetUniformLocation(GSimpleProg.GetId(),"scale"),x1-x0,y1-y0);
-	glUniform1i(glGetUniformLocation(GSimpleProg.GetId(),"tex"), 0);
-	glUniform1f(glGetUniformLocation(GSimpleProg.GetId(),"alpha"),alpha);
-	check();
-
-	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
-
-	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
-	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
-	glEnableVertexAttribArray(loc);	check();
-	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
-
-	//glDisableVertexAttribArray(loc);	check();//neu
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
-		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
-	}
-}
-
-void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float y1, GfxTexture* render_target)
-{
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
-		check();
-	}
-
-	glUseProgram(GBlobProg.GetId());	check();
-
-	glUniform2f(glGetUniformLocation(GBlobProg.GetId(),"offset"),x0,y0);
-	glUniform2f(glGetUniformLocation(GBlobProg.GetId(),"scale"),x1-x0,y1-y0);
-	glUniform3f(glGetUniformLocation(GBlobProg.GetId(),"blobcol"),r,g,b);
-	check();
-
-	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
-
-	GLuint loc = glGetAttribLocation(GBlobProg.GetId(),"vertex");
-	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
-	glEnableVertexAttribArray(loc);	check();
-	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
-
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
-		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
-	}
-}
-
-void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxTexture* render_target)
-{
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
-
-    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    //glClear(GL_DEPTH_BUFFER_BIT);
-    glClear(GL_COLOR_BUFFER_BIT);
-		
-		check();
-	}
-
-	if( numRects > 0 ){
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glUseProgram(GBlobsProg.GetId());	check();
-
-		GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
-		GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
-
-		glEnableVertexAttribArray(vloc);	
-		glEnableVertexAttribArray(cloc);	check();
-
-		glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
-		glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
-
-		glDrawArrays ( GL_TRIANGLES, 0, numRects*6 ); check();
-
-		glDisableVertexAttribArray(vloc);	
-		glDisableVertexAttribArray(cloc);	check();
-
-		glDisable(GL_BLEND);
-	}
-
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
-		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
-	}
-}
+// Extra drawing functions for pong app.
 
 void DrawGui(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
@@ -693,7 +322,7 @@ void DrawGui(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float
 	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"border"),
 			pong->isActivePlayer(0)?border:0.0,
 			pong->isActivePlayer(1)?1.0-border:1.0 );//border
-  glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"score"),
+	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"score"),
 			(float) pong->getScore()[0],
 			(float) pong->getScore()[1]);//score
 	if( pong->isActivePlayer(1) ) {
@@ -727,49 +356,3 @@ void DrawGui(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float
 	}
 }
 
-// Like DrawTextureRect with extra color information
-void DrawPongRect(GfxTexture* texture, float r, float g, float b,
-		float x0, float y0, float x1, float y1, GfxTexture* render_target)
-{
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
-		check();
-	}
-
-	glUseProgram(GPongProg.GetId());	check();
-
-	glUniform2f(glGetUniformLocation(GPongProg.GetId(),"offset"),x0,y0);
-	glUniform2f(glGetUniformLocation(GPongProg.GetId(),"scale"),x1-x0,y1-y0);
-	glUniform1i(glGetUniformLocation(GPongProg.GetId(),"tex"), 0);
-	glUniform3f(glGetUniformLocation(GPongProg.GetId(),"colorMod"),r,g,b);
-	check();
-
-	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
-
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
-
-	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
-	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
-	glEnableVertexAttribArray(loc);	check();
-	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
-
-	//glDisableVertexAttribArray(loc);	check();//neu
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
-
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
-		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
-	}
-}
-
-int GetShader(){
-	const int* score = pong.getScore();
-	return  ((score[0]+score[1])/3) %SHADER_TYPE_NUM;
-
-	return ShaderNormal;
-}

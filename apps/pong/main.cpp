@@ -194,6 +194,10 @@ int main(int argc, const char **argv){
 		 }
 	 }
 
+	//Setup tracker
+	tracker.setMaxRadius(10);
+	tracker.setOldestDurationFilter(4);
+
 	//start raspivid application.
 	raspivid(argc, argv);
 

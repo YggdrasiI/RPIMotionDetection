@@ -11,6 +11,7 @@ extern "C"
 {
 #endif
 
+	//For Pong app
 enum SHADER_TYPE {
 ShaderNormal,
 ShaderSobel,
@@ -24,8 +25,6 @@ int /*SHADER_TYPE*/ GetShader();
 void InitGraphics();
 void InitShaders();
 void ReleaseGraphics();
-void BeginFrame();
-void EndFrame();
 
 void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight);
 void RedrawGui();

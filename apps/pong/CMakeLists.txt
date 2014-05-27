@@ -42,6 +42,8 @@ set (COMMON_SOURCES
 	${RELDIR}/RaspiImv.c
 	${RELDIR}/lodepng.cpp
 	${RELDIR}/norm2.c
+	${RELDIR}/DrawingFunctions.cpp
+	${RELDIR}/GfxProgram.cpp
 	../../Tracker2.cpp ../../Tracker.cpp 
 	)
 

@@ -7,7 +7,7 @@
 
 #include "Tracker.h"
 #ifdef WITH_OPENGL
-#include "apps/raspicam/Graphics.h"
+#include "apps/raspicam/DrawingFunctions.h"
 #endif
 
 bool oldest_sort_function (const cBlob &a,const cBlob &b) { return (a.duration>b.duration); }
@@ -15,13 +15,36 @@ bool oldest_sort_function (const cBlob &a,const cBlob &b) { return (a.duration>b
 
 Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0),
 	m_use_N_oldest_blobs(0),
+#ifdef WITH_HISTORY
+	m_phistory_line_colors(NULL),
+#endif
 	m_minimal_frames_till_active(10)
 {
 	for(unsigned int i=0; i<MAXHANDS; i++) handids[i] = false;
 	last_handid = 0;
+
+#ifdef WITH_HISTORY
+	m_phistory_line_colors = new float[MAX_HISTORY_LEN*4];
+	float *rgba = m_phistory_line_colors;
+	const float *end = m_phistory_line_colors+MAX_HISTORY_LEN*4;
+	unsigned int seed = 255;
+	float div = 1.0/255;
+	while(rgba < end ){
+		*rgba++ = div*(seed%256);
+		*rgba++ = div*(127+(seed+100%128));
+		*rgba++ = div*((seed+200)%256);
+		*rgba++ = 1.0;
+		seed += 5;
+	}
+#endif
+
 }
 
-Tracker::~Tracker(){}
+Tracker::~Tracker(){
+#ifdef WITH_HISTORY
+	delete m_phistory_line_colors;
+#endif
+}
 
 std::vector<cBlob>& Tracker::getBlobs()
 {
@@ -87,7 +110,7 @@ void Tracker::getFilteredBlobs(int /*Trackfilter*/ filter, std::vector<cBlob> &o
 
 #ifdef WITH_OCV
 /* This method is a little bit outdated. The OpenGL variant is more actual. */
-void Tracker::drawBlobs(cv::Mat &out, std::vector<cBlob> *toDraw ){
+void Tracker::drawBlobs(cv::Mat &out, bool drawHistoryLines, std::vector<cBlob> *toDraw ){
 	if( toDraw == NULL ){
 		toDraw = &blobs;
 	}
@@ -105,41 +128,54 @@ void Tracker::drawBlobs(cv::Mat &out, std::vector<cBlob> *toDraw ){
 			col = cv::Scalar(150, 150, 150);
 		}
 
-#ifdef WITH_HISTORY
-		if( b.history.get() != nullptr ){
-			cv::Point p1((int)b.location.x,(int)b.location.y);
-			cv::Point p2;
-
-			std::deque<cBlob>::iterator it = b.history.get()->begin();
-			const std::deque<cBlob>::iterator itEnd = b.history.get()->end();
-			int time=0;
-			for ( ; it != itEnd ; ++it){
-				p2.x = (*it).location.x; 	p2.y = (*it).location.y; 	
-				//cv::Scalar color(200+10*time,200+10*time,200+10*time);
-				cv::Scalar color(30,30,200+10*time);
-				cv::line(out,p1,p2,color,2);
-
-				printf("Draw line from (%i,%i) to (%i,%i)\n", p1.x,p1.y, p2.x,p2.y);
-				p1 = p2;
-				--time;
-			}
-		}
-#else
-		cv::line(out,
-				cv::Point((int)b.origin.x,(int)b.origin.y),
-				cv::Point((int)b.location.x,(int)b.location.y),cv::Scalar(200,200,200),1);
-#endif
 		cv::rectangle(out,
 				cv::Point((int)b.min.x,(int)b.min.y),
 				cv::Point((int)b.max.x,(int)b.max.y),col,1);
+
+		if( drawHistoryLines ){
+#ifdef WITH_HISTORY
+			if( b.history.get() != nullptr ){
+				cv::Point p1((int)b.location.x,(int)b.location.y);
+				cv::Point p2;
+
+				std::deque<cBlob>::iterator it = b.history.get()->begin();
+				const std::deque<cBlob>::iterator itEnd = b.history.get()->end();
+				int time=0;
+				for ( ; it != itEnd ; ++it){
+					p2.x = (*it).location.x; 	p2.y = (*it).location.y; 	
+					//cv::Scalar color(200+10*time,200+10*time,200+10*time);
+					cv::Scalar color(30,30,200+10*time);
+					cv::line(out,p1,p2,color,2);
+
+					printf("Draw line from (%i,%i) to (%i,%i)\n", p1.x,p1.y, p2.x,p2.y);
+					p1 = p2;
+					--time;
+				}
+			}
+#else
+			cv::line(out,
+					cv::Point((int)b.origin.x,(int)b.origin.y),
+					cv::Point((int)b.location.x,(int)b.location.y),cv::Scalar(200,200,200),1);
+#endif
+		}
+
 	}
 }
 #endif
 
 #ifdef WITH_OPENGL
-void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw, GfxTexture *target){
+void Tracker::drawBlobsGL(int screenWidth, int screenHeight, bool drawHistoryLines, std::vector<cBlob> *toDraw, GfxTexture *target){
 	if( toDraw == NULL ){
 		toDraw = &blobs;
+	}
+
+	/* Clear target. It's not neccessary to unbind the
+	 * framebuffer because subfunctions will do this already. */
+	if( target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,target->GetFramebufferId());
+		glViewport ( 0, 0, target->GetWidth(), target->GetHeight() );
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
 
 	//Wait and look mutex.
@@ -151,6 +187,8 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 	GLfloat points[toDraw->size()*12];
 	GLfloat colors[toDraw->size()*24];
 	int quadIndex = 0;
+	float scaleW = 2.0/screenWidth;
+	float scaleH = 2.0/screenHeight;
 	GLfloat *p = &points[0];
 	GLfloat *c = &colors[0];
 
@@ -171,12 +209,10 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 		//printf("Draw blob! [%i-%i] x [%i-%i]\n", b.min.x, b.max.x, b.min.y, b.max.y);
 		float x0,y0,x1,y1;
 		/* Flip x0 with x1 to get same flipping as video frame */
-		x0 = 1-2.0*b.min.x/screenWidth;
-		y0 = 2.0*b.min.y/screenHeight-1;
-		x1 = 1-2.0*b.max.x/screenWidth;
-		y1 = 2.0*b.max.y/screenHeight-1;
-		//x0 = -x0; x1 = -x1;
-		//y0 = -y0; y1 = -y1;
+		x0 = 1-b.min.x*scaleW;
+		y0 = b.min.y*scaleH-1;
+		x1 = 1-b.max.x*scaleW;
+		y1 = b.max.y*scaleH-1;
 
 		//printf("  [%f-%f] x [%f-%f]\n", x0, x1, y0, y1);
 		//DrawBlobRect( col[0], col[1], col[2], x0,y0, x1, y1, NULL);
@@ -201,7 +237,12 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 
 		++quadIndex;
 
-		drawHistory(screenWidth, screenHeight, b, target);
+		if( drawHistoryLines ){
+#ifdef WITH_HISTORY
+			drawHistory(screenWidth, screenHeight, b, target);
+#endif
+		}
+
 	}
 	m_swap_mutex = 0;
 
@@ -215,32 +256,35 @@ void Tracker::drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTe
 	if( blob.history.get() == nullptr ) return;
 
 	unsigned int numPoints = 1+blob.history.get()->size();
+	float scaleW = 2.0/screenWidth;
+	float scaleH = 2.0/screenHeight;
 	GLfloat points[numPoints*2];
-	GLfloat colors[numPoints*4];
 	GLfloat *p = &points[0];
-	GLfloat *c = &colors[0];
-	/* TODO: Use a static, prefilled array for the colors. */
+
+	/* Do not generate colors for each line, but use member variable. */
+	//GLfloat colors[numPoints*4];
+	//GLfloat *c = &colors[0];
 
 	float x0,y0;
 	//Use current blob as first point. Flip x coordinates
-	x0 = 1-2.0*blob.location.x/screenWidth;
-	y0 = 2.0*b.location.y/screenHeight-1;
+	x0 = 1 - blob.location.x*scaleW;
+	y0 = blob.location.y*scaleH - 1;
 	*p++ = x0; 	*p++ = y0; 	
-	*c++ = 1.0; *c++ = 0.0; *c++ = 1.0; *c++ = 0.7;
+	//*c++ = 1.0; *c++ = 0.0; *c++ = 1.0; *c++ = 0.7;
 
 	int pointIndex = 1;
 	std::deque<cBlob>::iterator it = blob.history.get()->begin();
 	const std::deque<cBlob>::iterator itEnd = blob.history.get()->end();
 	for ( ; it != itEnd ; ++it){
-		x0 = 1-2.0* (*it).location.x/screenWidth;
-		y0 = 2.0* (*it).location.y/screenHeight-1;
+		x0 = 1 - (*it).location.x*scaleW;
+		y0 = (*it).location.y*scaleH - 1;
 		*p++ = x0; 	*p++ = y0; 	
-		*c++ = 1.0; *c++ = 0.0; *c++ = 1.0; *c++ = 0.7;
+		//*c++ = 1.0-pointIndex/30.0; *c++ = 0.0; *c++ = 1.0; *c++ = 0.7;
 
 		++pointIndex;
 	}
 		   
-	DrawColouredLines(&points[0], &colors[0], pointIndex, target);
+	DrawColouredLines(&points[0], m_phistory_line_colors /*&colors[0]*/, pointIndex, target);
 
 }
 #endif

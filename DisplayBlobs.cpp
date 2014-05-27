@@ -420,7 +420,7 @@ static void redraw(){
 			static std::vector<cBlob> blobCache;
 			blobCache.clear();
 			tracker.getFilteredBlobs(TRACK_ALL_ACTIVE/*|TRACK_PENDING*/, blobCache);
-			tracker.drawBlobs( color, &blobCache );
+			tracker.drawBlobs( color, true, &blobCache );
 		}
 	}else{
 		BlobtreeRect *roi;

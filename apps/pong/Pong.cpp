@@ -152,8 +152,11 @@ void Pong::linearColor(float factor, float abs){
 bool Pong::checkCollision(int width, int height, std::vector<cBlob> &blobs){
 	//Transform pong position from [-1,1]² into integer space [0,width]x[0,height]
 	//Moreover, flipping horizontal because orientation differs
-	int iPos[2] = { width - 0.5*(m_position[0]+1.0)*width, 0.5*(m_position[1]+1.0)*height };
-	int iRadius[2] = { m_radius[0]*width, m_radius[1]*height };
+	int iPos[2];
+	iPos[0] = width - (0.5*(m_position[0]+1.0)*width);
+	iPos[1] = (0.5*(m_position[1]+1.0)*height);
+
+	//int iRadius[2] = { m_radius[0]*width, m_radius[1]*height };
 	bool hit = false;
 	float y_movement = 0.0f;
 
