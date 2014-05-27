@@ -10,15 +10,14 @@
 #include "apps/raspicam/Graphics.h"
 #endif
 
-//bool oldest_sort_function (cBlob &a,cBlob &b) { return (a.duration>b.duration); }
-bool oldest_sort_function (cBlob a,cBlob b) { return (a.duration>b.duration); }
+bool oldest_sort_function (const cBlob &a,const cBlob &b) { return (a.duration>b.duration); }
 
 
 Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0),
 	m_use_N_oldest_blobs(0),
 	m_minimal_frames_till_active(10)
 {
-	for(int i=0; i<MAXHANDS; i++) handids[i] = false;
+	for(unsigned int i=0; i<MAXHANDS; i++) handids[i] = false;
 	last_handid = 0;
 }
 
@@ -50,7 +49,7 @@ void Tracker::getFilteredBlobs(int /*Trackfilter*/ filter, std::vector<cBlob> &o
 	/* I-Frames are without motions. Allow one missing frame. 
 	 * A general skipping of I-Frames would be a better solution.
 	 */
-	for (int i = 0; i < blobs.size(); i++) {
+	for (unsigned int i = 0; i < blobs.size(); i++) {
 		cBlob &b = blobs[i];
 		if( ( filter & ALL_ACTIVE
 					&& b.missing_duration < m_max_missing_duration
@@ -84,9 +83,10 @@ void Tracker::getFilteredBlobs(int /*Trackfilter*/ filter, std::vector<cBlob> &o
 }
 
 #ifdef WITH_OCV
+/* This method is a little bit outdated. The OpenGL variant is more actual. */
 void Tracker::drawBlobs(cv::Mat &out){
 
-	for (int i = 0; i < blobs.size(); i++) {
+	for (unsigned int i = 0; i < blobs.size(); i++) {
 		cBlob &b = blobs[i];
 		cv::Scalar col;
 		if( b.event == BLOB_DOWN ){
@@ -133,7 +133,7 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 	GLfloat *p = &points[0];
 	GLfloat *c = &colors[0];
 
-	for (int i = 0; i < toDraw->size(); i++) {
+	for (unsigned int i = 0; i < toDraw->size(); i++) {
 		cBlob &b = (*toDraw).at(i);
 		float col[3];
 #define C(r,g,b) {col[0]=(r)/255.0; col[1]=(g)/255.0; col[2]=(b)/255.0;}
@@ -188,4 +188,39 @@ void Tracker::drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> 
 	DrawBlobRects(&points[0], &colors[0], quadIndex, target);
 
 }
+
+#ifdef WITH_HISTORY
+/* Connect midpoints of the saved history of a blob */
+void Tracker::drawHistory( cBlob &blob, GfxTexture *target){
+	if( blob.history == NULL ) return;
+
+	unsigned int numPoints = 1+blob.history->size();
+	GLfloat points[numPoints*2];
+	GLfloat colors[numPoints*4];
+	GLfloat *p = &points[0];
+	GLfloat *c = &colors[0];
+	/* TODO: Use a static, prefilled array for the colors. */
+
+	//Use current blob as first point.
+	*p++ = blob.location.x; 	*p++ = blob.location.y; 	
+	*c++ = 1.0; *c++ = 1.0; *c++ = 1.0; *c++ = 0.7;
+	//*c++ = 1.0; *c++ = 1.0; *c++ = 1.0; *c++ = 0.7;
+
+	int pointIndex = 1;
+	std::deque<cBlob>::iterator it = blob.history->begin();
+	const std::deque<cBlob>::iterator itEnd = blob.history->end();
+	for ( ; it != itEnd ; ++it){
+		*p++ = (*it).location.x; 	*p++ = (*it).location.y; 	
+		*c++ = 1.0; *c++ = 1.0; *c++ = 1.0; *c++ = 0.7;
+
+		++pointIndex;
+	}
+		   
+	DrawColouredLines(&points[0], &colors[0], pointIndex, target);
+
+}
+#endif
+
+
+
 #endif

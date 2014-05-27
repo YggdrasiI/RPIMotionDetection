@@ -28,7 +28,7 @@ void Tracker2::trackBlobs(
 	blobs_previous.clear();
 
 	// before we populate the blobs vector with the current frame, we need to store the live blobs in blobs_previous
-	for (int i = 0; i < blobs.size(); i++){
+	for (unsigned int i = 0; i < blobs.size(); i++){
 		if (blobs[i].event != BLOB_UP){
 			blobs_previous.push_back(blobs[i]);
 	
@@ -66,23 +66,36 @@ void Tracker2::trackBlobs(
 
 	float d1,d2;
 	// main tracking loop -- O(n^2) -- simply looks for a blob in the previous frame within a specified radius
-	for (int i = 0; i < blobsTmp.size(); i++) {
-		cBlob &blobi = blobsTmp[i];
+	for (unsigned int i = 0; i < blobsTmp.size(); i++) {
+		cBlob &currentBlob = blobsTmp[i];
 		new_hand = true;
-		for (int j = 0; j < blobs_previous.size(); j++) {
-			if (blobs_previous[j].tracked) continue;
+		for (unsigned int j = 0; j < blobs_previous.size(); j++) {
+			cBlob &previousBlob = blobs_previous[j];
+			if (previousBlob.tracked) continue;
 
-			d1=blobsTmp[i].location.x - blobs_previous[j].location.x;
-			d2=blobsTmp[i].location.y - blobs_previous[j].location.y;
+			d1=currentBlob.location.x - previousBlob.location.x;
+			d2=currentBlob.location.y - previousBlob.location.y;
 			if ( (d1*d1 + d2*d2) < max_radius_2) {
-				blobs_previous[j].tracked = true;
-				blobsTmp[i].event = BLOB_MOVE;
-				blobsTmp[i].origin.x = history ? blobs_previous[j].origin.x : blobs_previous[j].location.x;
-				blobsTmp[i].origin.y = history ? blobs_previous[j].origin.y : blobs_previous[j].location.y;
+				previousBlob.tracked = true;
+				currentBlob.event = BLOB_MOVE;
+				if( history ){
+					currentBlob.origin.x = previousBlob.origin.x;
+					currentBlob.origin.y = previousBlob.origin.y;
+#ifdef WITH_HISTORY
+					/* Grab history stack pointer and
+					 * add the previous Blob to the history.
+					 */
+					currentBlob.transfer_history(previousBlob);
+					currentBlob.update_history(previousBlob);
+#endif
+				}else{
+					currentBlob.origin.x = previousBlob.location.x;
+					currentBlob.origin.y = previousBlob.location.y;
+				}
 
-				blobsTmp[i].handid = blobs_previous[j].handid;
-				blobsTmp[i].duration = blobs_previous[j].duration;
-				blobsTmp[i].missing_duration = 0;
+				currentBlob.handid = previousBlob.handid;
+				currentBlob.duration = previousBlob.duration;
+				currentBlob.missing_duration = 0;
 				new_hand = false;
 				break;
 			}
@@ -101,18 +114,18 @@ void Tracker2::trackBlobs(
 			}
 
 			handids[next_handid] = true;
-			blobsTmp[i].handid = next_handid;
+			currentBlob.handid = next_handid;
 			last_handid = next_handid;
 
-			blobsTmp[i].event = BLOB_DOWN;
-			blobsTmp[i].duration = 1;
-			blobsTmp[i].missing_duration = 0;
-			//blobsTmp[i].cursor = NULL;
+			currentBlob.event = BLOB_DOWN;
+			currentBlob.duration = 1;
+			currentBlob.missing_duration = 0;
+			//currentBlob.cursor = NULL;
 		}
 	}
 
 	// add any blobs from the previous frame that weren't tracked as having been removed
-	for (int i = 0; i < blobs_previous.size(); i++) {
+	for (unsigned int i = 0; i < blobs_previous.size(); i++) {
 		cBlob &b = blobs_previous[i];
 		if (!b.tracked) {
 			if( b.missing_duration < m_max_missing_duration ){

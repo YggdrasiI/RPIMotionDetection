@@ -52,7 +52,7 @@ if (n >= try << (N))   \
 	root |= 2 << (N); \
 }
 
-static unsigned int sqrt2 ( unsigned int n)
+inline unsigned int sqrt2 ( unsigned int n)
 {
 	unsigned int root = 0, try;
 	iter1 (15);    iter1 (14);    iter1 (13);    iter1 (12);
@@ -66,8 +66,9 @@ static unsigned int sqrt2 ( unsigned int n)
 /*  3cyles/bit Method
  * http://www.finesse.demon.co.uk/steven/sqrt.html
  *  */
-static unsigned int sqrt_asm( const unsigned int n){
-	unsigned int root, offset;
+inline unsigned int sqrt_asm( const unsigned int n){
+	volatile unsigned int root;
+	unsigned int offset;
 	asm (
 			" mov    %[offset], #3 << 30 \n\t"
 			" mov    %[root], #1 << 30 \n\t"
@@ -122,9 +123,9 @@ static unsigned int sqrt_asm( const unsigned int n){
 			" adc    %[root], %[offset], %[root], LSL #1 \n\t"
 			//
 			" bic    %[root], %[root], #3 << 30 \n\t"
-			: [root] "=r" (root) /*oder =&r */
+			: [root] "=&r" (root) 
 			: [offset] "r" (offset), [n] "r" (n)
-			:  "r0" 
+			:  
 			);
 
 	return root;
@@ -134,7 +135,7 @@ static unsigned int sqrt_asm( const unsigned int n){
 /* Only for values <= 2^15 defined/required.
  * Own algorithm (Olaf Schulz)
  */
-static unsigned int mem_lookup(unsigned int s){
+inline unsigned int mem_lookup(unsigned int s){
 	if( s>>11 ){
 		s =  *(norm2_root_map+(s>>8)) >> (16-4);
 	}else if( s>>7 ){

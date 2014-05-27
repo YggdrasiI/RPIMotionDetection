@@ -3,6 +3,11 @@
  * function on integer space.
  *
  * Compiling: gcc -o testIntegerSqrt -O3 testIntegerSqrt.c -lm
+ *
+ * Conclusion: First and second algorithm are
+ *    as fast as the normal sqrt method (math.h).
+ *    The third method tripples the speed and
+ *    should be excact enough.
  * */
 #include <stdlib.h>
 #include <stdio.h>
@@ -27,8 +32,9 @@
  * ]
  * BIC    root, root, #3 << 30  ; for rounding add: CMP n, root  ADC root, #1
  */
-unsigned int sqrt_asm(unsigned int n){
-	unsigned int root, offset;
+static unsigned int sqrt_asm(unsigned int n){
+	volatile unsigned int root; 
+	unsigned int offset;
 	asm (
 			" mov    %[offset], #3 << 30 \n\t"
 			" mov    %[root], #1 << 30 \n\t"
@@ -83,9 +89,9 @@ unsigned int sqrt_asm(unsigned int n){
 			" adc    %[root], %[offset], %[root], LSL #1 \n\t"
 			//
 			" bic    %[root], %[root], #3 << 30 \n\t"
-			: [root] "=r" (root) /*oder =&r */
+			: [root] "=&r" (root)
 			: [offset] "r" (offset), [n] "r" (n)
-			:  "r0" 
+			:  
 			);
 
 	return root;
@@ -116,7 +122,7 @@ unsigned int sqrt2 (unsigned int n)
 static unsigned int m_root[129];
 unsigned int mem_lookup(unsigned int s){
 
-#if 1
+#if 0
 	if( s>>11 ){
 		s =  *(m_root+(s>>8)) >> (16-4);
 	}else if( s>>7 ){
@@ -125,7 +131,7 @@ unsigned int mem_lookup(unsigned int s){
 		s = *(m_root+s) >> 16;
 	}
 #else
-	//runde rest r/d immer zu 1 auf.
+	//round up remainder r/d to 1.
 	if( s>>11 ){
 		s =  *(m_root+(s>>8) +1) >> (16-4);
 	}else if( s>>7 ){
@@ -137,6 +143,10 @@ unsigned int mem_lookup(unsigned int s){
 	return s;
 }
 
+//use math.h sqrt
+unsigned int sqrt_default(unsigned int s){
+	return sqrt(s);
+}
 
 
 long long update_fps()
@@ -185,7 +195,8 @@ void testErrors(unsigned int N, unsigned int (*handler ) (unsigned int) ){
 	for ( i=0,imax=N; i<imax; ++i){
 		s1 = handler(i);
 
-		s2 = sqrt2(i);
+		//s2 = sqrt2(i);
+		s2 = sqrt(i);
 		if( s1 != s2 ){
 			errorcount++;
 			errorsum+= abs(s1-s2);
@@ -200,9 +211,9 @@ void testErrors(unsigned int N, unsigned int (*handler ) (unsigned int) ){
 		}
 	}
 
-	printf("errors on %i positions ( %f% )\n", errorcount, 100*errorcount/(float)(1<<15));
+	printf("errors on %i positions ( %f% )\n", errorcount, 100*errorcount/(float)N);
 	printf("Mean error:  %f\n", errorsum, errorsum/(float)(errorcount));
-	printf("High error (>1) on %i positions ( %f% )\n", errorcountHigh, 100*errorcountHigh/(float)(1<<15));
+	printf("High error (>1) on %i positions ( %f% )\n", errorcountHigh, 100*errorcountHigh/(float)N);
 	printf("Mean high error:  %f\n", errorsumHigh, errorsumHigh/(float)(errorcountHigh));
 
 }
@@ -216,7 +227,7 @@ void testPerformance(unsigned int N, unsigned int (*handler ) (unsigned int) ){
 	for ( i=0,imax=N; i<imax; ++i){
 		//use i%2^15 because array based algorithm ist not defined for higher values.
 		s1 = handler( i&0xFFFF  );
-		if( i%(1<<16) == 0 ){
+		if( i%(1<<16) == 0 && s1<s2 ){
 			update_fps();
 		}
 	}
@@ -245,6 +256,9 @@ int main (int argn, char** argv ) {
 	}else	if( argn>1 && argv[1][0] == '1' ){
 		handler = &sqrt_asm;
 		printf("Use assembler routine\n");
+	}else	if( argn>1 && argv[1][0] == '3' ){
+		handler = &sqrt_default;
+		printf("Use default math.h routine\n");
 	}else{
 		printf("Use c-code routine\n");
 	}

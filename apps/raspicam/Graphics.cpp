@@ -31,10 +31,12 @@ GfxShader GSimpleFS;
 GfxShader GBlobFS;
 GfxShader GBlobsVS;
 GfxShader GBlobsFS;
+GfxShader GColouredLinesFS;
 
 GfxProgram GSimpleProg;
 GfxProgram GBlobProg;
 GfxProgram GBlobsProg;
+GfxProgram GColouredLinesProg;
 
 GLuint GQuadVertexBuffer;
 
@@ -192,6 +194,9 @@ void InitShaders()
 	GBlobsVS.LoadVertexShader("shader/blobsvertshader.glsl");
 	GBlobsFS.LoadFragmentShader("shader/blobsfragshader.glsl");
 	GBlobsProg.Create(&GBlobsVS,&GBlobsFS);
+
+	GColouredLinesFS.LoadFragmentShader("shader/colouredlinesfragshader.glsl");
+	GColouredLinesProg.Create(&GBlobsVS,&GColouredLinesFS);
 
 	check();
 
@@ -448,6 +453,10 @@ void SaveFrameBuffer(const char* fname)
 
 }
 
+int GetShader(){
+	return ShaderNormal;
+}
+
 void DrawTextureRect(GfxTexture* texture, float alpha, float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
 	if(render_target)
@@ -562,7 +571,40 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 	}
 }
 
+void DrawColouredLines(GLfloat *vertices, GLfloat *colors, GLfloat numPoints, GfxTexture* render_target)
+{
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
+		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+	}
 
-int GetShader(){
-	return ShaderNormal;
+	if( numPoints > 0 ){
+		//glEnable(GL_BLEND);
+		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glUseProgram(GColouredLinesProg.GetId());	check();
+
+		GLuint vloc = glGetAttribLocation(GColouredLinesProg.GetId(),"vertex");
+		GLuint cloc = glGetAttribLocation(GColouredLinesProg.GetId(),"vertexColor");
+
+		glEnableVertexAttribArray(vloc);	
+		glEnableVertexAttribArray(cloc);	check();
+
+		glVertexAttribPointer(vloc, 2, GL_FLOAT, GL_FALSE, 0, vertices);
+		glVertexAttribPointer(cloc, 4, GL_FLOAT, GL_FALSE, 0, colors);
+
+		glDrawArrays ( GL_LINES, 0, numPoints*2 ); check();
+
+		glDisableVertexAttribArray(vloc);	
+		glDisableVertexAttribArray(cloc);	check();
+
+		//glDisable(GL_BLEND);
+	}
+
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
+	}
 }

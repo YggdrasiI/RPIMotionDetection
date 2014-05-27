@@ -86,6 +86,11 @@ class Tracker {
 #ifdef WITH_OPENGL
 		/* Helper function to draw blobs for debugging */
 		void drawBlobsGL(int screenWidth, int screenHeight, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
+
+#ifdef WITH_HISTORY
+void drawHistory( cBlob &blob, GfxTexture *target);
+#endif
+
 #endif
 };
 
