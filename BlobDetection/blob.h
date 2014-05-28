@@ -29,8 +29,8 @@
 #include "tree.h"
 
 typedef struct {
-	int width;
-	int height;
+	unsigned int width;
+	unsigned int height;
 } Grid;
 
 typedef enum {
@@ -55,11 +55,11 @@ typedef enum {
 typedef int (FilterNodeHandler)(Node *node);
 
 typedef struct {
-	int tree_depth_min;
-	int tree_depth_max;
-	int min_area;
-	int max_area;
-	int only_leafs;/*0 or 1*/
+	unsigned int tree_depth_min;
+	unsigned int tree_depth_max;
+	unsigned int min_area;
+	unsigned int max_area;
+	unsigned char only_leafs;/*0 or 1*/
 	unsigned char area_depth_min;
 	unsigned char area_depth_max;
 	FilterNodeHandler* extra_filter;
@@ -85,12 +85,12 @@ void blobtree_create(Blobtree **blob);
 void blobtree_destroy(Blobtree **blob );
 
 /* Set one of the default filter values */
-void blobtree_set_filter( Blobtree *blob,const FILTER f,const int val);
+void blobtree_set_filter( Blobtree *blob,const FILTER f,const unsigned int val);
 /* Add own node filter function */
 void blobtree_set_extra_filter(Blobtree *blob, FilterNodeHandler* extra_filter);
 
 /* Set difference between compared pixels. Could ignore small blobs. */
-void blobtree_set_grid(Blobtree *blob, const int gridwidth, const int gridheight );
+void blobtree_set_grid(Blobtree *blob, const unsigned int gridwidth, const unsigned int gridheight );
 
 /* Returns first node which is matching
  * the filter criteria or NULL. */

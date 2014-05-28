@@ -3,15 +3,15 @@
 
 #include "threshtree.h"
 
-static const int W=28;
-static const int H=28;
+static const unsigned int W=28;
+static const unsigned int H=28;
 
 #include "example.h"
 
 
 int main(int argc, char **argv) {
 	// Stepwidth
-	int w=1,h=1;
+	unsigned int w=1,h=1;
 	// Region of interest
 	BlobtreeRect roi= {0,0,W,H};
 	//BlobtreeRect roi= {18,0,9,17};
@@ -47,7 +47,7 @@ int main(int argc, char **argv) {
 
 	// Print out result tree.
 	printf("===========\n");
-	printf("Treesize: %i, Tree null? %s\n", blob->tree->size, blob->tree->root==NULL?"Yes.":"No.");
+	printf("Treesize: %u, Tree null? %s\n", blob->tree->size, blob->tree->root==NULL?"Yes.":"No.");
 	print_tree(blob->tree->root,0);
 
 	// Filter results and loop over elements.
@@ -61,7 +61,7 @@ int main(int argc, char **argv) {
 		// bounding box
 		Blob *data = (Blob*)cur->data;
 		BlobtreeRect *rect = &data->roi;
-		printf("Blob with id %i: x=%i y=%i w=%i h=%i area=%i\n",data->id,
+		printf("Blob with id %u: x=%u y=%u w=%u h=%u area=%u\n",data->id,
 				rect->x, rect->y,
 				rect->width, rect->height,
 				data->area

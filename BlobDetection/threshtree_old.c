@@ -11,11 +11,11 @@
 
 Tree* find_connection_components_coarse(
 		const unsigned char *data,
-		const int w, const int h,
+		const unsigned int w, const unsigned int h,
 		const BlobtreeRect roi,
 		const unsigned char thresh,
-		const int stepwidth,
-		const int stepheight,
+		const unsigned int stepwidth,
+		const unsigned int stepheight,
 		Blob **tree_data,
 		ThreshtreeWorkspace *workspace )
 {
@@ -30,14 +30,14 @@ Tree* find_connection_components_coarse(
 	}
 }
 
-FORCEINLINE
+	FORCEINLINE
 Tree* find_connection_components_coarse2(
 		const unsigned char *data,
-		const int w, const int h,
+		const unsigned int w, const unsigned int h,
 		const BlobtreeRect roi,
 		const unsigned char thresh,
-		const int stepwidth,
-		const int stepheight,
+		const unsigned int stepwidth,
+		const unsigned int stepheight,
 		Blob **tree_data,
 		ThreshtreeWorkspace *workspace )
 {
@@ -68,39 +68,39 @@ Tree* find_connection_components_coarse2(
 	 *
 	 */
 	//init
-	int r=w-roi.x-roi.width; //right border
-	int b=h-roi.y-roi.height; //bottom border
+	unsigned int r=w-roi.x-roi.width; //right border
+	unsigned int b=h-roi.y-roi.height; //bottom border
 	if( r<0 || b<0 ){
 		fprintf(stderr,"[blob.c] BlobtreeRect not matching.\n");
 		*tree_data = NULL;
 		return NULL;
 	}
 
-	int swr = (roi.width-1)%stepwidth; // remainder of width/stepwidth;
-	int shr = (roi.height-1)%stepheight; // remainder of height/stepheight;
-	int sh = stepheight*w;
-	int sh1 = (stepheight-1)*w;
-	int sh2 = shr*w;
+	unsigned int swr = (roi.width-1)%stepwidth; // remainder of width/stepwidth;
+	unsigned int shr = (roi.height-1)%stepheight; // remainder of height/stepheight;
+	unsigned int sh = stepheight*w;
+	unsigned int sh1 = (stepheight-1)*w;
+	unsigned int sh2 = shr*w;
 
-	int id=-1;//id for next component
-	int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y))
-	int k; //loop variable
+	unsigned int id=-1;//id for next component
+	unsigned int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y))
+	unsigned int k; //loop variable
 
 	/* Create pointer to workspace arrays */
-	int max_comp = workspace->max_comp;
+	unsigned int max_comp = workspace->max_comp;
 
-	int* ids = workspace->ids;
-	int* comp_same = workspace->comp_same;
-	int* prob_parent = workspace->prob_parent;
+	unsigned int* ids = workspace->ids;
+	unsigned int* comp_same = workspace->comp_same;
+	unsigned int* prob_parent = workspace->prob_parent;
 #ifdef BLOB_COUNT_PIXEL
-	int* comp_size = workspace->comp_size;
+	unsigned int* comp_size = workspace->comp_size;
 #endif
 #ifdef BLOB_DIMENSION
-	int* top_index = workspace->top_index;
-	int* left_index = workspace->left_index;
-	int* right_index = workspace->right_index;
-	int* bottom_index = workspace->bottom_index;
-	int s=roi.x,z=roi.y; //s-spalte, z-zeile
+	unsigned int* top_index = workspace->top_index;
+	unsigned int* left_index = workspace->left_index;
+	unsigned int* right_index = workspace->right_index;
+	unsigned int* bottom_index = workspace->bottom_index;
+	unsigned int s=roi.x,z=roi.y; //s-spalte, z-zeile
 #endif
 
 
@@ -111,9 +111,9 @@ Tree* find_connection_components_coarse2(
 	const unsigned char* const dE = dR + (roi.height-1)*w;
 	const unsigned char* const dE2 = dE - sh2;//remove last lines.
 
-	//int i = w*roi.y+roi.x;
-	const unsigned char* dPi = dS; // Pointer to data+i //TODO
-	int* iPi = ids+(dS-data); // Poiner to ids+i
+	//unsigned int i = w*roi.y+roi.x;
+	const unsigned char* dPi = dS; // Pointer to data+i 
+	unsigned int* iPi = ids+(dS-data); // Poiner to ids+i
 
 	/**** A,A'-CASE *****/
 	//top, left corner of BlobtreeRect get first id.
@@ -737,16 +737,16 @@ Tree* find_connection_components_coarse2(
 	 * If BLOB_DIMENSION is set, detect
 	 * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
 	 * */
-	int nids = id+1; //number of ids
-	int tmp_id,tmp_id2, real_ids_size=0,l;
+	unsigned int nids = id+1; //number of ids
+	unsigned int tmp_id,tmp_id2, real_ids_size=0,l;
 
 	free(workspace->real_ids);
-	workspace->real_ids = calloc( nids, sizeof(int) ); //store join of ids.
-	int* const real_ids = workspace->real_ids;
+	workspace->real_ids = calloc( nids, sizeof(unsigned int) ); //store join of ids.
+	unsigned int* const real_ids = workspace->real_ids;
 
 	free(workspace->real_ids_inv);
-	workspace->real_ids_inv = calloc( nids, sizeof(int) ); //store for every id with position in real_id link to it's position.
-	int* const real_ids_inv = workspace->real_ids_inv;
+	workspace->real_ids_inv = calloc( nids, sizeof(unsigned int) ); //store for every id with position in real_id link to it's position.
+	unsigned int* const real_ids_inv = workspace->real_ids_inv;
 
 #if 1
 	for(k=0;k<nids;k++){
@@ -800,10 +800,10 @@ Tree* find_connection_components_coarse2(
 
 	}
 #else
-/* Old approach: Attention, old version does not create
- * the projection property of comp_same (cs). Here, only cs^2=cs^3.
- */
-	int found;
+	/* Old approach: Attention, old version does not create
+	 * the projection property of comp_same (cs). Here, only cs^2=cs^3.
+	 */
+	unsigned int found;
 	for(k=0;k<nids;k++){
 		tmp_id = k;
 		tmp_id2 = *(comp_same+tmp_id);
@@ -863,7 +863,7 @@ Tree* find_connection_components_coarse2(
 	 */
 
 	/* store for real_ids the index of the node in the tree array */
-	int *tree_id_relation = malloc( (real_ids_size+1)*sizeof(int) );
+	unsigned int *tree_id_relation = malloc( (real_ids_size+1)*sizeof(unsigned int) );
 
 	Node *nodes = malloc( (real_ids_size+1)*sizeof(Node) );
 	Blob *blobs = malloc( (real_ids_size+1)*sizeof(Blob) );
@@ -879,7 +879,7 @@ Tree* find_connection_components_coarse2(
 	Node *cur  = nodes;
 	Blob *curdata  = blobs;
 
-	curdata->id = -1;
+	curdata->id = 0;
 	memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
 	curdata->area = roi.width * roi.height;
 #ifdef SAVE_DEPTH_MAP_VALUE
@@ -897,7 +897,7 @@ Tree* find_connection_components_coarse2(
 		rect = &curdata->roi;
 		curdata->id = *(real_ids+l);	//Set id of this blob.
 		//not useful?!
-		//int anchor = *(anchors+*(real_ids+l)); //get anchor of this blob
+		//unsigned int anchor = *(anchors+*(real_ids+l)); //get anchor of this blob
 #ifdef BLOB_DIMENSION
 		rect->y = *(top_index + *(real_ids+l));
 		rect->height = *(bottom_index + *(real_ids+l)) - rect->y + 1;
@@ -909,7 +909,7 @@ Tree* find_connection_components_coarse2(
 #endif
 
 		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area.
-		if( tmp_id < 0 ){
+		if( tmp_id == -1 ){
 			/* Use root as parent node. */
 			//cur->parent = root;
 			add_child(root, cur );

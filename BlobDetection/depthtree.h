@@ -13,47 +13,47 @@ extern "C" {
 
 /* Workspace struct for array storage */
 typedef struct {
-	int max_comp; // = w+h;//maximal number of components. If the value is reached some arrays will reallocate.
-	int used_comp; // number of used ids ; will be set after the main algorithm finishes ; <=max_comp
-	int *ids;
+	unsigned int max_comp; // = w+h;//maximal number of components. If the value is reached some arrays will reallocate.
+	unsigned int used_comp; // number of used ids ; will be set after the main algorithm finishes ; <=max_comp
+	unsigned int *ids;
 	unsigned char *depths; // use monotone function to map image data into different depths
-	int *id_depth; //store depth (group) of id anchor.
-	int *comp_same; //map ids to unique ids g:{0,...,}->{0,....}
-	int *prob_parent; //store ⊂-Relation.
+	unsigned int *id_depth; //store depth (group) of id anchor.
+	unsigned int *comp_same; //map ids to unique ids g:{0,...,}->{0,....}
+	unsigned int *prob_parent; //store ⊂-Relation.
 #ifdef BLOB_COUNT_PIXEL
-	int *comp_size;
+	unsigned int *comp_size;
 #endif
 #ifdef BLOB_DIMENSION
-	int *top_index; //save row number of most top element of area.
-	int *left_index; //save column number of most left element of area.
-	int *right_index; //save column number of most right element.
-	int *bottom_index; //save row number of most bottom element.
+	unsigned int *top_index; //save row number of most top element of area.
+	unsigned int *left_index; //save column number of most left element of area.
+	unsigned int *right_index; //save column number of most right element.
+	unsigned int *bottom_index; //save row number of most bottom element.
 #endif
 	/* Geometric interpretation of the positions a,b,c,d
 	 * in relation to x(=current) position:
 	 * abc
 	 * dx
 	 * */
-	int *a_ids; //save chain of ids with depth(a_ids[0])>depth(a_ids[1])>...
+	unsigned int *a_ids; //save chain of ids with depth(a_ids[0])>depth(a_ids[1])>...
 	unsigned char *a_dep; //save depth(a_ids[...]) to avoid lookup with id_depth(a_ids[k]).
-	int *b_ids, *c_ids, *d_ids; //same for b,c,d 
+	unsigned int *b_ids, *c_ids, *d_ids; //same for b,c,d 
 	unsigned char *b_dep, *c_dep, *d_dep;  
 
-	int *real_ids;
-	int *real_ids_inv;
+	unsigned int *real_ids;
+	unsigned int *real_ids_inv;
 
 	//extra data
-	int *blob_id_filtered; //like comp_same, but respect blob tree filter.
+	unsigned int *blob_id_filtered; //like comp_same, but respect blob tree filter.
 
 } DepthtreeWorkspace;
 
 
 bool depthtree_create_workspace(
-		const int w, const int h,
+		const unsigned int w, const unsigned int h,
 		DepthtreeWorkspace **pworkspace
 		);
 bool depthtree_realloc_workspace(
-		const int max_comp,
+		const unsigned int max_comp,
 		DepthtreeWorkspace **pworkspace
 		);
 void depthtree_destroy_workspace(
@@ -81,16 +81,16 @@ void depthtree_filter_blob_ids(
 FORCEINLINE
 Tree* find_depthtree(
 		const unsigned char *data,
-		const int w, const int h,
+		const unsigned int w, const unsigned int h,
 		const BlobtreeRect roi,
 		const unsigned char *depth_map,
-		const int stepwidth,
+		const unsigned int stepwidth,
 		DepthtreeWorkspace *workspace,
 		Blob** tree_data );
 
 
-int inline getRealId( int * const comp_same, int const id ){
-	int rid1, rid2;
+unsigned int inline getRealId( unsigned int * const comp_same, unsigned int const id ){
+	unsigned int rid1, rid2;
 	rid1 = *(comp_same + id);
 	if( (rid2 = *(comp_same + rid1)) != rid1 ){
 		VPRINTF("Map %i from %i ", id, rid1);
@@ -106,7 +106,7 @@ int inline getRealId( int * const comp_same, int const id ){
 		 *
 		 */
 
-		/*int rid0 = id;
+		/*unsigned int rid0 = id;
 		rid1 = *(comp_same + rid0);
 		while( rid2 != rid1 ){
 		 *(comp_same + rid0) = rid2;
@@ -125,7 +125,7 @@ int inline getRealId( int * const comp_same, int const id ){
 	return rid1;
 }
 
-int inline getRealParent( int * const prob_parent, int * const comp_same, int const id ){
+unsigned int inline getRealParent( unsigned int * const prob_parent, unsigned int * const comp_same, unsigned int const id ){
 			return getRealId( comp_same, *(prob_parent + id) );
 }
 
@@ -135,7 +135,7 @@ int inline getRealParent( int * const prob_parent, int * const comp_same, int co
 void depthtree_find_blobs(
 		Blobtree *blob,
 		const unsigned char *data,
-		const int w, const int h,
+		const unsigned int w, const unsigned int h,
 		const BlobtreeRect roi,
 		const unsigned char *depth_map,
 		DepthtreeWorkspace *workspace
