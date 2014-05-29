@@ -50,8 +50,14 @@
 #define BLOB_INC_COMP_SIZE
 #endif
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 #define SZ(X) X;
+#else
+#define SZ(X) 
+#endif
+
+#ifdef BLOB_DIMENSION
+#define BD(X) X;
 #define BLOB_INIT_INDEX_ARRAYS \
 *(top_index+id) = z; \
 *(left_index+id) = s; \
@@ -72,13 +78,28 @@
 
 #else
 /* empty definitions */
-#define SZ(X)
+#define BD(X)
 #define BLOB_INIT_INDEX_ARRAYS
 #define BLOB_DIMENSION_LEFT
 #define BLOB_DIMENSION_RIGHT
 #define BLOB_DIMENSION_BOTTOM
 #endif
 
+#ifdef BLOB_BARYCENTER
+#define BARY(X) X;
+#define BLOB_REALLOC_BARY \
+	pixel_sum_X = realloc(pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) ); \
+pixel_sum_X = realloc(pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) );
+
+#define BLOB_INIT_BARY *(pixel_sum_X+id) = s; *(pixel_sum_Y+id) = z;
+#define BLOB_INC_BARY(ID) *(pixel_sum_X+ID) += s;  *(pixel_sum_Y+ID) += z;
+#else
+/* empty definitions */
+#define BARY(X) ;
+#define BLOB_REALLOC_BARY 
+#define BLOB_INIT_BARY 
+#define BLOB_INC_BARY(ID) 
+#endif
 
 #define NEW_COMPONENT(PARENTID) \
 	id++; \
@@ -103,7 +124,7 @@ if( id>=max_comp ){ \
 		comp_same = workspace->comp_same; \
 		prob_parent = workspace->prob_parent; \
 		COUNT( comp_size = workspace->comp_size; ) \
-		SZ( \
+		BD( \
 		top_index = workspace->top_index; \
 		left_index = workspace->left_index; \
 		right_index = workspace->right_index; \

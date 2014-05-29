@@ -136,8 +136,8 @@ void print_tree_filtered(Node *root, int shift, unsigned int minA){
 	//printf("%2i (w%u,h%u,a%2i) ",root->data.id, root->width, root->height, root->data.area);
 	//shift2+=9+4;
 #ifdef SAVE_DEPTH_MAP_VALUE
-	//printf("%2i (lvl:%3i, a:%4i) ",data->id, data->depth_level, data->area);
-	printf("%2i (wxh:%3i, a:%4i) ",data->id, data->roi.width*data->roi.height, data->area);
+	printf("%2i (lvl:%3i, a:%4i) ",data->id, data->depth_level, data->area);
+	//printf("%2i (wxh:%3i, a:%4i) ",data->id, data->roi.width*data->roi.height, data->area);
 	shift2+=22;
 #else
 	printf("%2i (area:%4i) ",data->id, data->area);
@@ -278,7 +278,7 @@ unsigned int sum_areas(Node * const root, const unsigned int * const comp_size){
 	do{
 		data->area = *(comp_size + data->id );
 
-		/* To to next node. update parent node on uprising flank */
+		/* Go to next node. update parent node on uprising flank */
 		if( node->child != NULL ){
 			node = node->child;
 			data = (Blob*)node->data;
@@ -379,8 +379,8 @@ unsigned int sum_areas(Node * const root, const unsigned int * const comp_size){
 static inline unsigned int number_of_coarse_roi(BlobtreeRect* roi, unsigned int sw, unsigned int sh);
 
 void approx_areas(const Tree * const tree, Node * const startnode,
-		unsigned int* comp_size,
-		unsigned int stepwidth, unsigned int stepheight)
+		const unsigned int * const comp_size,
+		const unsigned int stepwidth, const unsigned int stepheight)
 {
 
 	Node *root = tree->root;
@@ -507,6 +507,86 @@ static inline unsigned int number_of_coarse_roi(BlobtreeRect* roi, unsigned int 
 #endif //BLOB_DIMENSION
 #endif //BLOB_COUNT_PIXEL
 
+#ifdef BLOB_BARYCENTER
+/* 
+ * This functions loops through the tree. If all children of
+ * of a node P was handled, the values pixel_sum_*[P.id] will
+ * be accumulate by the values of the children.
+ * Finally, the barycenter will be evaluated.
+ *
+ * Notes:
+ * - This function SUPERSEDS sum_areas and changes the area value, too.
+ *   => Call other functions, which set the area value (i.e. approx areas)
+ *   after this function.
+ * - This function changes the values of the arguments pixel_sum_*.
+ * - This function requires the values of comp_size because the 
+ *   value of [node]->data->area could be unusable (for stepwidth>1).
+ *   Thats the reason for setting the area value during the loop, too.
+ * */
+void eval_barycenters(Node * const root,
+		const unsigned int * const comp_size,
+		BLOB_BARYCENTER_TYPE * const pixel_sum_X,
+		BLOB_BARYCENTER_TYPE * const pixel_sum_Y
+		){
+
+	Node *node = root;
+	Blob *data = (Blob*)node->data;
+	Blob *parentdata;
+	if( root->child == NULL){
+		data->area = *(comp_size + data->id );
+		return data->area;
+	}
+
+	do{
+		data->area = *(comp_size + data->id );
+
+		/* Go to next node. update parent node on uprising flank */
+		if( node->child != NULL ){
+			node = node->child;
+			data = (Blob*)node->data;
+			continue;
+		}
+
+		//Node is Leaf
+		data->barycenter[0] = *(pixel_sum_X + data->id ) / data->area;
+		data->barycenter[1] = *(pixel_sum_Y + data->id ) / data->area;
+		//((Blob*)node->parent->data)->area += data->area;
+		parentdata = (Blob*)node->parent->data;
+		parentdata->area += data->area;
+		*(pixel_sum_X + parentdata->id ) += *(pixel_sum_X + data->id );
+		*(pixel_sum_Y + parentdata->id ) += *(pixel_sum_Y + data->id );
+
+		if( node->silbing != NULL ){
+			node = node->silbing;
+			data = (Blob*)node->data;
+			continue;
+		}
+
+		while( node != root ){
+			node = node->parent;
+			data = (Blob*)node->data;
+
+			// All children was handled 
+			data->barycenter[0] = *(pixel_sum_X + data->id ) / data->area;
+			data->barycenter[1] = *(pixel_sum_Y + data->id ) / data->area;
+			
+			if(node != root ){
+				parentdata = (Blob*)node->parent->data;
+				parentdata->area += data->area;
+				*(pixel_sum_X + parentdata->id ) += *(pixel_sum_X + data->id );
+				*(pixel_sum_Y + parentdata->id ) += *(pixel_sum_Y + data->id );
+			}
+			if( node->silbing != NULL ){
+				node = node->silbing;
+				data = (Blob*)node->data;
+				break;
+			}
+		}
+
+	}while( node != root );
+
+}
+#endif
 
 #ifdef BLOB_DIMENSION
 /* Assume type(data) = Blob* */

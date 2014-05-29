@@ -2,6 +2,9 @@
 #include <signal.h>
 #include <opencv2/opencv.hpp>
 
+//get ENV variables from BlobDetection lib
+#include "settings.h"
+
 #include "threshtree.h"
 #include "depthtree.h"
 #include "Tracker2.h"
@@ -466,6 +469,21 @@ static void redraw(){
 				curNode = blobtree_next(frameblobs);
 			}
 		}
+
+#ifdef BLOB_BARYCENTER
+		curNode = blobtree_first(frameblobs);
+		while( curNode != NULL ){
+			Blob *data = (Blob*)curNode->data;
+			cv::circle( color,
+					cv::Point(data->barycenter[0], data->barycenter[1]),
+					3.0, cv::Scalar(100, 100, 255), 2 );
+
+			curNode = blobtree_next(frameblobs);
+		}
+
+#endif
+
+
 	}
 
 

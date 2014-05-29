@@ -29,6 +29,10 @@ typedef struct {
 	unsigned int *right_index; //save column number of most right element.
 	unsigned int *bottom_index; //save row number of most bottom element.
 #endif
+#ifdef BLOB_BARYCENTER
+	BLOB_BARYCENTER_TYPE *pixel_sum_X; //summation of all x coordinates for an id.
+	BLOB_BARYCENTER_TYPE *pixel_sum_Y; //summation of all x coordinates for an id.
+#endif
 	/* Geometric interpretation of the positions a,b,c,d
 	 * in relation to x(=current) position:
 	 * abc

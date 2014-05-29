@@ -48,6 +48,9 @@ typedef struct Blob{
 #ifdef SAVE_DEPTH_MAP_VALUE
 	unsigned char depth_level; 
 #endif
+#ifdef BLOB_BARYCENTER
+	int barycenter[2];
+#endif
 } Blob;
 
 
@@ -183,9 +186,17 @@ void gen_tree_id(Node *root, unsigned int* id, unsigned int size);
 unsigned int sum_areas(Node * const root, const unsigned int * const comp_size);
 #ifdef BLOB_DIMENSION
 void approx_areas(const Tree * const tree, Node * const startnode,
-		unsigned int* comp_size,
-		unsigned int stepwidth, unsigned int stepheight);
+		const unsigned int * const comp_size,
+		const unsigned int stepwidth, const unsigned int stepheight);
 #endif
+#endif
+
+#ifdef BLOB_BARYCENTER
+void eval_barycenters(Node * const root,
+		const unsigned int * const comp_size,
+		BLOB_BARYCENTER_TYPE * const pixel_sum_X,
+		BLOB_BARYCENTER_TYPE * const pixel_sum_Y
+		);
 #endif
 
 #ifdef BLOB_DIMENSION

@@ -44,6 +44,10 @@ bool threshtree_create_workspace(
             ( r->bottom_index = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
 						
 #endif
+#ifdef BLOB_BARYCENTER
+            ( r->pixel_sum_X = (BLOB_BARYCENTER_TYPE*) malloc( max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
+            ( r->pixel_sum_Y = (BLOB_BARYCENTER_TYPE*) malloc( max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
+#endif
 						0 ){
         // alloc failed
         threshtree_destroy_workspace( &r );
@@ -83,6 +87,10 @@ bool threshtree_realloc_workspace(
             ( r->right_index = (unsigned int*) realloc(r->right_index, max_comp*sizeof(unsigned int) ) ) == NULL ||
             ( r->bottom_index = (unsigned int*) realloc(r->bottom_index, max_comp*sizeof(unsigned int) ) ) == NULL ||
 #endif
+#ifdef BLOB_BARYCENTER_TYPE
+            ( r->pixel_sum_X = (BLOB_BARYCENTER_TYPE*) realloc(r->pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
+            ( r->pixel_sum_Y = (BLOB_BARYCENTER_TYPE*) realloc(r->pixel_sum_Y, max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
+#endif
 						0 ){
 			// realloc failed
 			VPRINTF("Critical error: Reallocation of workspace failed!\n");
@@ -113,6 +121,10 @@ void threshtree_destroy_workspace(
     free(r->left_index);
     free(r->right_index);
     free(r->bottom_index);
+#endif
+#ifdef BLOB_BARYCENTER
+    free(r->pixel_sum_X);
+    free(r->pixel_sum_Y);
 #endif
 
 #ifdef BLOB_SUBGRID_CHECK
@@ -244,6 +256,12 @@ Tree* find_connection_components_subcheck(
 	unsigned int* left_index = workspace->left_index;
 	unsigned int* right_index = workspace->right_index;
 	unsigned int* bottom_index = workspace->bottom_index;
+#endif
+#ifdef BLOB_BARYCENTER
+    BLOB_BARYCENTER_TYPE *pixel_sum_X = workspace->pixel_sum_X; 
+    BLOB_BARYCENTER_TYPE *pixel_sum_Y = workspace->pixel_sum_Y; 
+#endif
+#ifdef PIXEL_POSITION
 	unsigned int s=roi.x,z=roi.y; //s-spalte, z-zeile
 #else
 	const unsigned int s=0,z=0; //Should not be used.
@@ -306,7 +324,7 @@ Tree* find_connection_components_subcheck(
 	iPi += stepwidth;
 	dPi += stepwidth;
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 	s += stepwidth;
 #endif
 	++tri;
@@ -343,7 +361,7 @@ Tree* find_connection_components_subcheck(
 		BLOB_INC_COMP_SIZE;
 		iPi += stepwidth;
 		dPi += stepwidth;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 		s += stepwidth;
 #endif
 		++tri;
@@ -359,6 +377,10 @@ Tree* find_connection_components_subcheck(
 #ifdef BLOB_COUNT_PIXEL
 	*(comp_size+*(iPi-swr)) += 1;
 #endif
+#ifdef BLOB_BARYCENTER
+	*(pixel_sum_X+*(iPi-swr)) += s;
+	*(pixel_sum_Y+*(iPi-swr)) += z;
+#endif
 	
 	/* Move pointer to 'next' row.*/
 	dPi += r+roi.x+sh1+1;
@@ -366,7 +388,7 @@ Tree* find_connection_components_subcheck(
 
 	dR += sh; // Move right border to next row.
 	dR2 += sh;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 	s=roi.x;
 	z += stepheight;
 #endif	
@@ -416,7 +438,7 @@ Tree* find_connection_components_subcheck(
 		BLOB_INC_COMP_SIZE;
 		iPi += stepwidth;
 		dPi += stepwidth;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 		s += stepwidth;
 #endif
 		++tri;
@@ -741,7 +763,7 @@ Tree* find_connection_components_subcheck(
 			BLOB_INC_COMP_SIZE;
 			dPi += stepwidth;
 			iPi += stepwidth;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 			s += stepwidth;
 #endif
 			++tri;
@@ -774,7 +796,7 @@ Tree* find_connection_components_subcheck(
 		iPi += r+roi.x+sh1+swr+1;
 		dR += sh; // Move border indizes to next row.
 		dR2 += sh;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 		s=roi.x;
 		z += stepheight;
 #endif	
@@ -793,7 +815,7 @@ Tree* find_connection_components_subcheck(
 	dPi -= sh1;
 	dR -= sh1;
 	dR2 -= sh1;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 	z -= stepheight-1;
 #endif
 
@@ -813,13 +835,13 @@ Tree* find_connection_components_subcheck(
 		for( ; dPi<dE ; ){
 			SUBCHECK_TOPDIAG(dPi,iPi,stepwidth,w,sh,s,z);
 			++dPi; ++iPi;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 			++s;
 #endif
 			for( ; dPi<dR-1 ; ){
 				SUBCHECK_ALLDIR(dPi,iPi,stepwidth,w,sh,s,z);
 				++dPi; ++iPi;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 				++s;
 #endif
 			}
@@ -828,7 +850,7 @@ Tree* find_connection_components_subcheck(
 			//move pointer to 'next' row
 			dPi += r+roi.x+1;
 			iPi += r+roi.x+1;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 			s = roi.x;
 			++z;
 #endif
@@ -921,6 +943,14 @@ unsigned int tmp_id,tmp_id2, real_ids_size=0,l;
 				*( bottom_index+tmp_id ) = *( bottom_index+k );
 #endif
 
+#ifdef BLOB_BARYCENTER
+					//shift values to other id
+					*(pixel_sum_X+tmp_id) += *(pixel_sum_X+k); 
+					*(pixel_sum_X+k) = 0;
+					*(pixel_sum_Y+tmp_id) += *(pixel_sum_Y+k); 
+					*(pixel_sum_Y+k) = 0;
+#endif
+
 		}else{
 			//Its a component id of a new area
 			*(real_ids+real_ids_size) = tmp_id;
@@ -957,7 +987,6 @@ printf("\n");
 			*(comp_size+k) = 0;
 #endif
 
-
 #ifdef BLOB_DIMENSION
 			//update dimension
 			if( *( top_index+tmp_id2 ) > *( top_index+k ) )
@@ -968,6 +997,14 @@ printf("\n");
 				*( right_index+tmp_id2 ) = *( right_index+k );
 			if( *( bottom_index+tmp_id2 ) < *( bottom_index+k ) )
 				*( bottom_index+tmp_id2 ) = *( bottom_index+k );
+#endif
+
+#ifdef BLOB_BARYCENTER
+					//shift values to other id
+					*(pixel_sum_X+tmp_id) += *(pixel_sum_X+k); 
+					*(pixel_sum_X+k) = 0;
+					*(pixel_sum_Y+tmp_id) += *(pixel_sum_Y+k); 
+					*(pixel_sum_Y+k) = 0;
 #endif
 
 		//check if area id already identified as real id
@@ -1022,14 +1059,19 @@ printf("\n");
 		curdata++;
 		cur->data = curdata; // link to the data array.
 
-		rect = &curdata->roi;
 		const unsigned int rid = *(real_ids+l);
 		curdata->id = rid;	//Set id of this blob.
 #ifdef BLOB_DIMENSION
+		rect = &curdata->roi;
 		rect->y = *(top_index + rid);
 		rect->height = *(bottom_index + rid) - rect->y + 1;
 		rect->x = *(left_index + rid);
 		rect->width = *(right_index + rid) - rect->x + 1;
+#endif
+#ifdef BLOB_BARYCENTER
+		/* The barycenter will not set here, but in eval_barycenters(...) */
+		//curdata->barycenter[0] = *(pixel_sum_X + rid) / *(comp_same + rid);
+		//curdata->barycenter[1] = *(pixel_sum_Y + rid) / *(comp_same + rid);
 #endif
 #ifdef SAVE_DEPTH_MAP_VALUE
 		curdata->depth_level = 0; /* ??? without anchor not trivial.*/
@@ -1055,6 +1097,12 @@ printf("\n");
 
 	}
 
+
+#ifdef BLOB_BARYCENTER
+		eval_barycenters(root->child, comp_size, pixel_sum_X, pixel_sum_Y);
+#define SUM_AREAS_IS_REDUNDANT
+#endif
+
 	/* Evaluate exact areas of blobs for stepwidth==1
 	 * and try to approximate for stepwith>1. The
 	 * approximation requires a bounding box.
@@ -1062,7 +1110,9 @@ printf("\n");
 #ifdef BLOB_DIMENSION
 	#ifdef BLOB_COUNT_PIXEL
 	if(stepwidth == 1){
+#ifndef SUM_AREAS_IS_REDUNDANT
 		sum_areas(root->child, comp_size);
+#endif
 	}else{
 		approx_areas(tree, root->child, comp_size, stepwidth, stepheight);
 		//replace estimation with exact value for full image area
@@ -1075,18 +1125,20 @@ printf("\n");
 #else
 	#ifdef BLOB_COUNT_PIXEL
 	if(stepwidth == 1){
+#ifndef SUM_AREAS_IS_REDUNDANT
 		sum_areas(root->child, comp_size);
+#endif
 	}else{
-		//this values can be completly wrong
-		fprintf(stderr,"(threshtree) Warning: Eval areas for stepwidth>1.\n");
+#ifndef SUM_AREAS_IS_REDUNDANT
 		sum_areas(root->child, comp_size);
+#endif
+		//Be aware, this values scales by stepwidth.
+		fprintf(stderr,"(threshtree) Warning: Eval areas for stepwidth>1.\n");
 	}
 	#endif
 #endif
 
-
 #ifdef BLOB_SORT_TREE
-	//sort_tree(root->child);
 	sort_tree(root);
 #endif
 

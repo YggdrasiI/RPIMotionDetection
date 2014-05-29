@@ -100,9 +100,16 @@ Tree* find_connection_components_coarse2(
 	unsigned int* left_index = workspace->left_index;
 	unsigned int* right_index = workspace->right_index;
 	unsigned int* bottom_index = workspace->bottom_index;
-	unsigned int s=roi.x,z=roi.y; //s-spalte, z-zeile
 #endif
-
+#ifdef BLOB_BARYCENTER
+    BLOB_BARYCENTER_TYPE *pixel_sum_X = workspace->pixel_sum_X; 
+    BLOB_BARYCENTER_TYPE *pixel_sum_Y = workspace->pixel_sum_Y; 
+#endif
+#ifdef PIXEL_POSITION
+	unsigned int s=roi.x,z=roi.y; //s-spalte, z-zeile
+#else
+	const unsigned int s=0,z=0; //Should not be used.
+#endif
 
 	const unsigned char* const dS = data+w*roi.y+roi.x;
 	const unsigned char* dR = dS+roi.width; //Pointer to right border. Update on every line
@@ -122,7 +129,7 @@ Tree* find_connection_components_coarse2(
 	iPi += stepwidth;
 	dPi += stepwidth;
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 	s += stepwidth;
 #endif
 
@@ -150,7 +157,7 @@ Tree* find_connection_components_coarse2(
 			}
 		}
 		BLOB_INC_COMP_SIZE;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 		s += stepwidth;
 #endif
 	}
@@ -158,7 +165,7 @@ Tree* find_connection_components_coarse2(
 	//correct pointer shift of last for loop step.
 	iPi -= stepwidth-swr;
 	dPi -= stepwidth-swr;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 	s -= stepwidth-swr;
 #endif
 
@@ -187,7 +194,7 @@ Tree* find_connection_components_coarse2(
 	iPi += r+roi.x+sh1+1;
 	dR += sh; //rechter Randindex wird in nächste Zeile geschoben.
 	dR2 += sh;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 	s=roi.x;
 	z += stepheight;
 #endif	
@@ -223,7 +230,7 @@ Tree* find_connection_components_coarse2(
 		BLOB_INC_COMP_SIZE;
 		iPi += stepwidth;
 		dPi += stepwidth;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 		s += stepwidth;
 #endif
 
@@ -292,7 +299,7 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 			BLOB_INC_COMP_SIZE;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 			s += stepwidth;
 #endif
 		}
@@ -402,7 +409,7 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 			BLOB_INC_COMP_SIZE;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 			s+=swr;
 #endif
 			iPi+=swr;
@@ -447,7 +454,7 @@ Tree* find_connection_components_coarse2(
 			BLOB_INC_COMP_SIZE;
 		}//end of else case of (dR2==dR)
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 		s=roi.x;
 		z += stepheight;
 #endif
@@ -457,7 +464,7 @@ Tree* find_connection_components_coarse2(
 	dPi -= sh-sh2;//(stepheight-1)*w;
 	dR -= sh-sh2;
 	dR2 -= sh-sh2;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 	z -= stepheight-shr;
 #endif
 
@@ -489,7 +496,7 @@ Tree* find_connection_components_coarse2(
 		}
 
 		BLOB_INC_COMP_SIZE;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 		s += stepwidth;
 #endif
 		iPi += stepwidth;
@@ -561,7 +568,7 @@ Tree* find_connection_components_coarse2(
 			}
 
 			BLOB_INC_COMP_SIZE;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 			s += stepwidth;
 #endif
 		}
@@ -671,7 +678,7 @@ Tree* find_connection_components_coarse2(
 			}
 
 			BLOB_INC_COMP_SIZE;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 			s+=swr;
 #endif
 			iPi+=swr;
@@ -791,6 +798,14 @@ Tree* find_connection_components_coarse2(
 				*( bottom_index+tmp_id ) = *( bottom_index+k );
 #endif
 
+#ifdef BLOB_BARYCENTER
+					//shift values to other id
+					*(pixel_sum_X+tmp_id) += *(pixel_sum_X+k); 
+					*(pixel_sum_X+k) = 0;
+					*(pixel_sum_Y+tmp_id) += *(pixel_sum_Y+k); 
+					*(pixel_sum_Y+k) = 0;
+#endif
+
 		}else{
 			//Its a component id of a new area
 			*(real_ids+real_ids_size) = tmp_id;
@@ -828,6 +843,14 @@ Tree* find_connection_components_coarse2(
 				*( right_index+tmp_id2 ) = *( right_index+k );
 			if( *( bottom_index+tmp_id2 ) < *( bottom_index+k ) )
 				*( bottom_index+tmp_id2 ) = *( bottom_index+k );
+#endif
+
+#ifdef BLOB_BARYCENTER
+					//shift values to other id
+					*(pixel_sum_X+tmp_id) += *(pixel_sum_X+k); 
+					*(pixel_sum_X+k) = 0;
+					*(pixel_sum_Y+tmp_id) += *(pixel_sum_Y+k); 
+					*(pixel_sum_Y+k) = 0;
 #endif
 
 			tmp_id = tmp_id2;
@@ -894,21 +917,27 @@ Tree* find_connection_components_coarse2(
 		curdata++;
 		cur->data = curdata; // link to the data array.
 
-		rect = &curdata->roi;
-		curdata->id = *(real_ids+l);	//Set id of this blob.
+		const unsigned int rid = *(real_ids+l);
+		curdata->id = rid;	//Set id of this blob.
 		//not useful?!
 		//unsigned int anchor = *(anchors+*(real_ids+l)); //get anchor of this blob
 #ifdef BLOB_DIMENSION
-		rect->y = *(top_index + *(real_ids+l));
-		rect->height = *(bottom_index + *(real_ids+l)) - rect->y + 1;
-		rect->x = *(left_index + *(real_ids+l));
-		rect->width = *(right_index + *(real_ids+l)) - rect->x + 1;
+		rect = &curdata->roi;
+		rect->y = *(top_index + rid);
+		rect->height = *(bottom_index + rid) - rect->y + 1;
+		rect->x = *(left_index + rid);
+		rect->width = *(right_index + rid) - rect->x + 1;
+#endif
+#ifdef BLOB_BARYCENTER
+		/* The barycenter will not set here, but in eval_barycenters(...) */
+		//curdata->barycenter[0] = *(pixel_sum_X + rid) / *(comp_same + rid);
+		//curdata->barycenter[1] = *(pixel_sum_Y + rid) / *(comp_same + rid);
 #endif
 #ifdef SAVE_DEPTH_MAP_VALUE
 		curdata->depth_level = 0; /* ??? without anchor not trivial.*/
 #endif
 
-		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area.
+		tmp_id = *(prob_parent+rid); //get id of parent (or child) area.
 		if( tmp_id == -1 ){
 			/* Use root as parent node. */
 			//cur->parent = root;
@@ -928,6 +957,14 @@ Tree* find_connection_components_coarse2(
 
 	}
 
+	/*
+	 *
+	 */
+#ifdef BLOB_BARYCENTER
+	eval_barycenters(root->child, comp_size, pixel_sum_X, pixel_sum_Y);
+#define SUM_AREAS_IS_REDUNDANT
+#endif
+
 	/* Evaluate exact areas of blobs for stepwidth==1
 	 * and try to approximate for stepwith>1. The
 	 * approximation requires a bounding box.
@@ -935,7 +972,9 @@ Tree* find_connection_components_coarse2(
 #ifdef BLOB_DIMENSION
 	#ifdef BLOB_COUNT_PIXEL
 	if(stepwidth == 1){
+#ifndef SUM_AREAS_IS_REDUNDANT
 		sum_areas(root->child, comp_size);
+#endif
 	}else{
 		approx_areas(tree, root->child, comp_size, stepwidth, stepheight);
 		//replace estimation with exact value for full image area
@@ -950,9 +989,11 @@ Tree* find_connection_components_coarse2(
 	if(stepwidth == 1){
 		sum_areas(root->child, comp_size);
 	}else{
-		//this values can be completly wrong
-		fprintf(stderr,"(threshtree) Warning: Eval areas for stepwidth>1.\n");
+#ifndef SUM_AREAS_IS_REDUNDANT
 		sum_areas(root->child, comp_size);
+#endif
+		//Be aware, this values scales by stepwidth.
+		fprintf(stderr,"(threshtree) Warning: Eval areas for stepwidth>1.\n");
 	}
 	#endif
 #endif
