@@ -66,8 +66,14 @@
 #define BLOB_INC_COMP_SIZE(ID) 
 #endif
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
 #define SZ(X) X;
+#else
+#define SZ(X) 
+#endif
+
+#ifdef BLOB_DIMENSION
+#define BD(X) X;
 
 #define BLOB_DIMENSION_LEFT(ID, STEPWIDTH) \
 	/*if( *( left_index+ID ) > s ) *( left_index+ID ) -= STEPWIDTH; */ \
@@ -83,12 +89,27 @@
 
 #else
 /* empty definitions */
-#define SZ(X) 
+#define BD(X) 
 #define BLOB_DIMENSION_LEFT(ID, STEPWIDTH)
 #define BLOB_DIMENSION_RIGHT(ID, STEPWIDTH)
 #define BLOB_DIMENSION_BOTTOM(ID, STEPHEIGHT)
 #endif
 
+#ifdef BLOB_BARYCENTER
+#define BARY(X) X;
+#define BLOB_REALLOC_BARY \
+	pixel_sum_X = realloc(pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) ); \
+pixel_sum_X = realloc(pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) );
+
+#define BLOB_INIT_BARY *(pixel_sum_X+id) = s; *(pixel_sum_Y+id) = z;
+#define BLOB_INC_BARY(ID) *(pixel_sum_X+ID) += s;  *(pixel_sum_Y+ID) += z;
+#else
+/* empty definitions */
+#define BARY(X) ;
+#define BLOB_REALLOC_BARY 
+#define BLOB_INIT_BARY 
+#define BLOB_INC_BARY(ID) 
+#endif
 
 #define NEW_COMPONENT(PARENTID, DEPTH) id++; \
 *(iPi) = id; \
@@ -96,12 +117,13 @@
 *(prob_parent+id) = (PARENTID); \
 *(comp_same+id) = id; \
 BLOB_INIT_COMP_SIZE; \
-SZ( \
+BD( \
 *(left_index+id) = s; \
 *(right_index+id) = s; \
 *(top_index+id) = z; \
 *(bottom_index+id) = z; \
 	) \
+BLOB_INIT_BARY; \
 if( id>=max_comp ){ \
 	int max_comp2 = (int) ( (float)w*h*max_comp/(dPi-data) ); /*try estimation */ \
 	if( true || max_comp2 < max_comp*1.5 ){ \
@@ -117,12 +139,13 @@ if( id>=max_comp ){ \
 		prob_parent = workspace->prob_parent; \
 		id_depth = workspace->id_depth; \
 		COUNT( comp_size = workspace->comp_size; ) \
-		SZ( \
+		BD( \
 		top_index = workspace->top_index; \
 		left_index = workspace->left_index; \
 		right_index = workspace->right_index; \
 		bottom_index = workspace->bottom_index; \
 		) \
+		BARY( pixel_sum_X = workspace->pixel_sum_X; pixel_sum_Y = workspace->pixel_sum_Y; ) \
 } \
 
 
@@ -172,6 +195,7 @@ if( id>=max_comp ){ \
 			BLOB_DIMENSION_RIGHT( *pIDX, stepwidth ); \
 			BLOB_DIMENSION_LEFT( *pIDX, stepwidth ); \
 			BLOB_DIMENSION_BOTTOM( *pIDX, stepheight ); \
+			BLOB_INC_BARY( *pIDX );  \
 		} \
 /* End of INSERT_ELEMENT1. */
 
@@ -241,6 +265,7 @@ printf("CS(%i)=%i, P(%i)=%i, D(%i)=%i \n",xxx,*(comp_same+xxx), xxx, *(prob_pare
 			BLOB_INC_COMP_SIZE( *pIDX );  \
 			BLOB_DIMENSION_RIGHT( *pIDX, stepwidth ); \
 			BLOB_DIMENSION_BOTTOM( *pIDX, stepheight ); \
+			BLOB_INC_BARY( *pIDX );  \
 			DEPTHPRINTF("(eval_chains) Case 1b) Same id as a-branch.\n");  \
 			DEPTHPRINTF("(eval_chains) idX=%i\n", *pIDX);  \
 			DEPTHPRINTF("(eval_chains) P(%i)=%i\n", *(b_ids-1), *pIDX); \
@@ -253,6 +278,7 @@ printf("CS(%i)=%i, P(%i)=%i, D(%i)=%i \n",xxx,*(comp_same+xxx), xxx, *(prob_pare
 			BLOB_INC_COMP_SIZE( *pIDX );  \
 			BLOB_DIMENSION_LEFT( *pIDX, stepwidth ); \
 			BLOB_DIMENSION_BOTTOM( *pIDX, stepheight ); \
+			BLOB_INC_BARY( *pIDX );  \
 			DEPTHPRINTF("(eval_chains) Case 1c) Same id as b-branch.\n");  \
 			DEPTHPRINTF("(eval_chains) idX=%i\n", *pIDX);  \
 			DEPTHPRINTF("(eval_chains) P(%i)=%i\n", *(a_ids-1), *pIDX); \
@@ -269,12 +295,14 @@ printf("CS(%i)=%i, P(%i)=%i, D(%i)=%i \n",xxx,*(comp_same+xxx), xxx, *(prob_pare
 			*pIDX = *a_ids; \
 			BLOB_INC_COMP_SIZE( *pIDX );  \
 			BLOB_DIMENSION_BOTTOM( *pIDX, stepheight ); \
+			BLOB_INC_BARY( *pIDX );  \
 			\
 		}else{ /* 1.e) Same component. Hm, this case should be tested as first. */ \
 			DEPTHPRINTF("(eval_chains) Case 1e) Extend id %i\n", *b_ids);  \
 			*pIDX = *a_ids; \
 			BLOB_INC_COMP_SIZE( *pIDX );  \
 			BLOB_DIMENSION_BOTTOM( *pIDX, stepheight ); \
+			BLOB_INC_BARY( *pIDX );  \
 		} \
 		\
 		DEPTHPRINTF("(eval_chains) Start for Part 2: rIDA=%i, rIDB=%i, depA=%i, depB=%i\n", *a_ids, *b_ids, *a_dep, *b_dep);  \

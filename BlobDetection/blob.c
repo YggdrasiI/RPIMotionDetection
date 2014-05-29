@@ -34,7 +34,7 @@ void blobtree_destroy(Blobtree **pblob){
 	*pblob = NULL;
 }
 
-void blobtree_set_filter(Blobtree *blob, const FILTER f, const int val){
+void blobtree_set_filter(Blobtree *blob, const FILTER f, const unsigned int val){
 	switch(f){
 		case F_TREE_DEPTH_MIN: blob->filter.tree_depth_min=val;
 											break;
@@ -48,13 +48,13 @@ void blobtree_set_filter(Blobtree *blob, const FILTER f, const int val){
 											 break;
 		case F_AREA_DEPTH_MIN: { blob->filter.area_depth_min=val;
 #if VERBOSE > 0
-													 if(val<0||val>255) printf("(blobtree_set_filter) range error: val=%i leave range [0,255]");
+													 if(/*val<0||*/val>255) printf("(blobtree_set_filter) range error: val=%u leave range [0,255]");
 #endif
 													 }
 								 break; 
 		case F_AREA_DEPTH_MAX: { blob->filter.area_depth_max=val;
 #if VERBOSE > 0
-													 if(val<0||val>255) printf("(blobtree_set_filter) range error: val=%i leave range [0,255]");
+													 if(/*val<0||*/val>255) printf("(blobtree_set_filter) range error: val=%u leave range [0,255]");
 #endif
 													 }
 													 break; 
@@ -65,7 +65,7 @@ void blobtree_set_extra_filter(Blobtree *blob, FilterNodeHandler* extra_filter){
 	blob->filter.extra_filter = extra_filter;
 }
 
-void blobtree_set_grid(Blobtree *blob, const int gridwidth, const int gridheight ){
+void blobtree_set_grid(Blobtree *blob, const unsigned int gridwidth, const unsigned int gridheight ){
 	blob->grid.width = gridwidth;
 	blob->grid.height =  gridheight;
 }
@@ -204,7 +204,7 @@ void blobtree_next2(Blobtree *blob, Iterator* pit){
 
 		//extra filter handling
 		if( blob->filter.extra_filter != NULL ){
-			int ef = (*blob->filter.extra_filter)(it);
+			unsigned int ef = (*blob->filter.extra_filter)(it);
 			if( ef ){
 				if( ef<2 && it->child != NULL){
 					it = it->child;

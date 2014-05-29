@@ -3,15 +3,15 @@
 
 #include "depthtree.h"
 
-static const int W=28;
-static const int H=28;
+static const unsigned int W=28;
+static const unsigned int H=28;
 
 #include "example.h"
 
 
 int main(int argc, char **argv) {
 	// Stepwidth
-	int w=1,h=1;
+	unsigned int w=1,h=1;
 	// Region of interest
 	BlobtreeRect roi= {0,0,W,H};
 	//BlobtreeRect roi= {18,0,9,17};
@@ -52,7 +52,7 @@ int main(int argc, char **argv) {
 
 	//Init depth_map
 	unsigned char depth_map[256];
-	int i; for( i=0; i<256; i++) depth_map[i] = i;
+	unsigned int i; for( i=0; i<256; i++) depth_map[i] = i;
 
 	// Now search the blobs.
 	depthtree_find_blobs(blob, sw, W, H, roi, depth_map, workspace);

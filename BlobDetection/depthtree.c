@@ -12,7 +12,7 @@
 #include "depthtree_macros.h"
 
 bool depthtree_create_workspace(
-        const int w, const int h,
+        const unsigned int w, const unsigned int h,
         DepthtreeWorkspace **pworkspace
         ){
 
@@ -26,32 +26,36 @@ bool depthtree_create_workspace(
 
     DepthtreeWorkspace *r = malloc( sizeof(DepthtreeWorkspace) );
 
-    const int max_comp = (w+h)*100;
+    const unsigned int max_comp = (w+h)*100U;
     r->max_comp = max_comp;
 		r->used_comp = 0;
 
     if( 
-            ( r->ids = (int*) malloc( w*h*sizeof(int) ) ) == NULL ||
+            ( r->ids = (unsigned int*) malloc( w*h*sizeof(unsigned int) ) ) == NULL ||
 #ifndef NO_DEPTH_MAP
-//            ( r->depths = (int*) malloc( w*h*sizeof(int) ) ) == NULL ||
+//            ( r->depths = (unsigned int*) malloc( w*h*sizeof(unsigned int) ) ) == NULL ||
             ( r->depths = (unsigned char*) calloc( w*h,sizeof(unsigned char) ) ) == NULL ||
 #endif
-            ( r->id_depth = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
-            ( r->comp_same = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
-            ( r->prob_parent = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
+            ( r->id_depth = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->comp_same = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->prob_parent = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
 #ifdef BLOB_COUNT_PIXEL
-            ( r->comp_size = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
+            ( r->comp_size = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
 #endif
 #ifdef BLOB_DIMENSION
-            ( r->top_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
-            ( r->left_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
-            ( r->right_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL ||
-            ( r->bottom_index = (int*) malloc( max_comp*sizeof(int) ) ) == NULL || 
+            ( r->top_index = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->left_index = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->right_index = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->bottom_index = (unsigned int*) malloc( max_comp*sizeof(unsigned int) ) ) == NULL || 
 #endif
-            ( r->a_ids = (int*) malloc( 255*sizeof(int) ) ) == NULL || 
-            ( r->b_ids = (int*) malloc( 255*sizeof(int) ) ) == NULL || 
-            ( r->c_ids = (int*) malloc( 255*sizeof(int) ) ) == NULL || 
-            ( r->d_ids = (int*) malloc( 255*sizeof(int) ) ) == NULL || 
+#ifdef BLOB_BARYCENTER
+            ( r->pixel_sum_X = (BLOB_BARYCENTER_TYPE*) malloc( max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
+            ( r->pixel_sum_Y = (BLOB_BARYCENTER_TYPE*) malloc( max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
+#endif
+            ( r->a_ids = (unsigned int*) malloc( 255*sizeof(unsigned int) ) ) == NULL || 
+            ( r->b_ids = (unsigned int*) malloc( 255*sizeof(unsigned int) ) ) == NULL || 
+            ( r->c_ids = (unsigned int*) malloc( 255*sizeof(unsigned int) ) ) == NULL || 
+            ( r->d_ids = (unsigned int*) malloc( 255*sizeof(unsigned int) ) ) == NULL || 
             ( r->a_dep = (unsigned char*) malloc( 255*sizeof(unsigned char) ) ) == NULL || 
             ( r->b_dep = (unsigned char*) malloc( 255*sizeof(unsigned char) ) ) == NULL || 
             ( r->c_dep = (unsigned char*) malloc( 255*sizeof(unsigned char) ) ) == NULL || 
@@ -81,24 +85,28 @@ bool depthtree_create_workspace(
 }
 
 bool depthtree_realloc_workspace(
-        const int max_comp,
+        const unsigned int max_comp,
         DepthtreeWorkspace **pworkspace
         ){
 
     DepthtreeWorkspace *r = *pworkspace;
     r->max_comp = max_comp;
     if( 
-            ( r->id_depth = (int*) realloc(r->id_depth, max_comp*sizeof(int) ) ) == NULL ||
-            ( r->comp_same = (int*) realloc(r->comp_same, max_comp*sizeof(int) ) ) == NULL ||
-            ( r->prob_parent = (int*) realloc(r->prob_parent, max_comp*sizeof(int) ) ) == NULL ||
+            ( r->id_depth = (unsigned int*) realloc(r->id_depth, max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->comp_same = (unsigned int*) realloc(r->comp_same, max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->prob_parent = (unsigned int*) realloc(r->prob_parent, max_comp*sizeof(unsigned int) ) ) == NULL ||
 #ifdef BLOB_COUNT_PIXEL
-            ( r->comp_size = (int*) realloc(r->comp_size, max_comp*sizeof(int) ) ) == NULL ||
+            ( r->comp_size = (unsigned int*) realloc(r->comp_size, max_comp*sizeof(unsigned int) ) ) == NULL ||
 #endif
 #ifdef BLOB_DIMENSION
-            ( r->top_index = (int*) realloc(r->top_index, max_comp*sizeof(int) ) ) == NULL ||
-            ( r->left_index = (int*) realloc(r->left_index, max_comp*sizeof(int) ) ) == NULL ||
-            ( r->right_index = (int*) realloc(r->right_index, max_comp*sizeof(int) ) ) == NULL ||
-            ( r->bottom_index = (int*) realloc(r->bottom_index, max_comp*sizeof(int) ) ) == NULL ||
+            ( r->top_index = (unsigned int*) realloc(r->top_index, max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->left_index = (unsigned int*) realloc(r->left_index, max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->right_index = (unsigned int*) realloc(r->right_index, max_comp*sizeof(unsigned int) ) ) == NULL ||
+            ( r->bottom_index = (unsigned int*) realloc(r->bottom_index, max_comp*sizeof(unsigned int) ) ) == NULL ||
+#endif
+#ifdef BLOB_BARYCENTER_TYPE
+            ( r->pixel_sum_X = (BLOB_BARYCENTER_TYPE*) realloc(r->pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
+            ( r->pixel_sum_Y = (BLOB_BARYCENTER_TYPE*) realloc(r->pixel_sum_Y, max_comp*sizeof(BLOB_BARYCENTER_TYPE) ) ) == NULL ||
 #endif
 						0 ){
 			// realloc failed
@@ -135,6 +143,10 @@ void depthtree_destroy_workspace(
     free(r->right_index);
     free(r->bottom_index);
 #endif
+#ifdef BLOB_BARYCENTER
+    free(r->pixel_sum_X);
+    free(r->pixel_sum_Y);
+#endif
     free(r->a_ids);
     free(r->b_ids);
     free(r->c_ids);
@@ -156,10 +168,10 @@ void depthtree_destroy_workspace(
 FORCEINLINE
 Tree* find_depthtree(
 		const unsigned char *data,
-		const int w, const int h,
+		const unsigned int w, const unsigned int h,
 		const BlobtreeRect roi,
 		const unsigned char *depth_map,
-		const int stepwidth,
+		const unsigned int stepwidth,
 		DepthtreeWorkspace *workspace,
 		Blob** tree_data )
 {
@@ -193,41 +205,49 @@ Tree* find_depthtree(
      *
      */
     //init
-    int const r=w-roi.x-roi.width; //right border
-    int const b=h-roi.y-roi.height; //bottom border
+    unsigned int const r=w-roi.x-roi.width; //right border
+    unsigned int const b=h-roi.y-roi.height; //bottom border
     if( r<0 || b<0 ){
         fprintf(stderr,"[blob.c] BlobtreeRect not matching.\n");
         *tree_data = NULL;
         return NULL;
     }
 
-    int const swr = (roi.width-1)%stepwidth; // remainder of width/stepwidth;
-    int const shr = (roi.height-1)%stepheight; // remainder of height/stepheight;
-    int const sh = stepheight*w;
-    int const sh1 = (stepheight-1)*w;
-    int const sh2 = shr*w;
+    unsigned int const swr = (roi.width-1)%stepwidth; // remainder of width/stepwidth;
+    unsigned int const shr = (roi.height-1)%stepheight; // remainder of height/stepheight;
+    unsigned int const sh = stepheight*w;
+    unsigned int const sh1 = (stepheight-1)*w;
+    unsigned int const sh2 = shr*w;
 
-    int id=-1;//id for next component
-    int k; //loop variable
-    int max_comp = workspace->max_comp; 
-    int idA, idB; 
+    unsigned int id=-1;//id for last component, attention, unsigned variable!!
+    unsigned int k; //loop variable
+    unsigned int max_comp = workspace->max_comp; 
+    unsigned int idA, idB; 
     unsigned char depX; 
 
-    int* ids = workspace->ids; 
-    int* comp_same = workspace->comp_same; 
-    int* prob_parent = workspace->prob_parent; 
-    int* id_depth = workspace->id_depth; 
+    unsigned int* ids = workspace->ids; 
+    unsigned int* comp_same = workspace->comp_same; 
+    unsigned int* prob_parent = workspace->prob_parent; 
+    unsigned int* id_depth = workspace->id_depth; 
 #ifdef BLOB_COUNT_PIXEL
-    int* comp_size = workspace->comp_size; 
+    unsigned int* comp_size = workspace->comp_size; 
 #endif
 #ifdef BLOB_DIMENSION
-    int* top_index = workspace->top_index; 
-    int* left_index = workspace->left_index;
-    int* right_index = workspace->right_index;
-    int* bottom_index = workspace->bottom_index;
-    int s=roi.x,z=roi.y; //s-spalte, z-zeile
+	unsigned int* top_index = workspace->top_index;
+	unsigned int* left_index = workspace->left_index;
+	unsigned int* right_index = workspace->right_index;
+	unsigned int* bottom_index = workspace->bottom_index;
 #endif
-	int *a_ids, *b_ids/*, *c_ids, *d_ids*/;
+#ifdef PIXEL_POSITION
+	unsigned int s=roi.x,z=roi.y; //s-spalte, z-zeile
+#else
+	const unsigned int s=0,z=0; //Should not be used.
+#endif
+#ifdef BLOB_BARYCENTER
+    BLOB_BARYCENTER_TYPE *pixel_sum_X = workspace->pixel_sum_X; 
+    BLOB_BARYCENTER_TYPE *pixel_sum_Y = workspace->pixel_sum_Y; 
+#endif
+	unsigned int *a_ids, *b_ids/*, *c_ids, *d_ids*/;
 	unsigned char *a_dep, *b_dep/*, *c_dep, *d_dep*/;  
 
 
@@ -247,7 +267,7 @@ Tree* find_depthtree(
     const unsigned char* const depE = depR + (roi.height-1)*w;
     const unsigned char* const depE2 = depE - shr*w;//remove last lines.
 
-    int* iPi = ids+(dS-data); // Poiner to ids+i
+    unsigned int* iPi = ids+(dS-data); // Poiner to ids+i
     unsigned char *depPi = depS;
 
 
@@ -310,12 +330,17 @@ Tree* find_depthtree(
     /* Dummy for foreground (id=0, depth=255). It's important to set id=0 for
      * this component. */
     NEW_COMPONENT(1, 255 );
-    /* Dummy for background (id=1, depth=0) */
+    /* Dummy for background (id=1, depth=0), Attention, -1=MAX_UINT */
     NEW_COMPONENT(-1, 0 );
 
 #ifdef BLOB_COUNT_PIXEL
-    /* Set size of dummy component to 0. */
+    /* Set size of dummy foreground component to 0. */
     *(comp_size+0) = 0;
+#endif
+#ifdef BLOB_BARYCENTER
+    /* Dummy foreground should not influence the barycenter. */
+    *(pixel_sum_X+0) = 0;
+    *(pixel_sum_Y+0) = 0;
 #endif
 
 
@@ -324,8 +349,15 @@ Tree* find_depthtree(
     //top, left corner of BlobtreeRect get first id (=2).
     depX = *depPi;
     if( depX>0 ){
-        /* Set size of dummy component to 0. */
+#ifdef BLOB_COUNT_PIXEL
+        /* Set size of background dummy component to 0. */
         *(comp_size+1) = 0;
+#endif
+#ifdef BLOB_BARYCENTER
+    /* Dummy background should not influence the barycenter. */
+    *(pixel_sum_X+1) = 0;
+    *(pixel_sum_Y+1) = 0;
+#endif
         NEW_COMPONENT(1, depX );
     }else{
         //use dummy component id=1 for corner element. This avoid wrapping of
@@ -335,7 +367,7 @@ Tree* find_depthtree(
 
     iPi += stepwidth;
     depPi += stepwidth;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
     s += stepwidth;
 #endif
 
@@ -346,7 +378,7 @@ Tree* find_depthtree(
         depX = *depPi;
         INSERT_ELEMENT1( idA, iPi, *depPi);
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
         s += stepwidth;
 #endif
     }
@@ -354,7 +386,7 @@ Tree* find_depthtree(
     //correct pointer shift of last for loop step.
     iPi -= stepwidth-swr;
     depPi -= stepwidth-swr;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
     s -= stepwidth-swr;
 #endif
 
@@ -371,7 +403,7 @@ Tree* find_depthtree(
     iPi += r+roi.x+sh1+1;
     depR += sh; //rechter Randindex wird in nächste Zeile geschoben.
     depR2 += sh;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
     s=roi.x;
     z += stepheight;
 #endif	
@@ -387,7 +419,7 @@ Tree* find_depthtree(
 
         iPi += stepwidth;
         depPi += stepwidth;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
         s += stepwidth;
 #endif
 
@@ -404,7 +436,7 @@ Tree* find_depthtree(
                     *(depPi-sh), *(depPi-sh+stepwidth) ); /* max(b,c) */
         depX = *depPi;
         INSERT_ELEMENT2( idA, idB, iPi, *depPi);
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
             s += stepwidth;
 #endif
         }
@@ -426,7 +458,7 @@ Tree* find_depthtree(
 
             iPi+=swr;
             depPi+=swr;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
             s+=swr;
 #endif
 
@@ -448,7 +480,7 @@ Tree* find_depthtree(
 
         }//end of else case of (depR2!=depR)
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
         s=roi.x;
         z += stepheight;
 #endif
@@ -459,7 +491,7 @@ Tree* find_depthtree(
     depPi -= sh-sh2;//(stepheight-1)*w;
     depR -= sh-sh2;
     depR2 -= sh-sh2;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
     z -= stepheight-shr;
 #endif
 
@@ -473,7 +505,7 @@ Tree* find_depthtree(
 
         iPi += stepwidth;
         depPi += stepwidth;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
         s += stepwidth;
 #endif
 
@@ -491,7 +523,7 @@ Tree* find_depthtree(
             depX = *depPi;
             INSERT_ELEMENT2( idA, idB, iPi, *depPi);
 
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
             s += stepwidth;
 #endif
         }
@@ -512,7 +544,7 @@ Tree* find_depthtree(
 
             iPi+=swr;
             depPi+=swr;
-#ifdef BLOB_DIMENSION
+#ifdef PIXEL_POSITION
             s+=swr;
 #endif
 
@@ -554,19 +586,19 @@ Tree* find_depthtree(
 		 * If BLOB_DIMENSION is set, detect
 		 * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
      * */
-    int nids = id+1; //number of ids
-    int tmp_id,tmp_id2, real_ids_size=0,l;
+    unsigned int nids = id+1; //number of ids
+    unsigned int tmp_id,tmp_id2, real_ids_size=0,l;
     //int* real_ids = calloc( nids,sizeof(int) ); //store join of ids.
     //int* real_ids_inv = calloc( nids,sizeof(int) ); //store for every id with position in real_id link to it's position.
 		free(workspace->real_ids);
     workspace->real_ids = calloc( nids, sizeof(int) ); //store join of ids.
-		int* const real_ids = workspace->real_ids;
+		unsigned int* const real_ids = workspace->real_ids;
 
 		free(workspace->real_ids_inv);
-    workspace->real_ids_inv = calloc( nids, sizeof(int) ); //store for every id with position in real_id link to it's position.
-		int* const real_ids_inv = workspace->real_ids_inv;
+    workspace->real_ids_inv = calloc( nids, sizeof(unsigned int) ); //store for every id with position in real_id link to it's position.
+		unsigned int* const real_ids_inv = workspace->real_ids_inv;
 
-    for(k=1;k<nids;k++){ // k=1 skip the dummy component id=0
+    for(k=1;k<nids;k++){ // k=1 skips the foreground dummy component id=0
 
 			  /* Sei F=comp_same. Wegen F(x)<=x folgt (F wird innerhalb dieser Schleife angepasst!)
 				 * F^2 = F^3 = ... = F^*
@@ -575,13 +607,13 @@ Tree* find_depthtree(
         tmp_id = *(comp_same+k); 
 
 #if VERBOSE > 0
-        printf("%i: (%i->%i ",k,k,tmp_id);
+        printf("%u: (%u->%u ",k,k,tmp_id);
 #endif
 				if( tmp_id != k ){
 					tmp_id = *(comp_same+tmp_id); 
 					*(comp_same+k) = tmp_id; 
 #if VERBOSE > 0
-					printf("->%i ",tmp_id);
+					printf("->%u ",tmp_id);
 #endif
 				}
 #if VERBOSE > 0
@@ -608,6 +640,14 @@ Tree* find_depthtree(
 						*( bottom_index+tmp_id ) = *( bottom_index+k );
 #endif
 
+#ifdef BLOB_BARYCENTER
+					//shift values to other id
+					*(pixel_sum_X+tmp_id) += *(pixel_sum_X+k); 
+					*(pixel_sum_X+k) = 0;
+					*(pixel_sum_Y+tmp_id) += *(pixel_sum_Y+k); 
+					*(pixel_sum_Y+k) = 0;
+#endif
+
 				}else{
 					//Its a component id of a new area
 					*(real_ids+real_ids_size) = tmp_id;
@@ -622,7 +662,7 @@ Tree* find_depthtree(
      */
 
     /* store for real_ids the index of the node in the tree array */
-    int *tree_id_relation = malloc( (real_ids_size+1)*sizeof(int) );
+    unsigned int *tree_id_relation = malloc( (real_ids_size+1)*sizeof(unsigned int) );
 
     Node *nodes = malloc( (real_ids_size+1)*sizeof(Node) );
     Blob *blobs = malloc( (real_ids_size+1)*sizeof(Blob) );
@@ -643,7 +683,7 @@ Tree* find_depthtree(
 		 * on the border pixels of the ROI.
 		 * Almost in every cases it's only one child, but not always.
 		 * */
-    curdata->id = -1;
+    curdata->id = -1; /* = MAX_UINT */
     memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
     curdata->area = roi.width * roi.height;
 #ifdef SAVE_DEPTH_MAP_VALUE
@@ -658,31 +698,42 @@ Tree* find_depthtree(
 			curdata++;
 			cur->data = curdata; // link to the data array.
 
-			rect = &curdata->roi;
-			const int rid = *(real_ids+l);
+			const unsigned int rid = *(real_ids+l);
 			curdata->id = rid;	//Set id of this blob.
 #ifdef BLOB_DIMENSION
+			rect = &curdata->roi;
 			rect->y = *(top_index + rid);
 			rect->height = *(bottom_index + rid) - rect->y + 1;
 			rect->x = *(left_index + rid);
 			rect->width = *(right_index + rid) - rect->x + 1;
+#endif
+#ifdef BLOB_BARYCENTER
+			/* The barycenter will not set here, but in eval_barycenters(...) */
+			//curdata->barycenter[0] = *(pixel_sum_X + rid) / *(comp_same + rid);
+			//curdata->barycenter[1] = *(pixel_sum_Y + rid) / *(comp_same + rid);
 #endif
 #ifdef SAVE_DEPTH_MAP_VALUE
 			curdata->depth_level = *(id_depth + rid );
 #endif
 
 			tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area. 
-			if( tmp_id < 0 ){
+			if( tmp_id == -1 /*=MAX_UINT*/ ){
 				/* Use root as parent node. */
 				//cur->parent = root;
 				add_child(root, cur );
 			}else{
 				//find real id of parent id.
+#if 1
+				tmp_id = *(comp_same+tmp_id); 
+#else
+				//this was commented out because comp_same is here a projection.
 				tmp_id2 = *(comp_same+tmp_id); 
 				while( tmp_id != tmp_id2 ){
 					tmp_id = tmp_id2; 
 					tmp_id2 = *(comp_same+tmp_id); 
-				} 
+				}
+#endif
+				
 				/*Now, tmp_id is in real_id array. And real_ids_inv is defined. */
 				add_child( root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id ),
 						cur );
@@ -690,19 +741,27 @@ Tree* find_depthtree(
 
 		}
 
+
+#ifdef BLOB_BARYCENTER
+		eval_barycenters(root->child, comp_size, pixel_sum_X, pixel_sum_Y);
+#define SUM_AREAS_IS_REDUNDANT
+#endif
+
     //sum up node areas
 #ifdef BLOB_COUNT_PIXEL
 #if VERBOSE > 1 
-    int ci;
+		unsigned int ci;
     printf("comp_size Array:\n");
     for( ci=0 ; ci<nids; ci++){
-	 printf("cs[%i]=%i\n",ci, *(comp_size + *(real_ids+ci) ) );
+	 printf("cs[%u]=%u\n",ci, *(comp_size + *(real_ids+ci) ) );
     }
 #endif
-    sum_areas(root->child, comp_size);
+#ifndef SUM_AREAS_IS_REDUNDANT
+		sum_areas(root->child, comp_size);
+#endif
 #endif
 
-    /* If no pixel has depth=0, the dummy component with id=1
+    /* If no pixel has depth=0, the dummy component with id=1 (or=2 ?)
      * wrapping all blobs. In this case we could remove this
      * blob from the tree.
      * */
@@ -737,7 +796,7 @@ Tree* find_depthtree(
 }
 
 
-void depthtree_find_blobs(Blobtree *blob, const unsigned char *data, const int w, const int h, const BlobtreeRect roi, const unsigned char *depth_map, DepthtreeWorkspace *workspace ){
+void depthtree_find_blobs(Blobtree *blob, const unsigned char *data, const unsigned int w, const unsigned int h, const BlobtreeRect roi, const unsigned char *depth_map, DepthtreeWorkspace *workspace ){
 	//clear old tree
 	if( blob->tree != NULL){
 		tree_destroy(&blob->tree);
@@ -800,18 +859,18 @@ void depthtree_filter_blob_ids(
 		DepthtreeWorkspace *pworkspace
 		){
 
-	int numNodes = blob->tree->size;
-	VPRINTF("Num nodes: %i\n", numNodes);
+	unsigned int numNodes = blob->tree->size;
+	VPRINTF("Num nodes: %u\n", numNodes);
 
 	if(pworkspace->blob_id_filtered==NULL){
 		//Attention, correct size of blob_id_filtered is assumed if != NULL.
 		//See workspace reallocation
-		pworkspace->blob_id_filtered= (int*) malloc( pworkspace->max_comp*sizeof(int) );
+		pworkspace->blob_id_filtered= (unsigned int*) malloc( pworkspace->max_comp*sizeof(unsigned int) );
 	}
-	int * const bif = (int*) calloc( numNodes,sizeof(int) );
-	int * const blob_id_filtered = pworkspace->blob_id_filtered;
-	const int * const comp_same = pworkspace->comp_same;
-	const int * const real_ids_inv = pworkspace->real_ids_inv;
+	unsigned int * const bif = (unsigned int*) calloc( numNodes,sizeof(unsigned int) );
+	unsigned int * const blob_id_filtered = pworkspace->blob_id_filtered;
+	const unsigned int * const comp_same = pworkspace->comp_same;
+	const unsigned int * const real_ids_inv = pworkspace->real_ids_inv;
 
 	if( bif != NULL && blob_id_filtered != NULL ){
 		bif[0]=0;
@@ -824,9 +883,9 @@ void depthtree_filter_blob_ids(
 		const Node * const root = blob->tree->root;
 		const Node *cur = blobtree_first(blob);
 		while( cur != NULL ){
-			//const int id = ((Blob*)cur->data)->id;
-			//const int node_id = *(pworkspace->real_ids_inv+id) + 1;
-			const int node_id = cur-root;
+			//const unsigned int id = ((Blob*)cur->data)->id;
+			//const unsigned int node_id = *(pworkspace->real_ids_inv+id) + 1;
+			const unsigned int node_id = cur-root;
 			//note: Both definitions of node_id are equivalent.
 			//*(bif + node_id) = id;
 			*(bif + node_id) = node_id;
@@ -836,7 +895,7 @@ void depthtree_filter_blob_ids(
 		// 2. Take all nodes which are mapped to 0 and 
 		// search parent node with nonzero mapping.
 		// Start for index=i=2 because first node is dummy and second is root.
-		int pn, ri; //parent real id, read id of parent node
+		unsigned int pn, ri; //parent real id, read id of parent node
 		for( ri=2; ri<numNodes; ri++){
 			if( bif[ri] == 0 ){
 				//find parent node of 'ri' which was not filtered out
@@ -858,7 +917,7 @@ void depthtree_filter_blob_ids(
 		 * 3b) Get node for id2. The dummy node produce +1 shift.
 		 * 3c) Finally, use bif map.
 		 */
-		int id=pworkspace->used_comp;//dec till 0
+		unsigned int id=pworkspace->used_comp;//dec till 0
 		while( id ){
 			*(blob_id_filtered+id) = *(bif +	*(real_ids_inv + *(comp_same+id)) + 1 );
 			id--;
@@ -867,8 +926,8 @@ void depthtree_filter_blob_ids(
 #if VERBOSE > 0
 		printf("bif[realid] = realid\n");
 		for( ri=0; ri<numNodes; ri++){
-			int id = ((Blob*)((blob->tree->root +ri)->data))->id;
-			printf("id=%i, bif[%i] = %i\n",id, ri, bif[ri]);
+			unsigned int id = ((Blob*)((blob->tree->root +ri)->data))->id;
+			printf("id=%u, bif[%u] = %u\n",id, ri, bif[ri]);
 		}
 #endif
 
@@ -903,8 +962,8 @@ void extend_bounding_boxes( Tree * const tree){
 				child = cur->child;
 				while( child != NULL ){
 					BlobtreeRect *dchild = &((Blob*)child->data)->roi;
-					int w = dchild->width;
-					int h = dchild->height;
+					unsigned int w = dchild->width;
+					unsigned int h = dchild->height;
 					int a = (dchild->x - dcur->x);
 					int b = (dchild->y - dcur->y);
 					if( a<0 ){ dcur->x += a; dcur->width -= a; }else{ w += a; }
@@ -912,7 +971,7 @@ void extend_bounding_boxes( Tree * const tree){
 					if( b<0 ){ dcur->y += b; dcur->height -= b; }else{ h += b; }
 					if( dcur->height<h ){ dcur->height=h; }
 
-					VPRINTF("Compare parent node %i with %i \n", ((Blob*)cur->data)->id, ((Blob*)child->data)->id   );
+					VPRINTF("Compare parent node %u with %u \n", ((Blob*)cur->data)->id, ((Blob*)child->data)->id   );
 
 					child = child->silbing;
 				}

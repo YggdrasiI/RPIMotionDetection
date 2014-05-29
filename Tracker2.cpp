@@ -3,7 +3,11 @@
  */
 #include <unistd.h>
 
+//get ENV variables from BlobDetection lib
+#include "settings.h"
+
 #include "Tracker2.h"
+
 
 Tracker2::Tracker2()
 {
@@ -42,11 +46,18 @@ void Tracker2::trackBlobs(
 	blobsTmp.clear();
 
 	BlobtreeRect *roi;
+	Blob *data;
 	Node *curNode = blobtree_first(frameblobs);
 	while( curNode != NULL ){
-		roi = &(((Blob*)(curNode->data))->roi);
+		data = (Blob*)(curNode->data);
+		roi = &(data->roi);
+#ifdef BLOB_BARYCENTER
+		x = data->barycenter[0];
+		y = data->barycenter[1];
+#else
 		x     = roi->x + roi->width/2;
 		y     = roi->y + roi->height/2;
+#endif
 
 		min_x = roi->x; 
 		min_y = roi->y;

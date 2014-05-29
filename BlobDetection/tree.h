@@ -31,8 +31,8 @@ typedef struct Node Node;
 	Node *parent;
 	Node *silbing;
 	Node *child;/* second child reachable as silbing of first child and so on… */
-	int height; /* height = maximal reachable depth */
-	int width; /* number of children */
+	unsigned int height; /* height = maximal reachable depth */
+	unsigned int width; /* number of children */
 	void *data;
 };
 static const struct Node Leaf = { NULL,NULL,NULL,0,0, NULL };
@@ -42,44 +42,47 @@ static const struct Node Leaf = { NULL,NULL,NULL,0,0, NULL };
  * expect this data struct. This functions
  * should be recognizeable by its names. */
 typedef struct Blob{
-	int id;
+	unsigned int id;
 	BlobtreeRect roi;
-	int area;
+	unsigned int area;
 #ifdef SAVE_DEPTH_MAP_VALUE
 	unsigned char depth_level; 
+#endif
+#ifdef BLOB_BARYCENTER
+	int barycenter[2];
 #endif
 } Blob;
 
 
 typedef struct {
 	Node *root; // root of tree. Required to release mem in tree_destroy(). 
-	int size;//length of data and root array.
+	unsigned int size;//length of data and root array.
 } Tree;
 
 /* Allocate tree struct. If you use 
  * the data pointer of the nodes you has to 
  * setup/handle the storage for this data 
  * separatly */
-Tree *tree_create(int size);
+Tree *tree_create(unsigned int size);
 
 /* Dealloc tree. Attention, target of data pointer is not free'd. */
 void tree_destroy(Tree **tree);
 
 /* Eval height and number of children for each Node */
-void gen_redundant_information(Node * const root, int *pheight, int *psilbings);
+void gen_redundant_information(Node * const root, unsigned int *pheight, unsigned int *psilbings);
 
 /* Eval height and number of children for each Node */
-void gen_redundant_information_recursive(Node* root, int *pheight, int *psilbings);
+void gen_redundant_information_recursive(Node* root, unsigned int *pheight, unsigned int *psilbings);
 
 void add_child(Node *parent, Node *child);
 
-int number_of_nodes(Node *root);
+unsigned int number_of_nodes(Node *root);
 
 /* Textual output of tree. Shift defines number of spaces at line beginning. */
 void print_tree(Node *root, int shift);
 
 /* Print only nodes with area>=minA */
-void print_tree_filtered(Node *root, int shift, int minA);
+void print_tree_filtered(Node *root, int shift, unsigned int minA);
 
 
 /* 
@@ -171,21 +174,29 @@ void sort_tree(Node *root);
  * Kann man das noch komprimieren, wenn man als Basis die maximale Tiefe wählt?!
  *
  * */
-void _gen_tree_id(Node *root,int **id, int *d);
+void _gen_tree_id(Node *root,unsigned int **id, unsigned int *d);
 
 
 /* Generate Unique Number [xyz...] for node
  * Preallocate id-array with #nodes(root).
  * */
-void gen_tree_id(Node *root, int* id, int size);
+void gen_tree_id(Node *root, unsigned int* id, unsigned int size);
 
 #ifdef BLOB_COUNT_PIXEL
-int sum_areas(Node * const root, const int * const comp_size);
+unsigned int sum_areas(Node * const root, const unsigned int * const comp_size);
 #ifdef BLOB_DIMENSION
 void approx_areas(const Tree * const tree, Node * const startnode,
-		int* comp_size,
-		int stepwidth, int stepheight);
+		const unsigned int * const comp_size,
+		const unsigned int stepwidth, const unsigned int stepheight);
 #endif
+#endif
+
+#ifdef BLOB_BARYCENTER
+void eval_barycenters(Node * const root,
+		const unsigned int * const comp_size,
+		BLOB_BARYCENTER_TYPE * const pixel_sum_X,
+		BLOB_BARYCENTER_TYPE * const pixel_sum_Y
+		);
 #endif
 
 #ifdef BLOB_DIMENSION
@@ -194,8 +205,8 @@ void set_area_prop(Node *root);
 
 // Debug/Helper-Functions
 char * debug_getline(void); 
-void debug_print_matrix( int* data, int w, int h, BlobtreeRect roi, int gridw, int gridh);
-void debug_print_matrix2(int* ids, int* data, int w, int h, BlobtreeRect roi, int gridw, int gridh, char twice);
-void debug_print_matrix_char( unsigned char * data, int w, int h, BlobtreeRect roi, int gridw, int gridh);
+void debug_print_matrix( unsigned int* data, unsigned int w, unsigned int h, BlobtreeRect roi, unsigned int gridw, unsigned int gridh);
+void debug_print_matrix2(unsigned int* ids, unsigned int* data, unsigned int w, unsigned int h, BlobtreeRect roi, unsigned int gridw, unsigned int gridh, char twice);
+void debug_print_matrix_char( unsigned char * data, unsigned int w, unsigned int h, BlobtreeRect roi, unsigned int gridw, unsigned int gridh);
 
 #endif

@@ -2,6 +2,9 @@
 #include <signal.h>
 #include <opencv2/opencv.hpp>
 
+//get ENV variables from BlobDetection lib
+#include "settings.h"
+
 #include "threshtree.h"
 #include "depthtree.h"
 #include "Tracker2.h"
@@ -80,8 +83,8 @@ static int of_area_min = 40;
 static int of_area_max = 40;
 static int of_tree_depth_min = 1;
 static int of_tree_depth_max = 100;
-static int of_area_depth_min = 0;//2;
-static int of_area_depth_max = 255;//10;
+static int of_area_depth_min = 0;
+static int of_area_depth_max = 255;
 static bool of_only_leafs = false;
 static bool of_use_own_filter = false;
 static int output_scalefactor = 1;
@@ -101,12 +104,12 @@ static Tracker2 tracker;
 
 /* Init id array:
  * If this flag is set the ids array in the workspace
- * will be filled manually with -1. This allows a better
+ * will be filled manually with 0. This allows a better
  * visual representation of the ids. The array is not
  * reset automaticaly due performance increase.
  * */
 static bool reset_ids = false;
-static const int IDINITVAL = -99999999;
+static const unsigned int IDINITVAL = 0;
 
 
 
@@ -169,8 +172,8 @@ int detection_loop(std::string filename ){
 	/* pixel value:   0 1 2 3 4 5 … thresh …                   … 255
 	 *   depth map:   0 0 0 0 0 0 …    1     1 … 1 2 … 2 3 … 3 …
 	 */
-	int div=30;
-	for( int i=0; i<256; i++){
+	unsigned int div=30;
+	for( unsigned int i=0; i<256; i++){
 #if 1
 		depth_map[i] = (i<thresh?0:(i-thresh)/30+1);
 #else
@@ -232,8 +235,8 @@ int detection_loop(std::string filename ){
 	blobtree_create(&frameblobs);
 
 	if( reset_ids ){
-		int* ids = (algorithm==0)?tworkspace->ids:dworkspace->ids;
-		for( int* iEnd=ids+W*H; ids<iEnd;++ids){
+		unsigned int* ids = (algorithm==0)?tworkspace->ids:dworkspace->ids;
+		for( unsigned int* iEnd=ids+W*H; ids<iEnd;++ids){
 			*ids = IDINITVAL; 
 		}
 	}
@@ -243,7 +246,7 @@ int detection_loop(std::string filename ){
 	// Look at blobtree.h for more information.
 	blobtree_set_grid(frameblobs, gridwidth,gridwidth);
 
-	input_roi = {0,0,W, H-4 };//shrink height because lowest rows contains noise.
+	input_roi = {0,0,W, H };
 
 	if( algorithm == 0 ){
 		threshtree_find_blobs(frameblobs, ptr, W, H, input_roi, thresh, tworkspace);
@@ -274,8 +277,8 @@ int fpsTest(std::string filename ){
 	}
 
 	image_filename = filename;
-	int div=30;
-	for( int i=0; i<256; i++){
+	unsigned int div=30;
+	for( unsigned int i=0; i<256; i++){
 		depth_map[i] = (i<thresh?0:(i-thresh)/30+1); 
 		if( invert_depth_map ){
 			depth_map[i] = 255 - depth_map[i];
@@ -283,8 +286,8 @@ int fpsTest(std::string filename ){
 	}
 
 	//====================================================
-	const int W = input_image.size().width;
-	const int H = input_image.size().height;
+	const unsigned int W = input_image.size().width;
+	const unsigned int H = input_image.size().height;
 	const uchar* ptr = input_image.data;
 
 	blobtree_destroy(&frameblobs);
@@ -297,8 +300,8 @@ int fpsTest(std::string filename ){
 	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
 	Fps fps;
-	int N = 1;
-	while( N++<100000 ){
+	unsigned int N = 1;
+	while( ++N<100000 ){
 		//printf("N = %i\n", N);
 		if( algorithm == 0 ){
 			threshtree_find_blobs(frameblobs, ptr, W, H, input_roi, thresh, tworkspace);
@@ -336,8 +339,8 @@ static void redraw(){
 	//1. Create mapping for filtered list
 	if( display_areas ){
 
-		int seed, id, s2, s3, s4;
-		int *ids, *riv, *bif, *cm;
+		unsigned int seed, id, s2, s3, s4;
+		unsigned int *ids, *riv, *bif, *cm;
 
 		if( algorithm == 1 ){
 			ids = dworkspace->ids;
@@ -363,14 +366,14 @@ static void redraw(){
 		printf("Roi: (%i %i %i %i)\n", input_roi.x, input_roi.y, input_roi.width, input_roi.height);
 		fflush(stdout);
 
-		for( int y=0, H=input_roi.height; y<H; ++y){
+		for( unsigned int y=0, H=input_roi.height; y<H; ++y){
 
 			if( !reset_ids){
 				//restrict on grid pixels.
 				if( y % frameblobs->grid.height != 0 && y!= H-1 ) continue;
 			}
 
-			for( int x=0, W=input_roi.width; x<W; ++x) {
+			for( unsigned int x=0, W=input_roi.width; x<W; ++x) {
 				if( !reset_ids){
 					if( x % frameblobs->grid.width != 0 && x!= W-1 ) continue;
 				}
@@ -427,7 +430,7 @@ static void redraw(){
 		Node *curNode = blobtree_first(frameblobs);
 
 		if( display_bounding_boxes ){
-			int num=0;
+			unsigned int num=0;
 			while( curNode != NULL ){
 				num++;
 				Blob *data = (Blob*)curNode->data;
@@ -466,6 +469,21 @@ static void redraw(){
 				curNode = blobtree_next(frameblobs);
 			}
 		}
+
+#ifdef BLOB_BARYCENTER
+		curNode = blobtree_first(frameblobs);
+		while( curNode != NULL ){
+			Blob *data = (Blob*)curNode->data;
+			cv::circle( color,
+					cv::Point(data->barycenter[0], data->barycenter[1]),
+					3.0, cv::Scalar(100, 100, 255), 2 );
+
+			curNode = blobtree_next(frameblobs);
+		}
+
+#endif
+
+
 	}
 
 
