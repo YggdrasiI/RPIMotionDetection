@@ -18,17 +18,22 @@ WAIT=5000
 # Definition of the shaders: apps/raspivid/shaders/gl_scenes/pong*.glsl
 SHADEROPTIONS="--pongUseShader 0"
 
+ENV="LD_LIBRARY_PATH=./lib:\${LD_LIBRARY_PATH}"
+MAINCMD="./bin/pong --player ${PLAYER} --hflip -x /dev/null -o /dev/null -t 0 --gl --glscene pong --waitAndFix ${WAIT} ${SHADEROPTIONS}"
+EXTRA_ARGS="--vflip"
+#EXTRA_ARGS="--hflip -rot 90"
+
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
 echo "Waiting $WAIT ms on camera initialisation"
 
 if [ "$RESOLUTION" = "high" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1920,1080' --gl --glwin '0,0,1920,1080' --glscene pong -o /dev/null --waitAndFix ${WAIT} ${SHADEROPTIONS}
+eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,1920,1080' --glwin '0,0,1920,1080'"
 fi
 
 if [ "$RESOLUTION" = "med" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,1280x1024' --gl --glwin '0,0,1280x1024' --glscene pong -o /dev/null --waitAndFix ${WAIT} ${SHADEROPTIONS}
+eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,1280,1024' --glwin '0,0,1280,1024'"
 fi
 
 if [ "$RESOLUTION" = "low" ] ; then
-./pong --player ${PLAYER} --hflip -x /dev/null -t 0  --preview '0,0,800,600' --gl --glwin '0,0,800,600' --glscene pong -o /dev/null --waitAndFix ${WAIT} ${SHADEROPTIONS}
+eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,800,600' --glwin '0,0,800,600'"
 fi
