@@ -18,7 +18,7 @@ unsigned char depth_map[256];
 pthread_t blob_tid;
 
 static void eval_ids(DepthtreeWorkspace *dworkspace, unsigned char *out, int len ){
-	int *ids, *cm, *cs;
+	unsigned int *ids, *cm, *cs;
 	ids = dworkspace->ids;
 	cm = dworkspace->comp_same;
 	cs = dworkspace->comp_size;
@@ -67,8 +67,8 @@ void* blob_detection(void *argn){
 							motion_data.width, motion_data.height,
 							input_roi, depth_map, dworkspace);
 
-					//3. Tracker
-					tracker.trackBlobs( frameblobs, true );
+					//3. Tracker, track without history generation
+					tracker.trackBlobs( frameblobs, false );
 					
 					//4. Opengl Output
 
@@ -98,7 +98,7 @@ static int hand_filter(Node *n){
 	}
 
 	//remove big areas
-	if( 10 *( data->roi.width * data->roi.height )>120*68 )
+	if( (data->roi.width * data->roi.height) > (120*68/8) )
 		return 1;
 
 	// remove areas which are very unsquared

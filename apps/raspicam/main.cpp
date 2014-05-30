@@ -14,7 +14,7 @@ unsigned char depth_map[256];
 pthread_t blob_tid;
 
 static void eval_ids(DepthtreeWorkspace *dworkspace, unsigned char *out, int len ){
-	int *ids, *cm, *cs;
+	unsigned int *ids, *cm, *cs;
 	ids = dworkspace->ids;
 	cm = dworkspace->comp_same;
 	cs = dworkspace->comp_size;
@@ -127,7 +127,7 @@ int main(int argc, const char **argv){
 	blobtree_create(&frameblobs);
 	blobtree_set_grid(frameblobs, 1, 1);
 
-	blobtree_set_filter(frameblobs, F_AREA_MIN, 100 );
+	blobtree_set_filter(frameblobs, F_AREA_MIN, 75 );
 	blobtree_set_filter(frameblobs, F_AREA_MAX, 1000 );
 	blobtree_set_extra_filter(frameblobs, hand_filter);
 	/* Only show leafs with above filtering effects */
@@ -144,8 +144,11 @@ int main(int argc, const char **argv){
 		return -1;
 	}
 
-	//Setup tracker
+	/* Setup tracker */
 	tracker.setMaxRadius(15);
+	//filter out blobs with live time < M frames
+	tracker.setMinimalDurationFilter(8);
+	//reduce output to N oldest blobs
 	tracker.setOldestDurationFilter(2);
 
 	//start raspivid application.

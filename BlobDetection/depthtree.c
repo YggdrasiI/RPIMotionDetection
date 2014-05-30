@@ -587,7 +587,7 @@ Tree* find_depthtree(
 		 * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
      * */
     unsigned int nids = id+1; //number of ids
-    unsigned int tmp_id,tmp_id2, real_ids_size=0,l;
+    unsigned int tmp_id,/*tmp_id2,*/ real_ids_size=0,l;
     //int* real_ids = calloc( nids,sizeof(int) ); //store join of ids.
     //int* real_ids_inv = calloc( nids,sizeof(int) ); //store for every id with position in real_id link to it's position.
 		free(workspace->real_ids);
