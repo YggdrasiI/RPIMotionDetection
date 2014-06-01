@@ -1,0 +1,27 @@
+#!/bin/bash
+
+RESOLUTION=high #low|medium|high
+test "$1" ==  "" || RESOLUTION="$1"
+
+# Timeout for camera calibration
+WAIT=5000
+
+ENV="LD_LIBRARY_PATH=./lib:\${LD_LIBRARY_PATH}"
+MAINCMD="./colourDirection -x /dev/null -o /dev/null -t 0  --gl --glscene motion --waitAndFix ${WAIT} "
+EXTRA_ARGS="--vflip"
+#EXTRA_ARGS="--hflip -rot 90"
+
+echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
+echo "Waiting $WAIT ms on camera initialisation"
+
+if [ "$RESOLUTION" = "high" ] ; then
+eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,1920,1080' --glwin '0,0,1920,1080'"
+fi
+
+if [ "$RESOLUTION" = "med" ] ; then
+eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,1280,1024' --glwin '0,0,1280,1024'"
+fi
+
+if [ "$RESOLUTION" = "low" ] ; then
+eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,800,600' --glwin '0,0,800,600'"
+fi
