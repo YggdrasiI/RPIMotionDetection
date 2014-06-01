@@ -5,7 +5,7 @@
 /* *(anchors+id) = dPi-dS; */\
 *(prob_parent+id) = PARENTID; \
 *(comp_same+id) = id; \
-*(comp_size+id) = 1; \
+*(comp_size+id) = 0; \
 BLOB_INIT_INDEX_ARRAYS; \
 BLOB_INIT_BARY; \
 if( id>=max_comp ){ \

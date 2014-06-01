@@ -74,7 +74,7 @@ static BlobtreeRect input_roi; // Region of interest of input image
 static bool redraw_pending = false;
 static bool display_areas = true;
 static bool display_tracker = false;
-static bool display_filtered_areas = true;
+static bool display_filtered_areas = false;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
 static int gridwidth = 1;
@@ -108,8 +108,8 @@ static Tracker2 tracker;
  * visual representation of the ids. The array is not
  * reset automaticaly due performance increase.
  * */
-static bool reset_ids = false;
-static const unsigned int IDINITVAL = 0;
+static bool reset_ids = true;
+static const unsigned int IDINITVAL = -1;
 
 
 

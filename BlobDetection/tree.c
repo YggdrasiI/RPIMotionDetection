@@ -386,8 +386,8 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 		const unsigned int stepwidth, const unsigned int stepheight)
 {
 
-	Node *root = tree->root;
 	Node *node = startnode;
+	Node *root = tree->root;
 	Blob* data = (Blob*)node->data;
 
 	if( node->child == NULL ){
@@ -439,7 +439,7 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 			continue;
 		}
 
-		while( node != startnode ){
+		while( node->parent != root ){
 			/*
 			 * All children of parent processed.
 			 * We can start the approximation for the parent node.
@@ -471,7 +471,8 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 			}
 		}
 
-	}while( node != startnode );
+	}//while( node != startnode );
+	while( node->parent != root );
 
 	free( pA_F);
 }
@@ -526,17 +527,20 @@ static inline unsigned int number_of_coarse_roi(BlobtreeRect* roi, unsigned int 
  *   value of [node]->data->area could be unusable (for stepwidth>1).
  *   Thats the reason for setting the area value during the loop, too.
  * */
-void eval_barycenters(Node * const root,
+void eval_barycenters( Node *const start_node,
+		const Node * const root,
 		const unsigned int * const comp_size,
 		BLOB_BARYCENTER_TYPE * const pixel_sum_X,
 		BLOB_BARYCENTER_TYPE * const pixel_sum_Y
 		){
 
-	Node *node = root;
+	Node *node = start_node;
 	Blob *data = (Blob*)node->data;
 	Blob *parentdata;
-	if( root->child == NULL){
+	if( node->child == NULL){
 		data->area = *(comp_size + data->id );
+		data->barycenter[0] = (*(pixel_sum_X + data->id )+(data->area>>1)) / data->area;
+		data->barycenter[1] = (*(pixel_sum_Y + data->id )+(data->area>>1)) / data->area;
 		return data->area;
 	}
 
@@ -551,9 +555,9 @@ void eval_barycenters(Node * const root,
 		}
 
 		//Node is Leaf
-#if 0
-		data->barycenter[0] = *(pixel_sum_X + data->id ) / data->area;
-		data->barycenter[1] = *(pixel_sum_Y + data->id ) / data->area;
+#if 1
+		data->barycenter[0] = (*(pixel_sum_X + data->id )+(data->area>>1)) / data->area;
+		data->barycenter[1] = (*(pixel_sum_Y + data->id )+(data->area>>1)) / data->area;
 #else
 		data->barycenter[0] = round( *(pixel_sum_X + data->id )*1.0 / data->area);
 		data->barycenter[1] = round( *(pixel_sum_Y + data->id )*1.0 / data->area);
@@ -571,20 +575,20 @@ void eval_barycenters(Node * const root,
 			continue;
 		}
 
-		while( node != root ){
+		while( node->parent != root ){
 			node = node->parent;
 			data = (Blob*)node->data;
 
 			// All children was handled 
-#if 0
-			data->barycenter[0] = *(pixel_sum_X + data->id ) / data->area;
-			data->barycenter[1] = *(pixel_sum_Y + data->id ) / data->area;
+#if 1
+		data->barycenter[0] = (*(pixel_sum_X + data->id )+(data->area>>1)) / data->area;
+		data->barycenter[1] = (*(pixel_sum_Y + data->id )+(data->area>>1)) / data->area;
 #else
 			data->barycenter[0] = round( *(pixel_sum_X + data->id )*1.0 / data->area);
 			data->barycenter[1] = round( *(pixel_sum_Y + data->id )*1.0 / data->area);
 #endif
 
-			if(node != root ){
+			if(node->parent != root ){
 				parentdata = (Blob*)node->parent->data;
 				parentdata->area += data->area;
 				*(pixel_sum_X + parentdata->id ) += *(pixel_sum_X + data->id );
@@ -597,7 +601,7 @@ void eval_barycenters(Node * const root,
 			}
 		}
 
-	}while( node != root );
+	}while( node->parent != root );
 
 }
 #endif

@@ -192,7 +192,8 @@ void approx_areas(const Tree * const tree, Node * const startnode,
 #endif
 
 #ifdef BLOB_BARYCENTER
-void eval_barycenters(Node * const root,
+void eval_barycenters( Node *const start_node,
+		const Node * const root,
 		const unsigned int * const comp_size,
 		BLOB_BARYCENTER_TYPE * const pixel_sum_X,
 		BLOB_BARYCENTER_TYPE * const pixel_sum_Y

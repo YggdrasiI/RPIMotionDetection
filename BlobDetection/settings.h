@@ -50,7 +50,7 @@
 
 /* See README
  */
-#define BLOB_SUBGRID_CHECK 
+//#define BLOB_SUBGRID_CHECK 
 
 /* For depthtree algorithm.
  * Use identity function to distict the pixel values into

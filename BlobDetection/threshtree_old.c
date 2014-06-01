@@ -981,7 +981,7 @@ Tree* find_connection_components_coarse2(
 	 *
 	 */
 #ifdef BLOB_BARYCENTER
-	eval_barycenters(root->child, comp_size, pixel_sum_X, pixel_sum_Y);
+	eval_barycenters(root->child, root, comp_size, pixel_sum_X, pixel_sum_Y);
 #define SUM_AREAS_IS_REDUNDANT
 #endif
 

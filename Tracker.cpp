@@ -24,7 +24,8 @@ Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0),
 	last_handid = 0;
 
 #ifdef WITH_HISTORY
-	m_phistory_line_colors = new float[MAX_HISTORY_LEN*4];
+	//m_phistory_line_colors = new float[MAX_HISTORY_LEN*4];
+	m_phistory_line_colors = (float*) malloc(MAX_HISTORY_LEN*4*sizeof(float));
 	float *rgba = m_phistory_line_colors;
 	const float *end = m_phistory_line_colors+MAX_HISTORY_LEN*4;
 	unsigned int seed = 255;
@@ -42,7 +43,7 @@ Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0),
 
 Tracker::~Tracker(){
 #ifdef WITH_HISTORY
-	delete m_phistory_line_colors;
+	free(m_phistory_line_colors);
 #endif
 }
 

@@ -93,7 +93,8 @@
 	pixel_sum_X = realloc(pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) ); \
 pixel_sum_X = realloc(pixel_sum_X, max_comp*sizeof(BLOB_BARYCENTER_TYPE) );
 
-#define BLOB_INIT_BARY *(pixel_sum_X+id) = s; *(pixel_sum_Y+id) = z;
+//#define BLOB_INIT_BARY *(pixel_sum_X+id) = s; *(pixel_sum_Y+id) = z;
+#define BLOB_INIT_BARY *(pixel_sum_X+id) = 0; *(pixel_sum_Y+id) = 0; /* (0,0) is the matching start value for BLOB_INIT_COMP_SIZE(...) = 0. Prevent values on 'subpixels'. */
 #define BLOB_INC_BARY(ID) *(pixel_sum_X+ID) += s;  *(pixel_sum_Y+ID) += z;
 #else
 /* empty definitions */
