@@ -1,3 +1,6 @@
+#include <stdio.h>
+#include <math.h>
+
 #define INLINE inline
 #include "tree.h"
 
@@ -548,8 +551,14 @@ void eval_barycenters(Node * const root,
 		}
 
 		//Node is Leaf
+#if 0
 		data->barycenter[0] = *(pixel_sum_X + data->id ) / data->area;
 		data->barycenter[1] = *(pixel_sum_Y + data->id ) / data->area;
+#else
+		data->barycenter[0] = round( *(pixel_sum_X + data->id )*1.0 / data->area);
+		data->barycenter[1] = round( *(pixel_sum_Y + data->id )*1.0 / data->area);
+#endif
+
 		//((Blob*)node->parent->data)->area += data->area;
 		parentdata = (Blob*)node->parent->data;
 		parentdata->area += data->area;
@@ -567,9 +576,14 @@ void eval_barycenters(Node * const root,
 			data = (Blob*)node->data;
 
 			// All children was handled 
+#if 0
 			data->barycenter[0] = *(pixel_sum_X + data->id ) / data->area;
 			data->barycenter[1] = *(pixel_sum_Y + data->id ) / data->area;
-			
+#else
+			data->barycenter[0] = round( *(pixel_sum_X + data->id )*1.0 / data->area);
+			data->barycenter[1] = round( *(pixel_sum_Y + data->id )*1.0 / data->area);
+#endif
+
 			if(node != root ){
 				parentdata = (Blob*)node->parent->data;
 				parentdata->area += data->area;

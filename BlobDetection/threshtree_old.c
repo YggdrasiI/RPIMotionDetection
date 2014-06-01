@@ -82,7 +82,8 @@ Tree* find_connection_components_coarse2(
 	unsigned int sh1 = (stepheight-1)*w;
 	unsigned int sh2 = shr*w;
 
-	unsigned int id=-1;//id for next component
+#define DUMMY_ID -1 //id virtual parent of first element (id=0)
+	unsigned int id=-1;//id for next component would be ++id
 	unsigned int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y))
 	unsigned int k; //loop variable
 
@@ -124,8 +125,9 @@ Tree* find_connection_components_coarse2(
 
 	/**** A,A'-CASE *****/
 	//top, left corner of BlobtreeRect get first id.
-	NEW_COMPONENT_OLD(-1);
-	BLOB_INC_COMP_SIZE;
+	NEW_COMPONENT_OLD(DUMMY_ID);
+	BLOB_INC_COMP_SIZE( *iPi );
+	BLOB_INC_BARY( *iPi );  
 	iPi += stepwidth;
 	dPi += stepwidth;
 
@@ -156,7 +158,8 @@ Tree* find_connection_components_coarse2(
 				NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 			}
 		}
-		BLOB_INC_COMP_SIZE;
+		BLOB_INC_COMP_SIZE( *iPi );
+		BLOB_INC_BARY( *iPi );  
 #ifdef PIXEL_POSITION
 		s += stepwidth;
 #endif
@@ -186,7 +189,8 @@ Tree* find_connection_components_coarse2(
 				NEW_COMPONENT_OLD( *(iPi-swr) )
 			}
 		}
-		BLOB_INC_COMP_SIZE;
+		BLOB_INC_COMP_SIZE( *iPi );
+		BLOB_INC_BARY( *iPi );  
 	}
 
 	//move pointer to 'next' row
@@ -227,7 +231,8 @@ Tree* find_connection_components_coarse2(
 			}
 		}
 
-		BLOB_INC_COMP_SIZE;
+		BLOB_INC_COMP_SIZE( *iPi );
+		BLOB_INC_BARY( *iPi );  
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef PIXEL_POSITION
@@ -298,7 +303,8 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 #ifdef PIXEL_POSITION
 			s += stepwidth;
 #endif
@@ -345,7 +351,8 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 
 		}else{
 			//structure: (dPi-stepwidth),(dPi),(dPi+swr)
@@ -408,7 +415,8 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 #ifdef PIXEL_POSITION
 			s+=swr;
 #endif
@@ -451,7 +459,8 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 		}//end of else case of (dR2==dR)
 
 #ifdef PIXEL_POSITION
@@ -495,7 +504,8 @@ Tree* find_connection_components_coarse2(
 			}
 		}
 
-		BLOB_INC_COMP_SIZE;
+		BLOB_INC_COMP_SIZE( *iPi );
+		BLOB_INC_BARY( *iPi );  
 #ifdef PIXEL_POSITION
 		s += stepwidth;
 #endif
@@ -567,7 +577,8 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 #ifdef PIXEL_POSITION
 			s += stepwidth;
 #endif
@@ -613,7 +624,8 @@ Tree* find_connection_components_coarse2(
 					NEW_COMPONENT_OLD( *(iPi-stepwidth) )
 				}
 			}
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 
 		}else{
 			//structure: (dPi-stepwidth),(dPi),(dPi+swr)
@@ -677,7 +689,8 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 #ifdef PIXEL_POSITION
 			s+=swr;
 #endif
@@ -721,7 +734,8 @@ Tree* find_connection_components_coarse2(
 				}
 			}
 
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 		}//end of else case of (dR2==dR)
 
 	} //end of if(dE2==dE)
@@ -902,7 +916,7 @@ Tree* find_connection_components_coarse2(
 	Node *cur  = nodes;
 	Blob *curdata  = blobs;
 
-	curdata->id = 0;
+	curdata->id = -1; /* = MAX_UINT */
 	memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
 	curdata->area = roi.width * roi.height;
 #ifdef SAVE_DEPTH_MAP_VALUE
@@ -938,17 +952,23 @@ Tree* find_connection_components_coarse2(
 #endif
 
 		tmp_id = *(prob_parent+rid); //get id of parent (or child) area.
-		if( tmp_id == -1 ){
+		if( tmp_id == DUMMY_ID ){
 			/* Use root as parent node. */
 			//cur->parent = root;
 			add_child(root, cur );
 		}else{
 			//find real id of parent id.
-			tmp_id2 = *(comp_same+tmp_id);
-			while( tmp_id != tmp_id2 ){
-				tmp_id = tmp_id2;
-				tmp_id2 = *(comp_same+tmp_id);
-			}
+#if 1
+				tmp_id = *(comp_same+tmp_id); 
+#else
+				//this was commented out because comp_same is here a projection.
+				tmp_id2 = *(comp_same+tmp_id); 
+				while( tmp_id != tmp_id2 ){
+					tmp_id = tmp_id2; 
+					tmp_id2 = *(comp_same+tmp_id); 
+				}
+#endif
+
 			/*Now, tmp_id is in real_id array. And real_ids_inv is defined. */
 			//cur->parent = root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id );
 			add_child( root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id ),

@@ -237,7 +237,8 @@ Tree* find_connection_components_subcheck(
 	unsigned int sh1 = (stepheight-1)*w;
 //	unsigned int sh2 = shr*w;
 
-	unsigned int id=-1;//id for next component
+#define DUMMY_ID -1 //id virtual parent of first element (id=0)
+	unsigned int id=-1;//id for next component would be ++id
 	unsigned int a1,a2; // for comparation of g(f(x))=a1,a2=g(f(y))
 	unsigned int k; //loop variable
 
@@ -319,8 +320,9 @@ Tree* find_connection_components_subcheck(
 
 	/**** A,A'-CASE *****/
 	//top, left corner of BlobtreeRect get first id.
-	NEW_COMPONENT(0);
-	BLOB_INC_COMP_SIZE;
+	NEW_COMPONENT(DUMMY_ID);
+	BLOB_INC_COMP_SIZE( *iPi );
+	BLOB_INC_BARY( *iPi );  
 	iPi += stepwidth;
 	dPi += stepwidth;
 
@@ -358,7 +360,8 @@ Tree* find_connection_components_subcheck(
 				*(tri-1)=2;
 			}
 		}
-		BLOB_INC_COMP_SIZE;
+		BLOB_INC_COMP_SIZE( *iPi );
+		BLOB_INC_BARY( *iPi );  
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef PIXEL_POSITION
@@ -435,7 +438,8 @@ Tree* find_connection_components_subcheck(
 			}
 		}
 
-		BLOB_INC_COMP_SIZE;
+		BLOB_INC_COMP_SIZE( *iPi );
+		BLOB_INC_BARY( *iPi );  
 		iPi += stepwidth;
 		dPi += stepwidth;
 #ifdef PIXEL_POSITION
@@ -760,7 +764,8 @@ Tree* find_connection_components_subcheck(
 			}
 
 
-			BLOB_INC_COMP_SIZE;
+			BLOB_INC_COMP_SIZE( *iPi );
+			BLOB_INC_BARY( *iPi );  
 			dPi += stepwidth;
 			iPi += stepwidth;
 #ifdef PIXEL_POSITION
@@ -790,7 +795,8 @@ Tree* find_connection_components_subcheck(
 		*(tri) = 3; //redundant
 
 		/* Pointer is still on currrent element.*/
-		BLOB_INC_COMP_SIZE;
+		BLOB_INC_COMP_SIZE( *iPi );
+		BLOB_INC_BARY( *iPi );  
 		/* Move pointer to 'next' row.*/
 		dPi += r+roi.x+sh1+swr+1;
 		iPi += r+roi.x+sh1+swr+1;
@@ -891,7 +897,7 @@ if( stepwidth*stepheight >1 ){
  * extremal limits in [left|right|bottom]_index(*(real_ids+X)).
  * */
 unsigned int nids = id+1; //number of ids
-unsigned int tmp_id,tmp_id2, real_ids_size=0,l;
+unsigned int tmp_id,/*tmp_id2,*/ real_ids_size=0,l;
 	free(workspace->real_ids);
 	workspace->real_ids = calloc( nids, sizeof(int) ); //store join of ids.
 	unsigned int* const real_ids = workspace->real_ids;
@@ -952,10 +958,25 @@ unsigned int tmp_id,tmp_id2, real_ids_size=0,l;
 #endif
 
 		}else{
+
+#ifdef BLOB_COUNT_PIXEL
+			/* Elements without nodes on the coarse grid has area-value 0 (if the 
+			 * area value was evaluated). This elements are problematic because
+			 * this provoke the division by 0 due the barycenter evaluation.
+			 * Thus, it's probably the best decision
+			 * to ignore these nodes. */
+			if( *(comp_size+tmp_id ) ){
+				*(real_ids+real_ids_size) = tmp_id;
+				*(real_ids_inv+tmp_id) = real_ids_size;//inverse function
+				real_ids_size++;
+			}
+#else
 			//Its a component id of a new area
 			*(real_ids+real_ids_size) = tmp_id;
 			*(real_ids_inv+tmp_id) = real_ids_size;//inverse function
 			real_ids_size++;
+#endif
+
 		}
 
 	}
@@ -1044,7 +1065,7 @@ printf("\n");
 	Node *cur  = nodes;
 	Blob *curdata  = blobs;
 
-	curdata->id = -1; //attention, unsigned variable
+	curdata->id = -1; /* = MAX_UINT */
 	memcpy( &curdata->roi, &roi, sizeof(BlobtreeRect) );
 	curdata->area = roi.width * roi.height;
 #ifdef SAVE_DEPTH_MAP_VALUE
@@ -1078,19 +1099,24 @@ printf("\n");
 #endif
 
 		tmp_id = *(prob_parent+*(real_ids+l)); //get id of parent (or child) area.
-		if( tmp_id == -1 ){
+		if( tmp_id == DUMMY_ID ){
 			/* Use root as parent node. */
 			//cur->parent = root;
 			add_child(root, cur );
 		}else{
 			//find real id of parent id.
-			tmp_id2 = *(comp_same+tmp_id);
-			while( tmp_id != tmp_id2 ){
-				tmp_id = tmp_id2;
-				tmp_id2 = *(comp_same+tmp_id);
-			}
+#if 1
+				tmp_id = *(comp_same+tmp_id); 
+#else
+				//this was commented out because comp_same is here a projection.
+				tmp_id2 = *(comp_same+tmp_id); 
+				while( tmp_id != tmp_id2 ){
+					tmp_id = tmp_id2; 
+					tmp_id2 = *(comp_same+tmp_id); 
+				}
+#endif
+
 			/*Now, tmp_id is in real_id array. And real_ids_inv is defined. */
-			//cur->parent = root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id );
 			add_child( root + 1/*root pos shift*/ + *(real_ids_inv+tmp_id ),
 					cur );
 		}

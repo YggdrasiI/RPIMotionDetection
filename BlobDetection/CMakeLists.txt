@@ -14,6 +14,9 @@ add_executable( example2 example2.c )
 target_link_libraries(example2 depthtree ) 
 
 
+target_link_libraries(threshtree m)
+target_link_libraries(depthtree m)
+
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -fpic -O3" )
 set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} -Wall -g -O0 -fmax-errors=3 -w" )
 

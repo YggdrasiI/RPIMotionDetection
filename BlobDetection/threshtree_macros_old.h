@@ -5,13 +5,9 @@
 /* *(anchors+id) = dPi-dS; */\
 *(prob_parent+id) = PARENTID; \
 *(comp_same+id) = id; \
-*(comp_size+id) = 0; /*Increase now every pixel. => Can't start with 1 anymore. Overhead of |ids| operations */ \
-BD( \
-*(left_index+id) = s; \
-*(right_index+id) = s; \
-*(top_index+id) = z; \
-*(bottom_index+id) = z; \
-	) \
+*(comp_size+id) = 1; \
+BLOB_INIT_INDEX_ARRAYS; \
+BLOB_INIT_BARY; \
 if( id>=max_comp ){ \
 	max_comp = (unsigned int) ( (float)w*h*max_comp/(dPi-data) ); \
 	VPRINTF("Extend max_comp=%i\n", max_comp); \

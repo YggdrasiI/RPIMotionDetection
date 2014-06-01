@@ -41,13 +41,15 @@
 #define COUNT(X) X;
 #define BLOB_REALLOC_COMP_SIZE comp_size = realloc(comp_size, max_comp*sizeof(unsigned int) );
 #define BLOB_INIT_COMP_SIZE *(comp_size+id) = 0; /*Increase now every pixel. => Can't start with 1 anymore. Overhead of |ids| operations */
-#define BLOB_INC_COMP_SIZE *(comp_size+*(iPi)) += 1;
+//#define BLOB_INC_COMP_SIZE *(comp_size+*(iPi)) += 1;
+#define BLOB_INC_COMP_SIZE(ID) *(comp_size+ID) += 1; 
 #else
 /* empty definitions */
 #define COUNT(X) ;
 #define BLOB_REALLOC_COMP_SIZE
 #define BLOB_INIT_COMP_SIZE
-#define BLOB_INC_COMP_SIZE
+//#define BLOB_INC_COMP_SIZE
+#define BLOB_INC_COMP_SIZE(ID)
 #endif
 
 #ifdef PIXEL_POSITION
@@ -115,6 +117,7 @@ unsigned int ss=(iPi-ids)%roi.width;if( ss!=s)printf("Spaltenproblem: %i!=%i\n",
 *(comp_same+id) = id; \
 BLOB_INIT_COMP_SIZE; \
 BLOB_INIT_INDEX_ARRAYS; \
+BLOB_INIT_BARY; \
 if( id>=max_comp ){ \
 	max_comp = (unsigned int) ( (float)w*h*max_comp/(dPi-data) ); \
 	VPRINTF("Extend max_comp=%i\n", max_comp); \
