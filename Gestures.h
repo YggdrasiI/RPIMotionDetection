@@ -127,11 +127,10 @@ static void initStaticGestureVariables(){
 	//gsl_vector_const_view _grid = gsl_vector_const_subvector (bw->knots, K-1, NBREAK);
 	//gsl_blas_dcopy(&_grid.vector,FullGrid);
 
-	for ( i = NCOEFFS_MAX - NCOEFFS_MAX; i > 0 ;   ){
-		--i;
+	for ( i=0, ncoeffs = NCOEFFS_MIN; ncoeffs < NCOEFFS_MAX; ++ncoeffs, ++i ){
 		for ( j=0; j<DIM; ++j ){
-			Global_c[i][j] = gsl_vector_alloc(m_ncoeffs);
-			Global_cov[i][j] = gsl_matrix_alloc(m_ncoeffs, m_ncoeffs);
+			Global_c[i][j] = gsl_vector_alloc(ncoeffs);
+			Global_cov[i][j] = gsl_matrix_alloc(ncoeffs, ncoeffs);
 		}
 	}
 
@@ -153,7 +152,8 @@ static void uninitStaticGestureVariables(){
 	gsl_multifit_linear_realloc(mw, N, NCOEFFS_MAX-1);
 	gsl_multifit_linear_free(mw); mw = NULL;
 	//gsl_multifit_robust_free(rw); rw = NULL;
-	
+
+	size_t i,j;
 	for ( i = NCOEFFS_MAX - NCOEFFS_MAX; i > 0 ;   ){
 		--i;
 		for ( j=0; j<DIM; ++j ){
@@ -186,7 +186,7 @@ class Gesture{
 		void evalSpline();
 
 		//for debugging...
-		void plotSpline(double *outY, double *outY, int *outLen );
+		void plotSpline(double *outX, double *outY, size_t *outLen );
 
 };
 

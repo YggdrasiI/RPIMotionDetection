@@ -265,7 +265,7 @@ int detection_loop(std::string filename ){
 	/* Textual output of whole tree of blobs. */
 	//print_tree(frameblobs->tree->root,0);
 
-#if 1
+#if 0
 	/* Gesture analyser for tracking output */
 	blobCache.clear();
 	tracker.getFilteredBlobs(TRACK_UP, blobCache);
@@ -273,9 +273,15 @@ int detection_loop(std::string filename ){
 	std::vector<cBlob>::iterator it = blobCache.begin();
 	const std::vector<cBlob>::iterator itEnd = blobCache.end();
 	while( it != itEnd ){
-		printf("Create gesture object, %i\n", itEnd-it );
+		printf("Create gesture object, %u\n", itEnd-it );
 		Gesture foo( (*it) );
 		foo.evalSpline();
+
+		double *x, *y; 
+		size_t xy_len;
+		foo.plotSpline(x,y,&xy_len);
+		delete x; delete y;
+
 		++it;
 	}
 #endif

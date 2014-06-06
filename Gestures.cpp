@@ -81,7 +81,7 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 				++knot;
 
 				if( globKnot >= N ){
-					fprintf(stderr,"%s:Excess maximal duration for gestures.\n",__FILE__);
+					fprintf(stderr,"%s:Excess max_jmal duration for gestures.\n",__FILE__);
 					/* The tracked data is to far in the past. Cut of at this position and short
 					 * the dimension of the basis matrix.
 					 * Note: The selection of m_ncoeffs could be to high for the new m_n.
@@ -149,29 +149,32 @@ void Gesture::evalSpline(){
 
 }
 
-void Gesture::plotSpline(double *outY, double *outY, int *outLen ){
-		double ti,xi, yi, yerr;
-		size_t j;
-		
-		outX = new double[NUM_EVALUATION_POINTS]; 
-		outY = new double[NUM_EVALUATION_POINTS]; 
-		*outLen = NUM_EVALUATION_POINTS;
+void Gesture::plotSpline(double *outX, double *outY, size_t *outLen ){
+	size_t j;
 
-		const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
-		double t_step = 1/(NUM_EVALUATION_POINTS-1);
-		double t_pos = 0.0;
+	outX = new double[NUM_EVALUATION_POINTS]; 
+	outY = new double[NUM_EVALUATION_POINTS]; 
+	*outLen = NUM_EVALUATION_POINTS;
 
-		for ( j=0; j<NUM_EVALUATION_POINTS; ++j, t_pos+=t_step )
-		{
+	const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
+	double t_step = 1/(NUM_EVALUATION_POINTS-1);
+	double t_pos = 0.0;
 
-			//Nun berechne ich die Basiswerte ja doch in jedem Objekt...
-			gsl_bspline_eval(t_pos, B, bw[basisIndex]);
-			//gsl_multifit_linear_est(B, c1, cov, &xi, &yerr);
-			//gsl_multifit_linear_est(B, c2, cov, &yi, &yerr);
-			gsl_multifit_robust_est(B, c1, cov, &xi, &yerr);
-			gsl_multifit_robust_est(B, c2, cov, &yi, &yerr);
-			in[j].x = xi;
-			in[j].y = yi;
-			//printf("%f, %f, %f\n",ti,xi,yi);
-		}
+	for ( j=0; j<NUM_EVALUATION_POINTS; ++j, t_pos+=t_step )
+	{
+		double x_j,y_j, yerr;
+
+		//Nun berechne ich die Basiswerte ja doch in jedem Objekt...
+		gsl_vector *tmpB = gsl_vector_alloc(m_ncoeffs);
+		gsl_bspline_eval(t_pos, tmpB, bw[basisIndex]);
+		gsl_multifit_linear_est(tmpB, Global_c[basisIndex][0], Global_cov[basisIndex][0], &x_j, &yerr);
+		gsl_multifit_linear_est(tmpB, Global_c[basisIndex][1], Global_cov[basisIndex][1], &x_j, &yerr);
+		//gsl_multifit_robust_est(tmpB, Global_c[basisIndex][0], Global_cov[basisIndex][0], &x_j, &yerr);
+		//gsl_multifit_robust_est(tmpB, Global_c[basisIndex][1], Global_cov[basisIndex][1], &x_j, &yerr);
+		outX[j] = x_j;
+		outY[j] = y_j;
+		printf("%f, %f, %f\n",t_pos,x_j,y_j);
+
+		gsl_vector_free(tmpB);
 	}
+}
