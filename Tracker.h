@@ -38,6 +38,7 @@ enum Trackfilter{
 
 class Tracker {
 	protected:
+		int m_frameId; //increased for each frame
 
 		int m_max_radius;
 		int m_max_missing_duration;

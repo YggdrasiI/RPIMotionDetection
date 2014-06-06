@@ -40,11 +40,16 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x" )
 # as examples.
 if(WITH_OCV)
 
-add_executable( DisplayBlobs DisplayBlobs.cpp Tracker.cpp Tracker2.cpp )
+add_executable( DisplayBlobs 
+	DisplayBlobs.cpp
+	Tracker.cpp Tracker2.cpp
+	Gestures.cpp gsl_helper.c
+	)
 target_link_libraries( DisplayBlobs
 	${THRESHLIB}
 	${DEPTHLIB}
 	${OpenCV_LIBS} 
+	gsl gslcblas m
 	)
 
 set_target_properties( DisplayBlobs PROPERTIES

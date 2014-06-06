@@ -21,6 +21,7 @@ void Tracker2::trackBlobs(
 		Blobtree * frameblobs,
 		bool history )
 {
+	++m_frameId;
 
 	int max_radius_2 = m_max_radius * m_max_radius;
 	int x, y, min_x, min_y, max_x, max_y;

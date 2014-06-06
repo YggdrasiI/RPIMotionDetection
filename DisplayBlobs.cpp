@@ -8,11 +8,13 @@
 #include "threshtree.h"
 #include "depthtree.h"
 #include "Tracker2.h"
+#include "Gestures.h"
 
 #include "Fps.h"
 
 using namespace cv;
 
+static std::vector<cBlob> blobCache;
 
 /* Define own filters. Node will pass filter
  * if 0 will be returned. For more info
@@ -263,6 +265,21 @@ int detection_loop(std::string filename ){
 	/* Textual output of whole tree of blobs. */
 	//print_tree(frameblobs->tree->root,0);
 
+#if 1
+	/* Gesture analyser for tracking output */
+	blobCache.clear();
+	tracker.getFilteredBlobs(TRACK_UP, blobCache);
+
+	std::vector<cBlob>::iterator it = blobCache.begin();
+	const std::vector<cBlob>::iterator itEnd = blobCache.end();
+	while( it != itEnd ){
+		printf("Create gesture object, %i\n", itEnd-it );
+		Gesture foo( (*it) );
+		foo.evalSpline();
+		++it;
+	}
+#endif
+
 	return 0;
 }
 
@@ -300,9 +317,9 @@ int fpsTest(std::string filename ){
 	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
 	Fps fps;
-	unsigned int N = 1;
-	while( ++N<100000 ){
-		//printf("N = %i\n", N);
+	unsigned int n = 1;
+	while( ++n<100000 ){
+		//printf("n = %i\n", n);
 		if( algorithm == 0 ){
 			threshtree_find_blobs(frameblobs, ptr, W, H, input_roi, thresh, tworkspace);
 		}else{
@@ -420,7 +437,6 @@ static void redraw(){
 
 	if( display_tracker ){
 		if( display_bounding_boxes ){
-			static std::vector<cBlob> blobCache;
 			blobCache.clear();
 			tracker.getFilteredBlobs(TRACK_ALL_ACTIVE/*|TRACK_PENDING*/, blobCache);
 			tracker.drawBlobs( color, true, &blobCache );

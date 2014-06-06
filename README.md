@@ -46,6 +46,15 @@ Notes:
   and at least two blobs was detected.
 
 
+Dependencies:
+==========
+Required:
+	sudo apt-get install libgsl0-dev
+
+Optional:
+	sudo apt-get install libopencv-dev libopencv-highgui-dev
+
+
 Compiling:
 ==========
 
