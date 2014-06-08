@@ -18,6 +18,10 @@
 class GfxTexture; 
 #endif
 
+#ifdef WITH_GSL
+#include "Gestures.h"
+#endif
+
 #include "Blob.h"
 
 #include "threshtree.h"
@@ -97,9 +101,11 @@ class Tracker {
 
 #ifdef WITH_HISTORY
 		void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
+
+#ifdef WITH_GSL
 		void drawGestureSpline( int screenWidth, int screenHeight, Gesture *pGesture, GfxTexture *target);
 #endif
-
+#endif
 #endif
 };
 

@@ -291,7 +291,7 @@ void Tracker::drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTe
 
 }
 
-
+#ifdef WITH_GSL
 /* Print spline data (Debugging) */
 void Tracker::drawGestureSpline( int screenWidth, int screenHeight, Gesture *pGesture, GfxTexture *target){
 	if( pGesture == NULL ) return;
@@ -304,12 +304,12 @@ void Tracker::drawGestureSpline( int screenWidth, int screenHeight, Gesture *pGe
 
 	double *x = NULL , *y = NULL; 
 	size_t xy_len = 0;
-	gesture->plotSpline(&x,&y,&xy_len);
+	pGesture->evalSpline(&x,&y,&xy_len);
 	if( xy_len > 0 ){
 		float x0,y0;
 		for( size_t i=0; i<xy_len; ++i){
 			x0 = 1 - x[i]*scaleW;
-			y0 = blob.y[i]*scaleH - 1;
+			y0 = y[i]*scaleH - 1;
 			*p++ = x0; 	*p++ = y0; 	
 		}
 
@@ -318,6 +318,8 @@ void Tracker::drawGestureSpline( int screenWidth, int screenHeight, Gesture *pGe
 	delete x; delete y;
 
 }
+#endif
+
 #endif
 
 

@@ -1,6 +1,8 @@
 # modified raspivid
 
 add_definitions(-DWITH_OPENGL)
+add_definitions(-DWITH_GSL)
+
 SET(COMPILE_DEFINITIONS -Werror)
 
 SET(RELDIR "../raspicam")
@@ -58,6 +60,7 @@ set (MMAL_LIBS mmal_core mmal_util mmal_vc_client)
 
 target_link_libraries(gestures   ${MMAL_LIBS} vcos bcm_host GLESv2 EGL m
 	${DEPTHLIB}
+	gsl gslcblas 
 	)
 
 # Create link to simplify paths
