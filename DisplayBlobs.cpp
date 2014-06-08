@@ -8,7 +8,11 @@
 #include "threshtree.h"
 #include "depthtree.h"
 #include "Tracker2.h"
+
+#define WITH_GSL
+#ifdef WITH_GSL
 #include "Gestures.h"
+#endif
 
 #include "Fps.h"
 
@@ -104,6 +108,10 @@ static Blobtree *frameblobs = NULL;
 
 static Tracker2 tracker;
 
+#ifdef WITH_GSL
+static GestureStore gestureStore;
+#endif
+
 /* Init id array:
  * If this flag is set the ids array in the workspace
  * will be filled manually with 0. This allows a better
@@ -157,6 +165,34 @@ void update_filter( ){
 
 
 }
+
+void drawGestureSpline( Gesture *gesture, cv::Mat out){
+
+		double *x = NULL , *y = NULL; 
+		size_t xy_len = 0;
+		gesture->evalSpline(&x,&y,&xy_len);
+		if( xy_len > 0 ){
+				cv::Point p1((int)x[0],(int)y[0]);
+				cv::Point p2;
+				for( size_t i=1; i<xy_len; ++i){
+					p2.x = x[i]; p2.y = y[i];
+					cv::Scalar color(255,200,200);
+					cv::line(out,p1,p2,color,2);
+					p1 = p2;
+				}
+		}
+		//delete x; delete y;//points to member variables, now. -> no explicit delete
+
+		//draw orientation triangle
+		cv::Point t0(gesture->m_orientationTriangle[0].x,gesture->m_orientationTriangle[0].y);
+		cv::Point t1(gesture->m_orientationTriangle[1].x,gesture->m_orientationTriangle[1].y);
+		cv::Point t2(gesture->m_orientationTriangle[2].x,gesture->m_orientationTriangle[2].y);
+		cv::Scalar triColor(255,50,0);
+		cv::line(out,t0,t1,triColor,2);
+		cv::line(out,t1,t2,triColor,2);
+		cv::line(out,t2,t0,triColor,2);
+}
+
 
 
 int detection_loop(std::string filename ){
@@ -265,24 +301,30 @@ int detection_loop(std::string filename ){
 	/* Textual output of whole tree of blobs. */
 	//print_tree(frameblobs->tree->root,0);
 
-#if 0
+#ifdef WITH_GSL
 	/* Gesture analyser for tracking output */
 	blobCache.clear();
 	tracker.getFilteredBlobs(TRACK_UP, blobCache);
 
 	std::vector<cBlob>::iterator it = blobCache.begin();
 	const std::vector<cBlob>::iterator itEnd = blobCache.end();
-	while( it != itEnd ){
+	for( ; it != itEnd ; ++it ){
+		if( (*it).duration < 20 ) continue; 
 		printf("Create gesture object, %u\n", itEnd-it );
-		Gesture foo( (*it) );
-		foo.evalSpline();
+		Gesture *gest = new Gesture( (*it) );
+		//gest->evalSplineCoefficients();
 
-		double *x, *y; 
-		size_t xy_len;
-		foo.plotSpline(x,y,&xy_len);
-		delete x; delete y;
-
-		++it;
+		//drawGestureSpline(&gest, color);
+		//gestureStore.addPattern(gest);
+		
+		GesturePatternCompareResult res;
+		gestureStore.compateWithPatterns(gest, res);
+		if( res.minDist < 0.01 ){
+			printf("Gesture similar to %s\n", res.minGest->getGestureName() );
+			gestureStore.addPattern(gest);
+		}else{
+			delete gest;
+		}
 	}
 #endif
 
@@ -508,6 +550,15 @@ static void redraw(){
 
 	}
 
+#ifdef WITH_GSL
+	std::vector<Gesture*> gestures = gestureStore.getPatterns();
+	std::vector<Gesture*>::iterator it = gestures.begin();
+	const std::vector<Gesture*>::iterator itEnd = gestures.end();
+	printf("Number of stored patterns:%u\n", itEnd-it );
+	for( ; it != itEnd ; ++it ){
+		drawGestureSpline( (*it) , color);
+	}
+#endif
 
 	cv::Mat out;
 	cv::resize(color, out, color.size()*output_scalefactor, 0, 0, INTER_NEAREST);
@@ -671,6 +722,8 @@ int main(int argc, char** argv )
 	createButton("Show Tracker",CB_Button1,&display_tracker, CV_CHECKBOX, display_tracker );
 	createButton("Invert depth map",CB_Button1,&invert_depth_map, CV_CHECKBOX, invert_depth_map );
 #endif
+
+	addGestureTestPattern(gestureStore);
 
 	//Loop over list [Images] or [Image_Path, Images]
 	while( loop < loopMax ){

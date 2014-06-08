@@ -13,6 +13,17 @@ extern "C"
  */
 void gsl_multifit_linear_realloc (gsl_multifit_linear_workspace *w, size_t n, size_t p);
 
+/*assume stride=1*/
+inline double gsl_vector_get_fast( gsl_vector *v, const size_t pos){
+	return gsl_vector_get(v,pos);
+	//return v->data+pos;
+}
+inline void gsl_vector_set_fast (gsl_vector * v, const size_t pos, double x){
+	gsl_vector_set(v,pos,x);
+	//*(v->data+pos) = x;
+}
+
+
 #ifdef __cplusplus
 }
 #endif

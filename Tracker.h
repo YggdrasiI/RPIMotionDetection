@@ -31,7 +31,7 @@ enum Trackfilter{
 	TRACK_MOVE = BLOB_MOVE,
 	TRACK_PENDING = BLOB_PENDING,
 	TRACK_UP = BLOB_UP,
-	TRACK_ALL = BLOB_DOWN|BLOB_MOVE|BLOB_PENDING|BLOB_UP,
+	TRACK_ALL = 64,//BLOB_DOWN|BLOB_MOVE|BLOB_PENDING|BLOB_UP,
 	TRACK_ALL_ACTIVE = 16,
 	LIMIT_ON_N_OLDEST = 32 ,
 };
@@ -97,6 +97,7 @@ class Tracker {
 
 #ifdef WITH_HISTORY
 		void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
+		void drawGestureSpline( int screenWidth, int screenHeight, Gesture *pGesture, GfxTexture *target);
 #endif
 
 #endif

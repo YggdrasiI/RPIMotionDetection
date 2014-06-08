@@ -33,6 +33,8 @@
 #include <cmath>
 #include <vector>
 #include <deque>
+#include <cstring>
+//#include <string>
 
 #include <gsl/gsl_blas.h>
 #include <gsl/gsl_bspline.h>
@@ -48,7 +50,9 @@
 
 /* 2 dimensional float value */
 struct fpoint2 {
-	float val[2];
+	//float val[2];
+	float x;
+	float y;
 };
 
 /* The frame history of a blob 
@@ -68,10 +72,10 @@ struct fpoint2 {
  */
 #define NUM_EVALUATION_POINTS 50
 
-#define K					4
-#define N        100
+#define SPLINE_DEG					4
+#define MAX_DURATION_STEPS        100
 
-/* Preevaluate the Spline values on N positions for splines with
+/* Preevaluate the Spline values on MAX_DURATION_STEPS positions for splines with
  * nc coefficients with NCOEFFS_MIN <= nc < NCOEFFS_MAX
  * On runtime, the selected value for nc depends on the NCOEFFS_FUNC.
  * It's important for the smoothing to avoid high nc values
@@ -80,12 +84,25 @@ struct fpoint2 {
 #define NCOEFFS_MIN 4
 #define NCOEFFS_MAX 9
 #define NCOEFFS_FUNC(n) (std::max(NCOEFFS_MIN,std::min((int)(n/3),NCOEFFS_MAX-1)))
-//#define NBREAK   (NCOEFFS + 2 - K) //Should be at least 2
+//#define NBREAK   (NCOEFFS + 2 - SPLINE_DEG) //Should be at least 2
 
-/* Uniform grid on [0,1] with MAX_DURATION_STEPS + 2 - K.
+/* Uniform grid on [0,1] with MAX_DURATION_STEPS + 2 - SPLINE_DEG.
  * The border values will be doubled (0,0,…,1,1).
  */
 //static gsl_vector *FullGrid[NCOEFFS_MAX-NCOEFFS_MIN];
+
+/* Flag to indicate if the spline estimation should be saved in 
+ * the gesture objects or a global variable */
+#define STORE_IN_MEMBER_VARIABLE
+
+/* Number of nodes which are used for the mean value of start and
+ * end of a gesture. */
+#define NUM_END_NODES 3
+
+/* Distance between two spline evaluation points which will be
+ * used for the generation of the gesture invariance function.
+ */
+#define COMPARE_DIST (NUM_EVALUATION_POINTS/2)
 
 /* Basisfunction on all knots of the FullGrid
  */
@@ -97,24 +114,26 @@ static gsl_multifit_linear_workspace *mw = NULL;
 //static gsl_multifit_robust_workspace *rw = NULL;//more stable agains outliners
 static gsl_bspline_workspace *bw[NCOEFFS_MAX-NCOEFFS_MIN];
 
+static size_t gestureIdCounter = 0;
+
 static void initStaticGestureVariables(){
 	size_t i,j, ncoeffs;
 
-	mw = gsl_multifit_linear_alloc(N, NCOEFFS_MAX-1);
-	//rw = gsl_multifit_robust_alloc(gsl_multifit_robust_default, N, NCOEFFS);
+	mw = gsl_multifit_linear_alloc(MAX_DURATION_STEPS, NCOEFFS_MAX-1);
+	//rw = gsl_multifit_robust_alloc(gsl_multifit_robust_default, MAX_DURATION_STEPS, NCOEFFS);
 
-	/* Evaluate the basisvalues for N points in [0,1] and different
+	/* Evaluate the basisvalues for MAX_DURATION_STEPS points in [0,1] and different
 	 * values of ncoeffs. */
 	for ( i=0, ncoeffs = NCOEFFS_MIN; ncoeffs < NCOEFFS_MAX; ++ncoeffs, ++i ){
-		size_t nbreak = ncoeffs + 2 - K;
-		bw[i] = gsl_bspline_alloc(K, nbreak);
+		size_t nbreak = ncoeffs + 2 - SPLINE_DEG;
+		bw[i] = gsl_bspline_alloc(SPLINE_DEG, nbreak);
 		gsl_bspline_knots_uniform(0.0, 1.0, bw[i]);
 
-		FullBasis[i] = gsl_matrix_alloc(N, ncoeffs);
+		FullBasis[i] = gsl_matrix_alloc(MAX_DURATION_STEPS, ncoeffs);
 		gsl_vector *tmpB = gsl_vector_alloc(ncoeffs);
-		double step = 1.0/(N-1);
+		double step = 1.0/(MAX_DURATION_STEPS-1);
 		double t = 0;
-		for (j = 0; j < N; ++j, t+=step )
+		for (j = 0; j < MAX_DURATION_STEPS; ++j, t+=step )
 		{
 			gsl_bspline_eval(t, tmpB, bw[i]);
 			gsl_matrix_set_row( FullBasis[i], j, tmpB);
@@ -123,8 +142,8 @@ static void initStaticGestureVariables(){
 	}
 
 	//Extract grid. (The bspline knots array is slightly bigger at both ends...)
-	//FullGrid = gsl_vector_alloc(NBREAK);//NBREAK + 2*(K-1)
-	//gsl_vector_const_view _grid = gsl_vector_const_subvector (bw->knots, K-1, NBREAK);
+	//FullGrid = gsl_vector_alloc(NBREAK);//NBREAK + 2*(SPLINE_DEG-1)
+	//gsl_vector_const_view _grid = gsl_vector_const_subvector (bw->knots, SPLINE_DEG-1, NBREAK);
 	//gsl_blas_dcopy(&_grid.vector,FullGrid);
 
 	for ( i=0, ncoeffs = NCOEFFS_MIN; ncoeffs < NCOEFFS_MAX; ++ncoeffs, ++i ){
@@ -149,7 +168,7 @@ static void uninitStaticGestureVariables(){
 
 	/* reset internal mw vector/matrix values to original values
 	 * (just to be on the save side) */
-	gsl_multifit_linear_realloc(mw, N, NCOEFFS_MAX-1);
+	gsl_multifit_linear_realloc(mw, MAX_DURATION_STEPS, NCOEFFS_MAX-1);
 	gsl_multifit_linear_free(mw); mw = NULL;
 	//gsl_multifit_robust_free(rw); rw = NULL;
 
@@ -171,30 +190,143 @@ class Gesture{
 		size_t m_n;
 		size_t m_ncoeffs;
 		size_t m_nbreak;
+		double m_time_max;
 		// Subset of Grid and FullBasis.
 		//gsl_vector *m_grid;
 		gsl_matrix *m_ReducedBasis;
+		gsl_vector *m_debugDurationGrid;
 
-		//Spline data, now globaly to omit some shorttime allocations
-		//gsl_vector *m_c[DIM];
-		//gsl_matrix *m_cov[DIM];
+		char *m_gestureName;
+		size_t m_gestureId;
+
+#ifdef STORE_IN_MEMBER_VARIABLE
+		gsl_vector *m_c[DIM];
+		gsl_matrix *m_cov[DIM];
+#endif
+
+
+		/* Stores the result of evalSpline */
+		gsl_vector *m_splineCurve[DIM];
 
 		//gsl_bspline_workspace *m_bw;
+	
+		/* Derive spline coefficients and all metadata.
+		 * Called in all Constructors. */
+		void construct();
+
 	public:
+		fpoint2 m_orientationTriangle[3];
+
+		/* Stores result of evalDistances() */
+		gsl_vector *m_curvePointDistances;
+
+
 		Gesture( cBlob &blob);
+		Gesture(int *inTimestamp, double *inX, double *inY, size_t xy_Len, size_t stride );
+		Gesture(int *inTimestamp, double *inXY, size_t xy_Len );
 		~Gesture();
-		void evalSpline();
+
+		size_t getNumberOfRawSupportNodes() const;
+
+		void evalSplineCoefficients();
+		void evalOrientation();
+		void evalDistances();
+		bool isClosedCurve(/* float *outAbs, float *outRel*/);
 
 		//for debugging...
-		void plotSpline(double *outX, double *outY, size_t *outLen );
+		void evalSpline(double **outX, double **outY, size_t *outLen );
+
+		void setGestureName(const char* name);
+		const char* getGestureName() const;
 
 };
 
+/* Store the result for gesture analyse. */
+struct GesturePatternCompareResult{
+	float minDist; 
+	Gesture *minGest; //Gesture of gestureStore with minimal 'distance'.
+	float avgDist; // Average distance to (currently all) gestures of the gesture store.
+};
 
 class GestureStore{
+	private:
+		/* Use pointers because Gesture objects contains many memory allocations (gsv_vector_*, etc.) */
+			std::vector<Gesture*> gestures;
 
+	public:
+			GestureStore();
+			~GestureStore();
+			/* All patters will be deleted in the destrutor. */
+			void addPattern(Gesture *pGesture);
+			std::vector<Gesture*> & getPatterns();
+
+			void compateWithPatterns(Gesture *pGesture, GesturePatternCompareResult &gpcr );
 
 };
 
+
+/* Create test gesture by function and store it. */
+static void addGestureTestPattern(GestureStore &gestureStore){
+	size_t n = 30;
+	double xy[2*n];
+	int time[n];
+	double *pos=&xy[0];
+	size_t i=0; 
+
+	//L-shape
+	for( ; i<20; ++i){
+		*pos++ = 100; 
+		*pos++ = 100 + i*5;
+		time[i] = i;
+	}
+	for( ; i<30; ++i){
+		*pos++ = 100 + (i-20)*5; 
+		*pos++ = 100 + 20*5;
+		time[i] = i;
+	}
+	Gesture *gest1 = new Gesture( time, xy, n); 
+	gest1->setGestureName("L-shape");
+	gestureStore.addPattern(gest1);
+
+
+	//Circle
+	pos=&xy[0];
+	for(i=0 ; i<30; ++i){
+		*pos++ = 300 + 20*cos(2*3.1415*i/30);
+		*pos++ = 150 + 20*sin(2*3.1415*i/30);
+	}
+	Gesture *gest2 = new Gesture( time, xy, n); 
+	gest2->setGestureName("Circle");
+	gestureStore.addPattern(gest2);
+
+	//Line
+	pos=&xy[0];
+	for(i=0 ; i<30; ++i){
+		*pos++ = 200 - 6*i - (i*333)%7;
+		*pos++ = 100 + 6*i + (i*111)%7;
+	}
+	Gesture *gest3 = new Gesture( time, xy, n); 
+	gest3->setGestureName("Line");
+	gestureStore.addPattern(gest3);
+
+	//U-Shape
+	pos=&xy[0];
+	for(i=0 ; i<10; ++i){
+		*pos++ = 300; 
+		*pos++ = 100 + i*10;
+	}
+	for( ; i<20; ++i){
+		*pos++ = 300 + (i-10)*5; 
+		*pos++ = 200;
+	}
+	for( ; i<30; ++i){
+		*pos++ = 350; 
+		*pos++ = 200 - (i-20)*10;
+	}
+	Gesture *gest4 = new Gesture( time, xy, n); 
+	gest4->setGestureName("U-Shape");
+	gestureStore.addPattern(gest4);
+
+}
 
 #endif

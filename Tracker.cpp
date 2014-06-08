@@ -150,8 +150,7 @@ void Tracker::drawBlobs(cv::Mat &out, bool drawHistoryLines, std::vector<cBlob> 
 					//cv::Scalar color(200+10*time,200+10*time,200+10*time);
 					cv::Scalar color(30,30,200+10*time);
 					cv::line(out,p1,p2,color,2);
-
-					printf("Draw line from (%i,%i) to (%i,%i)\n", p1.x,p1.y, p2.x,p2.y);
+					//printf("Draw line from (%i,%i) to (%i,%i)\n", p1.x,p1.y, p2.x,p2.y);
 					p1 = p2;
 					--time;
 				}
@@ -289,6 +288,34 @@ void Tracker::drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTe
 	}
 		   
 	DrawColouredLines(&points[0], m_phistory_line_colors /*&colors[0]*/, pointIndex, target);
+
+}
+
+
+/* Print spline data (Debugging) */
+void Tracker::drawGestureSpline( int screenWidth, int screenHeight, Gesture *pGesture, GfxTexture *target){
+	if( pGesture == NULL ) return;
+
+	unsigned int numPoints = NUM_EVALUATION_POINTS; 
+	float scaleW = 2.0/screenWidth;
+	float scaleH = 2.0/screenHeight;
+	GLfloat points[numPoints*2];
+	GLfloat *p = &points[0];
+
+	double *x = NULL , *y = NULL; 
+	size_t xy_len = 0;
+	gesture->plotSpline(&x,&y,&xy_len);
+	if( xy_len > 0 ){
+		float x0,y0;
+		for( size_t i=0; i<xy_len; ++i){
+			x0 = 1 - x[i]*scaleW;
+			y0 = blob.y[i]*scaleH - 1;
+			*p++ = x0; 	*p++ = y0; 	
+		}
+
+		DrawColouredLines(&points[0], m_phistory_line_colors /*&colors[0]*/, (int) xy_len, target);
+	}
+	delete x; delete y;
 
 }
 #endif
