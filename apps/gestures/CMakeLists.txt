@@ -7,10 +7,6 @@ SET(COMPILE_DEFINITIONS -Werror)
 
 SET(RELDIR "../raspicam")
 
-#(we dont need opencv in this app)
-#target_link_libraries( gestures ${OpenCV_LIBS} )
-remove_definitions(-DWITH_OPENCV)
-
 include_directories(/opt/vc/include)
 include_directories(/opt/vc/include/interface/vcos)
 include_directories(/opt/vc/include/interface/vcos/pthreads)
@@ -47,6 +43,7 @@ set (COMMON_SOURCES
 	${RELDIR}/DrawingFunctions.cpp
 	${RELDIR}/GfxProgram.cpp
 	../../Tracker2.cpp ../../Tracker.cpp 
+	../../Gestures.cpp ../../gsl_helper.c
 	)
 
  add_executable(gestures
@@ -62,6 +59,8 @@ target_link_libraries(gestures   ${MMAL_LIBS} vcos bcm_host GLESv2 EGL m
 	${DEPTHLIB}
 	gsl gslcblas 
 	)
+
+set_target_properties( gestures PROPERTIES COMPILE_FLAGS -DWITH_GSL)
 
 # Create link to simplify paths
 message(STATUS "Add symbolic link to shader directory\n From: ${CMAKE_CURRENT_SOURCE_DIR}/../raspicam/shader \nTo: ${CMAKE_CURRENT_BINARY_DIR}/shader" )

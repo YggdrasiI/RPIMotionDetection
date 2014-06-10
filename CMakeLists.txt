@@ -1,6 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
-project( DisplayBlobs )
-find_package( OpenCV REQUIRED )
+project( RPIMotionDetection )
+
+find_package( OpenCV COMPONENTS )
 #find_package( OpenGLES REQUIRED )
 
 #Disable this option if not compiling on RPi.
@@ -35,46 +36,6 @@ message(STATUS ${DEPTHLIB})
 # Use newer c++ standard (for shared pointers)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x" )
 
-### 1. Test application for BlobDetection library ###
-# The images directory contains a few images 
-# as examples.
-if(WITH_OCV)
 
-add_executable( DisplayBlobs 
-	DisplayBlobs.cpp
-	Tracker.cpp Tracker2.cpp
-	Gestures.cpp gsl_helper.c
-	)
-target_link_libraries( DisplayBlobs
-	${THRESHLIB}
-	${DEPTHLIB}
-	${OpenCV_LIBS} 
-	gsl gslcblas m
-	)
-
-set_target_properties( DisplayBlobs PROPERTIES
-	COMPILE_FLAGS -DWITH_OCV
-	)
-#Allow OpenCV commands with QT dependencies. Comment out for non-QT-Version
-if(WITH_QT)
-add_definitions(-DWITH_QT)
-endif(WITH_QT)
-
-# Create link to simplify paths
-execute_process( COMMAND "ln" "-s" "${CMAKE_HOME_DIRECTORY}/images" "."
-	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
-	)
-
-# Rebuild BlobDetection library if neccessary.
-add_custom_command(TARGET DisplayBlobs
-	PRE_BUILD
-	COMMAND make
-	WORKING_DIRECTORY ${CMAKE_HOME_DIRECTORY}/BlobDetection/build )
-else(WITH_OCV)
-	message(STATUS "No OpenCV lib. Skip DisplayBlob compiliation." )
-endif(WITH_OCV)
-
-
-
-### 2. Create some other testing applications ###
+### 1. Create testing applications ###
 add_subdirectory(apps)

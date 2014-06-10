@@ -19,6 +19,7 @@ class GfxTexture;
 #endif
 
 #ifdef WITH_GSL
+class Gesture;
 #include "Gestures.h"
 #endif
 

@@ -3,10 +3,6 @@
 add_definitions(-DWITH_OPENGL)
 SET(COMPILE_DEFINITIONS -Werror)
 
-#(we dont need opencv in this app)
-#target_link_libraries( raspivid ${OpenCV_LIBS} )
-remove_definitions(-DWITH_OPENCV)
-
 include_directories(/opt/vc/include)
 include_directories(/opt/vc/include/interface/vcos)
 include_directories(/opt/vc/include/interface/vcos/pthreads)
