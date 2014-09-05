@@ -66,11 +66,13 @@ set_target_properties( gestures PROPERTIES COMPILE_FLAGS -DWITH_GSL)
 message(STATUS "Add symbolic link to shader directory\n From: ${CMAKE_CURRENT_SOURCE_DIR}/../raspicam/shader \nTo: ${CMAKE_CURRENT_BINARY_DIR}/shader" )
 execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/../raspicam/shader" "."
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+	ERROR_QUIET
 	)
 
 #Create symbolic link to start script
 execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/start" "."
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+	ERROR_QUIET
 	)
 
 install(TARGETS gestures RUNTIME DESTINATION bin)

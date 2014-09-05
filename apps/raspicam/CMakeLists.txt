@@ -50,11 +50,13 @@ target_link_libraries(raspivid   ${MMAL_LIBS} vcos bcm_host GLESv2 EGL m
 message(STATUS "Add symbolic link to shader directory\n From: ${CMAKE_CURRENT_SOURCE_DIR}/shader \nTo: ${CMAKE_CURRENT_BINARY_DIR}/shader" )
 execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/shader" "."
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+	ERROR_QUIET
 	)
 
 #Create symbolic link to start script
 execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/start" "."
 	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+	ERROR_QUIET
 	)
 
 install(TARGETS raspivid RUNTIME DESTINATION bin)

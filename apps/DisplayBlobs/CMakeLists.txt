@@ -30,7 +30,8 @@ set_target_properties( DisplayBlobs PROPERTIES COMPILE_FLAGS -DWITH_GSL)
 
 # Create link to simplify paths
 execute_process( COMMAND "ln" "-s" "${CMAKE_HOME_DIRECTORY}/images" "."
-	WORKING_DIRECTORY "${CMAKE_BINARY_DIR}"
+	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}"
+	ERROR_QUIET
 	)
 
 install(TARGETS DisplayBlobs RUNTIME DESTINATION bin)
