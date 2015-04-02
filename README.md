@@ -40,9 +40,10 @@ Notes:
 • Start with
 	cd build/apps/pong
 	./start
-• Add the arguments "low" and "right" to start the game in a lower resolution and
-	only one player.
-• Start of game is delayed until the camera was calibrated
+• Add "low" or "med" as first argument to start the game in a lower resolution
+	Lower resolutions runs more stable on weak power supplies.
+• Add "left" or "right" as second argument to start a single player match.
+• Start of game will be delayed until the camera was calibrated
   and at least two blobs was detected.
 
 

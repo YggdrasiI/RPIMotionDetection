@@ -55,7 +55,7 @@ set (COMMON_SOURCES
 	 Graphics.cpp 
 	 )
 
-set (MMAL_LIBS mmal_core mmal_util mmal_vc_client)
+set (MMAL_LIBS mmal_core mmal_util mmal_vc_client pthread)
 
 target_link_libraries(pong   ${MMAL_LIBS} vcos bcm_host GLESv2 EGL m
 	${DEPTHLIB}
