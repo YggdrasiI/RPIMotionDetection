@@ -50,6 +50,7 @@ class Tracker {
 		bool handids[MAXHANDS];
 		int last_handid;
 
+	public:
 		int m_swap_mutex;
 
 #ifdef WITH_HISTORY
@@ -88,14 +89,14 @@ class Tracker {
 
 #ifdef WITH_OCV
 		/* Helper function to draw blobs for debugging */
-		void drawBlobs(cv::Mat &out, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL);
+		//void drawBlobs(cv::Mat &out, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL);
 #endif
 #ifdef WITH_OPENGL
 		/* Helper function to draw blobs for debugging */
-		void drawBlobsGL(int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
+		//void drawBlobsGL(int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
 
 #ifdef WITH_HISTORY
-		void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
+		//void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
 #endif
 
 #endif

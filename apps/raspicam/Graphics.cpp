@@ -22,6 +22,9 @@ extern Tracker2 tracker;
 
 #define check() assert(glGetError() == 0)
 
+// Header for drawing function. Definition in libs/tracker/DrawingOpenGL.cpp
+void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL);
+void tracker_drawHistory( Tracker &tracker, int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
 
 //List of Gfx*Objects which will be used in this app.
 extern uint32_t GScreenWidth;
@@ -175,8 +178,8 @@ void RedrawTextures()
 
 	blobCache.clear();
 	tracker.getFilteredBlobs(TRACK_ALL_ACTIVE|LIMIT_ON_N_OLDEST, blobCache);
-	tracker.drawBlobsGL(motion_data.width, motion_data.height, true, &blobCache);
 	//tracker.drawBlobsGL(motion_data.width, motion_data.height);
+	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, true, &blobCache);
 
 #if 0
 	static int savecounter=0;

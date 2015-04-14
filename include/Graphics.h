@@ -8,7 +8,8 @@
 #include "GfxProgram.h"
 #include "GraphicsStub.h"
 #include "DrawingFunctions.h"
-#include "Pong.h"
+//#include "Pong.h"
+class Pong;
 
 void DrawGui(GfxTexture* scoreTexture, Pong *pong, float border, float x0, float y0, float x1, float y1, GfxTexture* render_target);
 

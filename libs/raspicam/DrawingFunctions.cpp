@@ -2,8 +2,6 @@
 #include "Graphics.h"
 #include "DrawingFunctions.h"
 
-#include "../pong/Pong.h"
-
 uint32_t GScreenWidth;
 uint32_t GScreenHeight;
 EGLDisplay GDisplay;

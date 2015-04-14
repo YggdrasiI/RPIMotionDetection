@@ -19,7 +19,7 @@ WAIT=5000
 SHADEROPTIONS="--pongUseShader 0"
 
 ENV="LD_LIBRARY_PATH=./lib:\${LD_LIBRARY_PATH}"
-MAINCMD="./bin/pong --player ${PLAYER} -x /dev/null -o /dev/null -t 0 --gl --glscene pong --waitAndFix ${WAIT} ${SHADEROPTIONS}"
+MAINCMD="./pong --player ${PLAYER} -x /dev/null -o /dev/null -t 0 --gl --glscene pong --waitAndFix ${WAIT} ${SHADEROPTIONS}"
 EXTRA_ARGS="--vflip"
 #EXTRA_ARGS="--hflip -rot 90"
 
