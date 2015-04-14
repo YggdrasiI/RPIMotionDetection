@@ -18,7 +18,13 @@
 #include "DrawingFunctions.h"
 #include "Tracker2.h"
 extern Tracker2 tracker;
+
+#include "Pong.h"
 extern Pong pong;
+
+// Header for drawing function. Definition in libs/tracker/DrawingOpenGL.cpp
+void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL);
+void tracker_drawHistory( Tracker &tracker, int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
 
 //statics from RaspiTex.c
 //extern "C" long long time_diff;
@@ -202,7 +208,7 @@ void RedrawGui()
 {
 	blobCache.clear();
 	tracker.getFilteredBlobs(TRACK_ALL_ACTIVE, blobCache);
-	tracker.drawBlobsGL(motion_data.width, motion_data.height, false, &blobCache, &blobsTexture);
+	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, false, &blobCache, &blobsTexture);
 
 	if( !guiNeedRedraw ) return;
 	DrawGui(&numeralsTexture,&pong,0.05f,
@@ -223,7 +229,7 @@ void RedrawTextures()
 	/*
 	blobCache.clear();
 	tracker.getFilteredBlobs(ALL_ACTIVE, blobCache);
-	tracker.drawBlobsGL(motion_data.width, motion_data.height, &blobCache, NULL);
+	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, &blobCache, NULL);
 	*/
 
 	/* Call update_fps from RaspiTex.c, which returns  time_diff

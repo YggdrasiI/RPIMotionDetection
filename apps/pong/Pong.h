@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "../../Blob.h"
+#include "Blob.h"
 
 #define SCORE_MAX 9 //0,…,9
 #define PLAYER_MAX 2

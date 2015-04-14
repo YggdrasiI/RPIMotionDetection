@@ -18,11 +18,6 @@
 class GfxTexture; 
 #endif
 
-#ifdef WITH_GSL
-class Gesture;
-#include "Gestures.h"
-#endif
-
 #include "Blob.h"
 
 #include "threshtree.h"
@@ -36,14 +31,13 @@ enum Trackfilter{
 	TRACK_MOVE = BLOB_MOVE,
 	TRACK_PENDING = BLOB_PENDING,
 	TRACK_UP = BLOB_UP,
-	TRACK_ALL = 64,//BLOB_DOWN|BLOB_MOVE|BLOB_PENDING|BLOB_UP,
+	TRACK_ALL = BLOB_DOWN|BLOB_MOVE|BLOB_PENDING|BLOB_UP,
 	TRACK_ALL_ACTIVE = 16,
 	LIMIT_ON_N_OLDEST = 32 ,
 };
 
 class Tracker {
 	protected:
-		int m_frameId; //increased for each frame
 
 		int m_max_radius;
 		int m_max_missing_duration;
@@ -56,6 +50,7 @@ class Tracker {
 		bool handids[MAXHANDS];
 		int last_handid;
 
+	public:
 		int m_swap_mutex;
 
 #ifdef WITH_HISTORY
@@ -94,19 +89,16 @@ class Tracker {
 
 #ifdef WITH_OCV
 		/* Helper function to draw blobs for debugging */
-		void drawBlobs(cv::Mat &out, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL);
+		//void drawBlobs(cv::Mat &out, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL);
 #endif
 #ifdef WITH_OPENGL
 		/* Helper function to draw blobs for debugging */
-		void drawBlobsGL(int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
+		//void drawBlobsGL(int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
 
 #ifdef WITH_HISTORY
-		void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
+		//void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
+#endif
 
-#ifdef WITH_GSL
-		void drawGestureSpline( int screenWidth, int screenHeight, Gesture *pGesture, GfxTexture *target);
-#endif
-#endif
 #endif
 };
 

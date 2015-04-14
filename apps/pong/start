@@ -4,7 +4,7 @@
 # To set the Resolution to 1280x1024 call 'tvservice -e "DMT 32"'
 # Higher resolutions consume a lot of gpu memory.
 
-RESOLUTION=high #low|medium|high
+RESOLUTION=high #low|med|high
 test "$1" ==  "" || RESOLUTION="$1"
 
 PLAYER=both #both|left|right
@@ -19,7 +19,7 @@ WAIT=5000
 SHADEROPTIONS="--pongUseShader 0"
 
 ENV="LD_LIBRARY_PATH=./lib:\${LD_LIBRARY_PATH}"
-MAINCMD="./bin/pong --player ${PLAYER} --hflip -x /dev/null -o /dev/null -t 0 --gl --glscene pong --waitAndFix ${WAIT} ${SHADEROPTIONS}"
+MAINCMD="./pong --player ${PLAYER} -x /dev/null -o /dev/null -t 0 --gl --glscene pong --waitAndFix ${WAIT} ${SHADEROPTIONS}"
 EXTRA_ARGS="--vflip"
 #EXTRA_ARGS="--hflip -rot 90"
 
