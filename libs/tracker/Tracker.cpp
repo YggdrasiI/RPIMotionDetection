@@ -10,7 +10,7 @@
 bool oldest_sort_function (const cBlob &a,const cBlob &b) { return (a.duration>b.duration); }
 
 
-Tracker::Tracker():m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0),
+Tracker::Tracker():m_frameId(0),m_max_radius(7), m_max_missing_duration(5), m_swap_mutex(0),
 	m_use_N_oldest_blobs(0),
 #ifdef WITH_HISTORY
 	m_phistory_line_colors(NULL),

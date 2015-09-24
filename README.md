@@ -66,8 +66,8 @@ Compiling:
 
  If you compile on the RPi: Please note that the compiling 
  of the release version (-O3) requires a big amount of memory.
- Reduce the memory for the gpu at 64MB (config.txt) or enable the
- swapping file (very slow).
+ If the compiling fails reduce the memory for the gpu at 64MB (config.txt) or enable 
+ swapping.
 
  If you compile on other systems: Add the cmake flag
  -DWITH_RPI=0
