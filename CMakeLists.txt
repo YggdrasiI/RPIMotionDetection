@@ -1,12 +1,12 @@
 cmake_minimum_required(VERSION 2.8)
 project( RPiMotionDetection )
-find_package( OpenCV REQUIRED )
+find_package( OpenCV )
 #find_package( OpenGLES REQUIRED )
 
-#Disable this option if not compiling on RPi.
-option(WITH_RPI "Set this option on if you compiling on the Raspberry Pi." ON)
+option(WITH_RPI "Enable this option if you compiling on the Raspberry Pi." ON)
 option(WITH_OPENGL "Required for most apps on the Raspberry Pi." ON)
-option(WITH_OCV "Enable this option if OpenCV library is available. Required for 'DisplayBlob' application." ON)
+
+option(WITH_OCV "Enable this option if OpenCV library is available. Required for 'DisplayBlob' application." OFF)
 option(WITH_QT "Allow OpenCV commands with QT dependencies (toggle buttons). Required for 'DisplayBlob' application." OFF)
 
 #Set variables for options because options are not availabe in subdirectories.
