@@ -2,6 +2,7 @@
 #include <cmath>
 
 #include "Graphics.h"
+#include "GraphicsPong.h"
 #include "Pong.h"
 
 //extern "C" int score[2];
@@ -202,3 +203,4 @@ bool Pong::checkCollision(int width, int height, std::vector<cBlob> &blobs){
 
 	return false;
 }
+

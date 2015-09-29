@@ -1,6 +1,8 @@
 #ifndef GFXPROGRAM_H
 #define GFXPROGRAM_H
 
+#include <map>
+
 #include "GLES2/gl2.h"
 #include "EGL/egl.h"
 #include "EGL/eglext.h"
@@ -25,11 +27,19 @@ public:
 	GLuint GetId() { return Id; }
 };
 
+//string hash function for handles map.
+static unsigned int hash( const char *name, size_t len = 0);
+
 class GfxProgram
 {
 	GfxShader* VertexShader;
 	GfxShader* FragmentShader;
 	GLuint Id;
+
+	//The following map uses string hashes as key.
+	//This allows access easy by str:string, const char, preprocessor hash, ...),
+	//see overloaded GetHandle() function.
+	std::map<unsigned int, GLint> handles; // cache GetAttributeLocation values
 
 public:
 
@@ -38,6 +48,9 @@ public:
 
 	bool Create(GfxShader* vertex_shader, GfxShader* fragment_shader);
 	GLuint GetId() { return Id; }
+	GLint GetHandle( const char *name);
+	GLint GetHandle( std::string name);
+	GLint GetHandle( unsigned int name_hash);
 };
 
 class GfxTexture

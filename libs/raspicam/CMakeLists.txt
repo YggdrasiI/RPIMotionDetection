@@ -31,6 +31,12 @@ set (COMMON_SOURCES
 	RaspiPreview.c
 	)
 
+# Optional shader for Font rendering
+include_directories(${CMAKE_SOURCE_DIR}/libs/freetypeGlesRpi/)
+set (FONT_MANAGER
+	FontManager.cpp
+	)
+
 add_library(raspivid_core
 	${COMMON_SOURCES} 
 	${GL_SCENE_SOURCES}
@@ -40,6 +46,7 @@ add_library(raspivid_core
 	norm2.c
 	DrawingFunctions.cpp
 	GfxProgram.cpp
+	${FONT_MANAGER}
 	)
 
 set (MMAL_LIBS mmal_core mmal_util mmal_vc_client pthread)

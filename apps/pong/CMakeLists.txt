@@ -23,6 +23,7 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 include_directories(${CMAKE_SOURCE_DIR}/libs/raspicam/)
 include_directories(${CMAKE_SOURCE_DIR}/libs/blobdetection/)
 include_directories(${CMAKE_SOURCE_DIR}/libs/tracker/)
+include_directories(${CMAKE_SOURCE_DIR}/libs/freetypeGlesRpi/)
 
 link_directories(/opt/vc/lib)
 
@@ -30,6 +31,7 @@ target_link_libraries(pong
 	raspivid_core
 	tracker
 	depthtree
+  freetypeGlesRpi
 	${MMAL_LIBS} vcos bcm_host GLESv2 EGL m
 	)
 

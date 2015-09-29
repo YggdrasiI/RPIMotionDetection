@@ -15,12 +15,16 @@
 #include "RaspiImv.h"
 
 #include "Graphics.h"
+#include "GraphicsPong.h"
 #include "DrawingFunctions.h"
 #include "Tracker2.h"
 extern Tracker2 tracker;
 
 #include "Pong.h"
 extern Pong pong;
+
+#include <FontManager.h>
+extern FontManager fontManager;
 
 // Header for drawing function. Definition in libs/tracker/DrawingOpenGL.cpp
 void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL);
@@ -31,31 +35,33 @@ void tracker_drawHistory( Tracker &tracker, int screenWidth, int screenHeight, c
 extern "C" long long update_fps();
 
 //List of Gfx*Objects which will be used in this app.
-extern uint32_t GScreenWidth;
-extern uint32_t GScreenHeight;
-extern EGLDisplay GDisplay;
-extern EGLSurface GSurface;
-extern EGLContext GContext;
+uint32_t GScreenWidth;
+uint32_t GScreenHeight;
+EGLDisplay GDisplay;
+EGLSurface GSurface;
+EGLContext GContext;
 
-extern GfxShader GSimpleVS;
-extern GfxShader GSimpleFS;
-extern GfxShader GBlobFS;
-extern GfxShader GBlobsVS;
-extern GfxShader GBlobsFS;
-extern GfxShader GPongFS;
-extern GfxShader GColouredLinesFS;
-
-extern GfxProgram GSimpleProg;
-extern GfxProgram GBlobProg;
-extern GfxProgram GPongProg;
-extern GfxProgram GBlobsProg;
-extern GfxProgram GColouredLinesProg;
-
-extern GLuint GQuadVertexBuffer;
-
+GfxShader GSimpleVS;
+GfxShader GSimpleFS;
+GfxShader GBlobFS;
+GfxShader GBlobsVS;
+GfxShader GBlobsFS;
+GfxShader GPongFS;
+GfxShader GColouredLinesFS;
 GfxShader GGuiVS;
 GfxShader GGuiFS;
+GfxShader GFontVS;
+GfxShader GFontFS;
+
+GfxProgram GSimpleProg;
+GfxProgram GBlobProg;
+GfxProgram GPongProg;
+GfxProgram GBlobsProg;
+GfxProgram GColouredLinesProg;
 GfxProgram GGuiProg;
+GfxProgram GFontProg;
+
+GLuint GQuadVertexBuffer;
 
 GfxTexture imvTexture;
 GfxTexture numeralsTexture;
@@ -203,7 +209,9 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 	blobsTexture.toRaspiTexture(&blobsBuffer);
 }
 
-
+/* Raspivid uses gl_scenes/pong.c to draw scenes.
+ * pong_redraw() in the above file calls RedrawGui().
+ */
 void RedrawGui()
 {
 	blobCache.clear();
@@ -211,8 +219,10 @@ void RedrawGui()
 	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, false, &blobCache, &blobsTexture);
 
 	if( !guiNeedRedraw ) return;
-	DrawGui(&numeralsTexture,&pong,0.05f,
-			-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
+	//old approach
+	//DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
+	//new approach
+	fontManager.Render(-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
 
 	guiNeedRedraw = false;
 }
@@ -354,6 +364,47 @@ void DrawGui(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
+	}
+}
+
+
+// Like DrawTextureRect with extra color information
+void DrawPongRect(GfxTexture* texture, float r, float g, float b,
+		float x0, float y0, float x1, float y1, GfxTexture* render_target)
+{
+	if(render_target )
+	{
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
+		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		check();
+	}
+
+	glUseProgram(GPongProg.GetId());	check();
+
+	glUniform2f(GPongProg.GetHandle("offset"),x0,y0);
+	glUniform2f(GPongProg.GetHandle("scale"),x1-x0,y1-y0);
+	glUniform1i(GPongProg.GetHandle("tex"), 0);
+	glUniform3f(GPongProg.GetHandle("colorMod"),r,g,b);
+	check();
+
+	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
+
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
+
+	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
+	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
+	glEnableVertexAttribArray(loc);	check();
+	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
+
+	//glDisableVertexAttribArray(loc);	check();//neu
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
+	glBindTexture(GL_TEXTURE_2D, 0);
 
 	if(render_target )
 	{

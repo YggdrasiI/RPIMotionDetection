@@ -1,0 +1,5 @@
+Adaption of https://code.google.com/p/freetype-gl (BSD 3-clause licence).
+Original C-code can be found on https://github.com/PDKK/freetypeGlesRpi
+
+The above project was extended by a set of C++-classes generate 
+a sort of simple font based gui.

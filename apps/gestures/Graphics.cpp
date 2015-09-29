@@ -24,25 +24,25 @@ extern Tracker2 tracker;
 
 
 //List of Gfx*Objects which will be used in this app.
-extern uint32_t GScreenWidth;
-extern uint32_t GScreenHeight;
-extern EGLDisplay GDisplay;
-extern EGLSurface GSurface;
-extern EGLContext GContext;
+uint32_t GScreenWidth;
+uint32_t GScreenHeight;
+EGLDisplay GDisplay;
+EGLSurface GSurface;
+EGLContext GContext;
 
-extern GfxShader GSimpleVS;
-extern GfxShader GSimpleFS;
-extern GfxShader GBlobFS;
-extern GfxShader GBlobsVS;
-extern GfxShader GBlobsFS;
-extern GfxShader GColouredLinesFS;
+GfxShader GSimpleVS;
+GfxShader GSimpleFS;
+GfxShader GBlobFS;
+GfxShader GBlobsVS;
+GfxShader GBlobsFS;
+GfxShader GColouredLinesFS;
 
-extern GfxProgram GSimpleProg;
-extern GfxProgram GBlobProg;
-extern GfxProgram GBlobsProg;
-extern GfxProgram GColouredLinesProg;
+GfxProgram GSimpleProg;
+GfxProgram GBlobProg;
+GfxProgram GBlobsProg;
+GfxProgram GColouredLinesProg;
 
-extern GLuint GQuadVertexBuffer;
+GLuint GQuadVertexBuffer;
 
 GfxTexture imvTexture;
 static std::vector<cBlob> blobCache;

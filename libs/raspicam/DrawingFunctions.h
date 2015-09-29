@@ -13,8 +13,7 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 void DrawColouredLines(GLfloat *vertices, GLfloat *colors, GLfloat numPoints, GfxTexture* render_target);
 
 
-void DrawPongRect(GfxTexture* texture, float r, float g, float b,
-		float x0, float y0, float x1, float y1, GfxTexture* render_target);
-
+//void DrawPongRect(GfxTexture* texture, float r, float g, float b,
+//		float x0, float y0, float x1, float y1, GfxTexture* render_target);
 
 #endif

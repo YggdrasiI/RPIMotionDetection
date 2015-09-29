@@ -7,11 +7,14 @@
 #include "Tracker2.h"
 #include "Graphics.h"
 
+#include "FontManager.h"
+
 #include "Pong.h"
 
 static DepthtreeWorkspace *dworkspace = NULL;
 static Blobtree *frameblobs = NULL;
 Tracker2 tracker;
+FontManager fontManager;
 //Pong pong(0.06, 800.0/600.0);
 Pong pong(0.06, 16.0/9);
 unsigned char depth_map[256];
@@ -197,6 +200,27 @@ int main(int argc, const char **argv){
 	//Setup tracker
 	tracker.setMaxRadius(10);
 	tracker.setOldestDurationFilter(4);
+
+	//Setup font manager for GUI textes
+	fontManager.add_font("./shader/fontrendering/fonts/custom.ttf", 50 );
+	fontManager.add_font("./shader/fontrendering/fonts/ObelixPro.ttf", 70 );
+
+	texture_font_t *font1, *font2;
+	font1 = fontManager.getFonts()->at(0);
+	font2 = fontManager.getFonts()->at(1);
+
+  vec2 pen = {-400,150};
+  vec4 color = {.2,0.2,0.2,1};
+	vec4 transColor = {1,0.3,0.3,0.6};
+	fontManager.add_text( font1, L"freetypeGlesRpi", &color, &pen );
+	
+	pen.x = -390;
+	pen.y = 140;
+	fontManager.add_text( font1, L"freetypeGlesRpi", &transColor, &pen );
+
+	pen.x = 600;
+	pen.y = 400;
+	fontManager.add_text( font2, L"Special chars: ηαβ∅", &color, &pen );
 
 	//start raspivid application.
 	raspivid(argc, argv);

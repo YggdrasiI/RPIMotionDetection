@@ -270,3 +270,55 @@ void SaveFrameBuffer(const char* fname)
 	free(image);
 
 }
+
+GLint GfxProgram::GetHandle( const char *name){
+	unsigned int name_hash = hash(name);
+	try {
+		return handles.at(name_hash);
+	}
+	catch (const std::out_of_range& oor) {
+		GLint id = glGetAttribLocation(GetId(), name);
+		handles[name_hash] = id;
+		return id;
+	}
+}
+
+GLint GfxProgram::GetHandle( std::string name){
+	unsigned int name_hash = hash(name.c_str(), name.length());
+	try {
+		return handles.at(name_hash);
+	}
+	catch (const std::out_of_range& oor) {
+		GLint id = glGetAttribLocation(GetId(), name.c_str());
+		handles[name_hash] = id;
+		return id;
+	}
+}
+
+GLint GfxProgram::GetHandle( unsigned int name_hash){
+	try {
+		return handles.at(name_hash);
+	}
+	catch (const std::out_of_range& oor) {
+		std::cerr << "Handle not defined. Out of Range error: " << oor.what() << '\n';
+		return -1;
+	}
+}
+
+static unsigned int hash( const char *name, size_t len){
+	if(len == 0){
+		len = strlen(name);
+	}
+	uint32_t hash, i;
+	for(hash = i = 0; i < len; ++i)
+	{
+		hash += name[i];
+		hash += (hash << 10);
+		hash ^= (hash >> 6);
+	}
+	hash += (hash << 3);
+	hash ^= (hash >> 11);
+	hash += (hash << 15);
+	return hash;
+
+}
