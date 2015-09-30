@@ -33,25 +33,25 @@ void DrawTextureRect(GfxTexture* texture, float alpha, float x0, float y0, float
 {
 	if(render_target)
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 		check();
 	}
 
-	glUseProgram(GSimpleProg.GetId());	check();
+	glUseProgram(GSimpleProg.getId());	check();
 
-	glUniform2f(GSimpleProg.GetHandle("offset"),x0,y0);
-	glUniform2f(GSimpleProg.GetHandle("scale"),x1-x0,y1-y0);
-	glUniform1i(GSimpleProg.GetHandle("tex"), 0);
-	glUniform1f(GSimpleProg.GetHandle("alpha"),alpha);
+	glUniform2f(GSimpleProg.getUniformLocation("offset"),x0,y0);
+	glUniform2f(GSimpleProg.getUniformLocation("scale"),x1-x0,y1-y0);
+	glUniform1i(GSimpleProg.getUniformLocation("tex"), 0);
+	glUniform1f(GSimpleProg.getUniformLocation("alpha"),alpha);
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
+	glBindTexture(GL_TEXTURE_2D,texture->getId());	check();
 
-	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
+	GLuint loc = glGetAttribLocation(GSimpleProg.getId(),"vertex");
 	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
 	glEnableVertexAttribArray(loc);	check();
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
@@ -70,21 +70,21 @@ void DrawBlobRect(float r, float g, float b, float x0, float y0, float x1, float
 {
 	if(render_target)
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 		check();
 	}
 
-	glUseProgram(GBlobProg.GetId());	check();
+	glUseProgram(GBlobProg.getId());	check();
 
-	glUniform2f(GBlobProg.GetHandle("offset"),x0,y0);
-	glUniform2f(GBlobProg.GetHandle("scale"),x1-x0,y1-y0);
-	glUniform3f(GBlobProg.GetHandle("blobcol"),r,g,b);
+	glUniform2f(GBlobProg.getUniformLocation("offset"),x0,y0);
+	glUniform2f(GBlobProg.getUniformLocation("scale"),x1-x0,y1-y0);
+	glUniform3f(GBlobProg.getUniformLocation("blobcol"),r,g,b);
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
 
-	GLuint loc = glGetAttribLocation(GBlobProg.GetId(),"vertex");
+	GLuint loc = glGetAttribLocation(GBlobProg.getId(),"vertex");
 	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
 	glEnableVertexAttribArray(loc);	check();
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
@@ -103,8 +103,8 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 {
 	if(render_target )
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 
 		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//glClear(GL_DEPTH_BUFFER_BIT);
@@ -117,10 +117,10 @@ void DrawBlobRects(GLfloat *vertices, GLfloat *colors, GLfloat numRects, GfxText
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glUseProgram(GBlobsProg.GetId());	check();
+		glUseProgram(GBlobsProg.getId());	check();
 
-		GLuint vloc = glGetAttribLocation(GBlobsProg.GetId(),"vertex");
-		GLuint cloc = glGetAttribLocation(GBlobsProg.GetId(),"vertexColor");
+		GLuint vloc = glGetAttribLocation(GBlobsProg.getId(),"vertex");
+		GLuint cloc = glGetAttribLocation(GBlobsProg.getId(),"vertexColor");
 
 		glEnableVertexAttribArray(vloc);	
 		glEnableVertexAttribArray(cloc);	check();
@@ -147,18 +147,18 @@ void DrawColouredLines(GLfloat *vertices, GLfloat *colors, GLfloat numPoints, Gf
 {
 	if(render_target )
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 	}
 
 	if( numPoints > 0 ){
 		//glEnable(GL_BLEND);
 		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		glUseProgram(GColouredLinesProg.GetId());	check();
+		glUseProgram(GColouredLinesProg.getId());	check();
 
-		GLuint vloc = glGetAttribLocation(GColouredLinesProg.GetId(),"vertex");
-		GLuint cloc = glGetAttribLocation(GColouredLinesProg.GetId(),"vertexColor");
+		GLuint vloc = glGetAttribLocation(GColouredLinesProg.getId(),"vertex");
+		GLuint cloc = glGetAttribLocation(GColouredLinesProg.getId(),"vertexColor");
 
 		glEnableVertexAttribArray(vloc);	
 		glEnableVertexAttribArray(cloc);	check();

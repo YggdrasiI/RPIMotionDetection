@@ -61,7 +61,7 @@ void* blob_detection(void *argn){
 						 * of the gl context thread and will be
 						 * ignored. Solution?!"
 						 * */
-						//imvTexture.SetPixels(motion_data.imv_norm);
+						//imvTexture.setPixels(motion_data.imv_norm);
 					}
 
 					//2. Blob detection
@@ -221,6 +221,8 @@ int main(int argc, const char **argv){
 	pen.x = 600;
 	pen.y = 400;
 	fontManager.add_text( font2, L"Special chars: ηαβ∅", &color, &pen );
+
+	pong.setPause(false);
 
 	//start raspivid application.
 	raspivid(argc, argv);

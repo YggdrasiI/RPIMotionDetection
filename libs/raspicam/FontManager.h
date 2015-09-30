@@ -25,7 +25,7 @@ struct shader_t {
 class FontManager{
   protected:
       //store 9 floats ( xyz, st and rgba) for each vertex.
-    vector_t *verticesData = vector_new(sizeof(GLfloat));
+    vector_t *verticesData;
     std::vector<texture_font_t*> fonts;
     texture_atlas_t *atlas;
     shader_t shader;
@@ -33,6 +33,11 @@ class FontManager{
     public:
     FontManager();
     ~FontManager();
+
+    /* OpenGLES shader initialisation. Should be
+     * done AFTER creation of OpenGL context.
+     */
+    void initShaders();
 
     /* Adding font file to internal atlas.
      Example add_font( "./fonts/custom.ttf", 50 );

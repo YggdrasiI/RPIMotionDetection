@@ -58,8 +58,8 @@ void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bo
 	 * framebuffer because subfunctions will do this already. */
 	if( target )
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,target->GetFramebufferId());
-		glViewport ( 0, 0, target->GetWidth(), target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,target->getFramebufferId());
+		glViewport ( 0, 0, target->getWidth(), target->getHeight() );
 		glClear(GL_COLOR_BUFFER_BIT);
 	}
 

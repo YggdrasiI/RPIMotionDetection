@@ -55,7 +55,7 @@ void* blob_detection(void *argn){
 						 * of the gl context thread and will be
 						 * ignored. Solution?!"
 						 * */
-						//imvTexture.SetPixels(motion_data.imv_norm);
+						//imvTexture.setPixels(motion_data.imv_norm);
 					}
 
 					//2. Blob detection

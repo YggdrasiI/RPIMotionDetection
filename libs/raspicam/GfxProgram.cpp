@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
+#include <stdexcept>
 #include <assert.h>
 #include <unistd.h>
 #include <iostream>
@@ -34,106 +35,106 @@ void printShaderInfoLog(GLint shader)
 	}
 }
 
-bool GfxShader::LoadVertexShader(const char* filename)
+bool GfxShader::loadVertexShader(const char* filename)
 {
 	//cheeky bit of code to read the whole file into memory
-	assert(!Src);
+	assert(!src);
 	FILE* f = fopen(filename, "rb");
 	assert(f);
 	fseek(f,0,SEEK_END);
 	int sz = ftell(f);
 	fseek(f,0,SEEK_SET);
-	Src = new GLchar[sz+1];
-	fread(Src,1,sz,f);
-	Src[sz] = 0; //null terminate it!
+	src = new GLchar[sz+1];
+	fread(src,1,sz,f);
+	src[sz] = 0; //null terminate it!
 	fclose(f);
 
 	//now create and compile the shader
-	GlShaderType = GL_VERTEX_SHADER;
-	Id = glCreateShader(GlShaderType);
-	glShaderSource(Id, 1, (const GLchar**)&Src, 0);
-	glCompileShader(Id);
+	glShaderType = GL_VERTEX_SHADER;
+	id = glCreateShader(glShaderType);
+	glShaderSource(id, 1, (const GLchar**)&src, 0);
+	glCompileShader(id);
 	check();
 
 	//compilation check
 	GLint compiled;
-	glGetShaderiv(Id, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(id, GL_COMPILE_STATUS, &compiled);
 	if(compiled==0)
 	{
-		printf("Failed to compile vertex shader %s:\n%s\n", filename, Src);
-		printShaderInfoLog(Id);
-		glDeleteShader(Id);
+		printf("Failed to compile vertex shader %s:\n%s\n", filename, src);
+		printShaderInfoLog(id);
+		glDeleteShader(id);
 		return false;
 	}
 	else
 	{
-		//printf("Compiled vertex shader %s:\n%s\n", filename, Src);
+		//printf("Compiled vertex shader %s:\n%s\n", filename, src);
 		printf("Compiled vertex shader %s.\n", filename);
 	}
 
 	return true;
 }
 
-bool GfxShader::LoadFragmentShader(const char* filename)
+bool GfxShader::loadFragmentShader(const char* filename)
 {
 	//cheeky bit of code to read the whole file into memory
-	assert(!Src);
+	assert(!src);
 	FILE* f = fopen(filename, "rb");
 	assert(f);
 	fseek(f,0,SEEK_END);
 	int sz = ftell(f);
 	fseek(f,0,SEEK_SET);
-	Src = new GLchar[sz+1];
-	fread(Src,1,sz,f);
-	Src[sz] = 0; //null terminate it!
+	src = new GLchar[sz+1];
+	fread(src,1,sz,f);
+	src[sz] = 0; //null terminate it!
 	fclose(f);
 
 	//now create and compile the shader
-	GlShaderType = GL_FRAGMENT_SHADER;
-	Id = glCreateShader(GlShaderType);
-	glShaderSource(Id, 1, (const GLchar**)&Src, 0);
-	glCompileShader(Id);
+	glShaderType = GL_FRAGMENT_SHADER;
+	id = glCreateShader(glShaderType);
+	glShaderSource(id, 1, (const GLchar**)&src, 0);
+	glCompileShader(id);
 	check();
 
 	//compilation check
 	GLint compiled;
-	glGetShaderiv(Id, GL_COMPILE_STATUS, &compiled);
+	glGetShaderiv(id, GL_COMPILE_STATUS, &compiled);
 	if(compiled==0)
 	{
-		printf("Failed to compile fragment shader %s:\n%s\n", filename, Src);
-		printShaderInfoLog(Id);
-		glDeleteShader(Id);
+		printf("Failed to compile fragment shader %s:\n%s\n", filename, src);
+		printShaderInfoLog(id);
+		glDeleteShader(id);
 		return false;
 	}
 	else
 	{
-		//printf("Compiled fragment shader %s:\n%s\n", filename, Src);
+		//printf("Compiled fragment shader %s:\n%s\n", filename, src);
 		printf("Compiled fragment shader %s.\n", filename);
 	}
 
 	return true;
 }
 
-bool GfxProgram::Create(GfxShader* vertex_shader, GfxShader* fragment_shader)
+bool GfxProgram::create(GfxShader* vertex_shader, GfxShader* fragment_shader)
 {
-	VertexShader = vertex_shader;
-	FragmentShader = fragment_shader;
-	Id = glCreateProgram();
-	glAttachShader(Id, VertexShader->GetId());
-	glAttachShader(Id, FragmentShader->GetId());
-	glLinkProgram(Id);
+	vertexShader = vertex_shader;
+	fragmentShader = fragment_shader;
+	id = glCreateProgram();
+	glAttachShader(id, vertexShader->getId());
+	glAttachShader(id, fragmentShader->getId());
+	glLinkProgram(id);
 	check();
-	printf("Created program id %d from vs %d and fs %d\n", GetId(), VertexShader->GetId(), FragmentShader->GetId());
+	printf("Created program id %d from vs %d and fs %d\n", getId(), vertexShader->getId(), fragmentShader->getId());
 
 	// Prints the information log for a program object
 	char log[1024];
-	glGetProgramInfoLog(Id,sizeof log,NULL,log);
-	printf("%d:program:\n%s\n", Id, log);
+	glGetProgramInfoLog(id,sizeof log,NULL,log);
+	printf("%d:program:\n%s\n", id, log);
 
 	return true;	
 }
 
-bool GfxTexture::CreateFromFile(const char *filename)
+bool GfxTexture::createFromFile(const char *filename)
 {
   unsigned error;
   unsigned char* image = NULL;
@@ -146,18 +147,18 @@ bool GfxTexture::CreateFromFile(const char *filename)
 		return false;
 	}
 	
-	bool ret = CreateRGBA(width,height,image);
+	bool ret = createRGBA(width,height,image);
   free(image);
 	return ret;
 }
 
-bool GfxTexture::CreateRGBA(int width, int height, const void* data)
+bool GfxTexture::createRGBA(int width, int height, const void* data)
 {
 	Width = width;
 	Height = height;
-	glGenTextures(1, &Id);
+	glGenTextures(1, &id);
 	check();
-	glBindTexture(GL_TEXTURE_2D, Id);
+	glBindTexture(GL_TEXTURE_2D, id);
 	check();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width, Height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	check();
@@ -169,13 +170,13 @@ bool GfxTexture::CreateRGBA(int width, int height, const void* data)
 	return true;
 }
 
-bool GfxTexture::CreateGreyScale(int width, int height, const void* data)
+bool GfxTexture::createGreyScale(int width, int height, const void* data)
 {
 	Width = width;
 	Height = height;
-	glGenTextures(1, &Id);
+	glGenTextures(1, &id);
 	check();
-	glBindTexture(GL_TEXTURE_2D, Id);
+	glBindTexture(GL_TEXTURE_2D, id);
 	check();
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, Width, Height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 	check();
@@ -187,23 +188,23 @@ bool GfxTexture::CreateGreyScale(int width, int height, const void* data)
 	return true;
 }
 
-bool GfxTexture::GenerateFrameBuffer()
+bool GfxTexture::generateFramebuffer()
 {
 	//Create a frame buffer that points to this texture
 	glGenFramebuffers(1,&FramebufferId);
 	check();
 	glBindFramebuffer(GL_FRAMEBUFFER,FramebufferId);
 	check();
-	glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,Id,0);
+	glFramebufferTexture2D(GL_FRAMEBUFFER,GL_COLOR_ATTACHMENT0,GL_TEXTURE_2D,id,0);
 	check();
 	glBindFramebuffer(GL_FRAMEBUFFER,0);
 	check();
 	return true;
 }
 
-void GfxTexture::SetPixels(const void* data)
+void GfxTexture::setPixels(const void* data)
 {
-	glBindTexture(GL_TEXTURE_2D, Id);
+	glBindTexture(GL_TEXTURE_2D, id);
 	check();
 	glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, Width, Height, IsRGBA ? GL_RGBA : GL_LUMINANCE, GL_UNSIGNED_BYTE, data);
 	check();
@@ -211,15 +212,15 @@ void GfxTexture::SetPixels(const void* data)
 	check();
 }
 
-void GfxTexture::SetInterpolation(bool interpol)
+void GfxTexture::setInterpolation(bool interpol)
 {
-	glBindTexture(GL_TEXTURE_2D, Id);
+	glBindTexture(GL_TEXTURE_2D, id);
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
 	glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, (GLfloat)(interpol?GL_LINEAR:GL_NEAREST) );
 	glBindTexture(GL_TEXTURE_2D, 0);
 }
 
-void GfxTexture::Save(const char* fname)
+void GfxTexture::save(const char* fname)
 {
 	void* image = malloc(Width*Height*4);
 	glBindFramebuffer(GL_FRAMEBUFFER,FramebufferId);
@@ -239,7 +240,7 @@ void GfxTexture::Save(const char* fname)
 void GfxTexture::toRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
 	tex->width = Width;
 	tex->height = Height;
-	tex->id = Id;
+	tex->id = id;
 	tex->framebufferId = FramebufferId;
 	tex->isRGBA = IsRGBA?1:0;
 }
@@ -248,12 +249,12 @@ void GfxTexture::toRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
 void GfxTexture::fromRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex){
 	Width = tex->width;
 	Height = tex->height;
-	Id = tex->id;
+	id = tex->id;
 	FramebufferId = tex->framebufferId;
 	IsRGBA = tex->isRGBA?1:0;
 }
 
-void SaveFrameBuffer(const char* fname)
+void saveFramebuffer(const char* fname)
 {
 	//uint32_t GScreenWidth;
 	//uint32_t GScreenHeight;
@@ -271,33 +272,66 @@ void SaveFrameBuffer(const char* fname)
 
 }
 
-GLint GfxProgram::GetHandle( const char *name){
+GLuint GfxProgram::getAttribLocation( const char *name){
 	unsigned int name_hash = hash(name);
 	try {
 		return handles.at(name_hash);
 	}
 	catch (const std::out_of_range& oor) {
-		GLint id = glGetAttribLocation(GetId(), name);
+		GLuint id = glGetAttribLocation(getId(), name);
 		handles[name_hash] = id;
 		return id;
 	}
 }
 
-GLint GfxProgram::GetHandle( std::string name){
+GLuint GfxProgram::getAttribLocation( std::string name){
 	unsigned int name_hash = hash(name.c_str(), name.length());
 	try {
 		return handles.at(name_hash);
 	}
 	catch (const std::out_of_range& oor) {
-		GLint id = glGetAttribLocation(GetId(), name.c_str());
+		GLuint id = glGetAttribLocation(getId(), name.c_str());
 		handles[name_hash] = id;
 		return id;
 	}
 }
 
-GLint GfxProgram::GetHandle( unsigned int name_hash){
+GLuint GfxProgram::getAttribLocation( unsigned int name_hash){
 	try {
 		return handles.at(name_hash);
+	}
+	catch (const std::out_of_range& oor) {
+		std::cerr << "Handle not defined. Out of Range error: " << oor.what() << '\n';
+		return -1;
+	}
+}
+GLuint GfxProgram::getUniformLocation( const char *name){
+	unsigned int name_hash = hash(name);
+	try {
+		return handles.at(name_hash+1);
+	}
+	catch (const std::out_of_range& oor) {
+		GLuint id = glGetUniformLocation(getId(), name);
+		handles[name_hash+1] = id;
+		return id;
+	}
+}
+
+GLuint GfxProgram::getUniformLocation( std::string name){
+	unsigned int name_hash = hash(name.c_str(), name.length());
+	try {
+		return handles.at(name_hash+1);
+	}
+	catch (const std::out_of_range& oor) {
+		GLuint id = glGetUniformLocation(getId(), name.c_str());
+		handles[name_hash+1] = id;
+		return id;
+	}
+}
+
+GLuint GfxProgram::getUniformLocation( unsigned int name_hash){
+	try {
+		return handles.at(name_hash+1);
 	}
 	catch (const std::out_of_range& oor) {
 		std::cerr << "Handle not defined. Out of Range error: " << oor.what() << '\n';

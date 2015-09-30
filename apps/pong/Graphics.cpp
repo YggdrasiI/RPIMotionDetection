@@ -185,27 +185,27 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 
 	/* Begin of row values is NOT word-aligned. Set alignment to 1 */
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-	imvTexture.CreateGreyScale(121,68);
-	//imvTexture.GenerateFrameBuffer();
+	imvTexture.createGreyScale(121,68);
+	//imvTexture.generateFramebuffer();
 	
 	//restore default
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 4); 
 	
-	numeralsTexture.CreateFromFile("../../images/numerals.png");
-	numeralsTexture.SetInterpolation(true);
+	numeralsTexture.createFromFile("../../images/numerals.png");
+	numeralsTexture.setInterpolation(true);
 
-	raspiTexture.CreateFromFile("../../images/Raspi_Logo_128.png");
-	raspiTexture.SetInterpolation(true);
+	raspiTexture.createFromFile("../../images/Raspi_Logo_128.png");
+	raspiTexture.setInterpolation(true);
 
-	//guiTexture.CreateRGBA(GScreenWidth,GScreenHeight, NULL);
-	guiTexture.CreateRGBA(800,600, NULL);
-	guiTexture.SetInterpolation(false);
-	guiTexture.GenerateFrameBuffer();
+	//guiTexture.createRGBA(GScreenWidth,GScreenHeight, NULL);
+	guiTexture.createRGBA(800,600, NULL);
+	guiTexture.setInterpolation(false);
+	guiTexture.generateFramebuffer();
 	guiTexture.toRaspiTexture(&guiBuffer);
 
-	blobsTexture.CreateRGBA(800,600, NULL);
-	blobsTexture.SetInterpolation(false);
-	blobsTexture.GenerateFrameBuffer();
+	blobsTexture.createRGBA(800,600, NULL);
+	blobsTexture.setInterpolation(false);
+	blobsTexture.generateFramebuffer();
 	blobsTexture.toRaspiTexture(&blobsBuffer);
 }
 
@@ -230,7 +230,7 @@ void RedrawGui()
 void RedrawTextures()
 {
 
-	//imvTexture.SetPixels(motion_data.imv_norm);
+	//imvTexture.setPixels(motion_data.imv_norm);
 	//DrawTextureRect(&imvTexture,-1.0,1.0f,-1.0f,-1.0f,1.0f,NULL);
 	
 	//DrawGui(&numeralsTexture,&pong,0.05f,
@@ -262,26 +262,26 @@ void RedrawTextures()
 void InitShaders()
 {
 	//load the test shaders
-	GSimpleVS.LoadVertexShader("shader/simplevertshader.glsl");
-	GSimpleFS.LoadFragmentShader("shader/simplefragshader.glsl");
-	GSimpleProg.Create(&GSimpleVS,&GSimpleFS);
+	GSimpleVS.loadVertexShader("shader/simplevertshader.glsl");
+	GSimpleFS.loadFragmentShader("shader/simplefragshader.glsl");
+	GSimpleProg.create(&GSimpleVS,&GSimpleFS);
 	check();
-	GBlobFS.LoadFragmentShader("shader/blobfragshader.glsl");
-	GBlobProg.Create(&GSimpleVS,&GBlobFS);
+	GBlobFS.loadFragmentShader("shader/blobfragshader.glsl");
+	GBlobProg.create(&GSimpleVS,&GBlobFS);
 
-	GBlobsVS.LoadVertexShader("shader/blobsvertshader.glsl");
-	GBlobsFS.LoadFragmentShader("shader/blobsfragshader.glsl");
-	GBlobsProg.Create(&GBlobsVS,&GBlobsFS);
+	GBlobsVS.loadVertexShader("shader/blobsvertshader.glsl");
+	GBlobsFS.loadFragmentShader("shader/blobsfragshader.glsl");
+	GBlobsProg.create(&GBlobsVS,&GBlobsFS);
 
-	GGuiVS.LoadVertexShader("shader/guivertshader.glsl");
-	GGuiFS.LoadFragmentShader("shader/guifragshader.glsl");
-	GGuiProg.Create(&GGuiVS,&GGuiFS);
+	GGuiVS.loadVertexShader("shader/guivertshader.glsl");
+	GGuiFS.loadFragmentShader("shader/guifragshader.glsl");
+	GGuiProg.create(&GGuiVS,&GGuiFS);
 
-	GPongFS.LoadFragmentShader("shader/pongfragshader.glsl");
-	GPongProg.Create(&GSimpleVS,&GPongFS);
+	GPongFS.loadFragmentShader("shader/pongfragshader.glsl");
+	GPongProg.create(&GSimpleVS,&GPongFS);
 
-	GColouredLinesFS.LoadFragmentShader("shader/colouredlinesfragshader.glsl");
-	GColouredLinesProg.Create(&GBlobsVS,&GColouredLinesFS);
+	GColouredLinesFS.loadFragmentShader("shader/colouredlinesfragshader.glsl");
+	GColouredLinesProg.create(&GBlobsVS,&GColouredLinesFS);
 
 	check();
 
@@ -321,43 +321,43 @@ void DrawGui(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float
 {
 	if(render_target )
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 		check();
 	}
 
-	glUseProgram(GGuiProg.GetId());	check();
+	glUseProgram(GGuiProg.getId());	check();
 
-	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"offset"),x0,y0);
-	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"scale"),x1-x0,y1-y0);
+	glUniform2f(glGetUniformLocation(GGuiProg.getId(),"offset"),x0,y0);
+	glUniform2f(glGetUniformLocation(GGuiProg.getId(),"scale"),x1-x0,y1-y0);
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D, scoreTexture->GetId());
-	glUniform1i(glGetUniformLocation(GGuiProg.GetId(),"numerals"), 0);
+	glBindTexture(GL_TEXTURE_2D, scoreTexture->getId());
+	glUniform1i(glGetUniformLocation(GGuiProg.getId(),"numerals"), 0);
 
-	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"border"),
+	glUniform2f(glGetUniformLocation(GGuiProg.getId(),"border"),
 			pong->isActivePlayer(0)?border:0.0,
 			pong->isActivePlayer(1)?1.0-border:1.0 );//border
-	glUniform2f(glGetUniformLocation(GGuiProg.GetId(),"score"),
+	glUniform2f(glGetUniformLocation(GGuiProg.getId(),"score"),
 			(float) pong->getScore()[0],
 			(float) pong->getScore()[1]);//score
 	if( pong->isActivePlayer(1) ) {
-		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosLeft"), 0.0, 0.25, 0.5, 0.75); //scorePosLeft
+		glUniform4f(glGetUniformLocation(GGuiProg.getId(),"scorePosLeft"), 0.0, 0.25, 0.5, 0.75); //scorePosLeft
 	}else{
-		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosLeft"), 0.0, 0.1, 0.1, -0.2); //scorePosLeft
+		glUniform4f(glGetUniformLocation(GGuiProg.getId(),"scorePosLeft"), 0.0, 0.1, 0.1, -0.2); //scorePosLeft
 	}
 
 	if( pong->isActivePlayer(0) ){
-		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosRight"), 0.5, 0.25, 1.0, 0.75); //scorePosRight
+		glUniform4f(glGetUniformLocation(GGuiProg.getId(),"scorePosRight"), 0.5, 0.25, 1.0, 0.75); //scorePosRight
 	}else{
-		glUniform4f(glGetUniformLocation(GGuiProg.GetId(),"scorePosRight"), 0.9, 0.1, 1.0, -0.2); //scorePosRight
+		glUniform4f(glGetUniformLocation(GGuiProg.getId(),"scorePosRight"), 0.9, 0.1, 1.0, -0.2); //scorePosRight
 	}
 
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
 
-	GLuint loc = glGetAttribLocation(GBlobProg.GetId(),"vertex");
+	GLuint loc = GGuiProg.getAttribLocation("vertex");
 	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
 	glEnableVertexAttribArray(loc);	check();
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
@@ -379,25 +379,24 @@ void DrawPongRect(GfxTexture* texture, float r, float g, float b,
 {
 	if(render_target )
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 		check();
 	}
+	glUseProgram(GPongProg.getId());	check();
 
-	glUseProgram(GPongProg.GetId());	check();
-
-	glUniform2f(GPongProg.GetHandle("offset"),x0,y0);
-	glUniform2f(GPongProg.GetHandle("scale"),x1-x0,y1-y0);
-	glUniform1i(GPongProg.GetHandle("tex"), 0);
-	glUniform3f(GPongProg.GetHandle("colorMod"),r,g,b);
+	glUniform2f(GPongProg.getUniformLocation("offset"),x0,y0);
+	glUniform2f(GPongProg.getUniformLocation("scale"),x1-x0,y1-y0);
+	glUniform1i(GPongProg.getUniformLocation("tex"), 0);
+	glUniform3f(GPongProg.getUniformLocation("colorMod"),r,g,b);
 	check();
 
 	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
 
 	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D,texture->GetId());	check();
+	glBindTexture(GL_TEXTURE_2D,texture->getId());	check();
 
-	GLuint loc = glGetAttribLocation(GSimpleProg.GetId(),"vertex");
+	GLuint loc = GPongProg.getAttribLocation("vertex");
 	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
 	glEnableVertexAttribArray(loc);	check();
 	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
@@ -405,6 +404,8 @@ void DrawPongRect(GfxTexture* texture, float r, float g, float b,
 	//glDisableVertexAttribArray(loc);	check();//neu
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	printf("Draw pong....");
 
 	if(render_target )
 	{

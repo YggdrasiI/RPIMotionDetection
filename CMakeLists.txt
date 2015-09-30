@@ -21,6 +21,12 @@ include_directories(${CMAKE_HOME_DIRECTORY}/libs/raspicam)
 # Use newer c++ standard (for shared pointers)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x" )
 
+#Create symbolic link to assets
+execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/images" "."
+	WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/"
+	ERROR_QUIET
+	)
+
 ### Create libs
 add_subdirectory(libs)
 

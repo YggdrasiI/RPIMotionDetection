@@ -1,6 +1,7 @@
 #ifndef GFXPROGRAM_H
 #define GFXPROGRAM_H
 
+#include <string>
 #include <map>
 
 #include "GLES2/gl2.h"
@@ -13,18 +14,18 @@
 
 class GfxShader
 {
-	GLchar* Src;
-	GLuint Id;
-	GLuint GlShaderType;
+	GLchar* src;
+	GLuint id;
+	GLuint glShaderType;
 
 public:
 
-	GfxShader() : Src(NULL), Id(0), GlShaderType(0) {}
-	~GfxShader() { if(Src) delete[] Src; }
+	GfxShader() : src(NULL), id(0), glShaderType(0) {}
+	~GfxShader() { if(src) delete[] src; }
 
-	bool LoadVertexShader(const char* filename);
-	bool LoadFragmentShader(const char* filename);
-	GLuint GetId() { return Id; }
+	bool loadVertexShader(const char* filename);
+	bool loadFragmentShader(const char* filename);
+	GLuint getId() { return id; }
 };
 
 //string hash function for handles map.
@@ -32,57 +33,60 @@ static unsigned int hash( const char *name, size_t len = 0);
 
 class GfxProgram
 {
-	GfxShader* VertexShader;
-	GfxShader* FragmentShader;
-	GLuint Id;
+	GfxShader* vertexShader;
+	GfxShader* fragmentShader;
+	GLuint id;
 
 	//The following map uses string hashes as key.
 	//This allows access easy by str:string, const char, preprocessor hash, ...),
-	//see overloaded GetHandle() function.
-	std::map<unsigned int, GLint> handles; // cache GetAttributeLocation values
+	//see overloaded getAttribLocation(), getUniformLocation functions.
+	std::map<unsigned int, GLuint> handles; // cache glGet*Location values
 
 public:
 
 	GfxProgram() {}
 	~GfxProgram() {}
 
-	bool Create(GfxShader* vertex_shader, GfxShader* fragment_shader);
-	GLuint GetId() { return Id; }
-	GLint GetHandle( const char *name);
-	GLint GetHandle( std::string name);
-	GLint GetHandle( unsigned int name_hash);
+	bool create(GfxShader* vertex_shader, GfxShader* fragment_shader);
+	GLuint getId() { return id; }
+	GLuint getAttribLocation( const char *name);
+	GLuint getAttribLocation( std::string name);
+	GLuint getAttribLocation( unsigned int name_hash);
+	GLuint getUniformLocation( const char *name);
+	GLuint getUniformLocation( std::string name);
+	GLuint getUniformLocation( unsigned int name_hash);
 };
 
 class GfxTexture
 {
 	int Width;
 	int Height;
-	GLuint Id;
+	GLuint id;
 	GLuint FramebufferId;
 	bool IsRGBA;
 
 public:
 
-	GfxTexture() : Width(0), Height(0), Id(0), FramebufferId(0) {}
+	GfxTexture() : Width(0), Height(0), id(0), FramebufferId(0) {}
 	~GfxTexture() {}
 
-	bool CreateFromFile(const char *filename);
-	bool CreateRGBA(int width, int height, const void* data = NULL);
-	bool CreateGreyScale(int width, int height, const void* data = NULL);
-	bool GenerateFrameBuffer();
-	void SetPixels(const void* data);
-	void SetInterpolation(bool interpol);
-	void Save(const char* fname);
-	GLuint GetId() { return Id; }
-	GLuint GetFramebufferId() { return FramebufferId; }
-	int GetWidth() {return Width;}
-	int GetHeight() {return Height;}
+	bool createFromFile(const char *filename);
+	bool createRGBA(int width, int height, const void* data = NULL);
+	bool createGreyScale(int width, int height, const void* data = NULL);
+	bool generateFramebuffer();
+	void setPixels(const void* data);
+	void setInterpolation(bool interpol);
+	void save(const char* fname);
+	GLuint getId() { return id; }
+	GLuint getFramebufferId() { return FramebufferId; }
+	int getWidth() {return Width;}
+	int getHeight() {return Height;}
 	void toRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex);
 	void fromRaspiTexture(RASPITEXUTIL_TEXTURE_T *tex);
 };
 
 void printShaderInfoLog(GLint shader);
-void SaveFrameBuffer(const char* fname);
+void saveFramebuffer(const char* fname);
 
 
 

@@ -135,28 +135,28 @@ void InitGraphics()
 	glClear( GL_COLOR_BUFFER_BIT );
 
 	//load the test shaders
-	GSimpleVS.LoadVertexShader("simplevertshader.glsl");
-	GSimpleFS.LoadFragmentShader("simplefragshader.glsl");
-	GSimpleProg.Create(&GSimpleVS,&GSimpleFS);
+	GSimpleVS.loadVertexShader("simplevertshader.glsl");
+	GSimpleFS.loadFragmentShader("simplefragshader.glsl");
+	GSimpleProg.create(&GSimpleVS,&GSimpleFS);
 	check();
 
-	GTriVS.LoadVertexShader("trivertshader.glsl");
-	GTriFS.LoadFragmentShader("trifragshader.glsl");
-	GTriProg.Create(&GTriVS,&GTriFS);
+	GTriVS.loadVertexShader("trivertshader.glsl");
+	GTriFS.loadFragmentShader("trifragshader.glsl");
+	GTriProg.create(&GTriVS,&GTriFS);
 	check();
 
-	GFillVS.LoadVertexShader("red.vert.glsl");
-	GFillFS.LoadFragmentShader("red.frag.glsl");
-	GFillProg.Create(&GFillVS,&GFillFS);
+	GFillVS.loadVertexShader("red.vert.glsl");
+	GFillFS.loadFragmentShader("red.frag.glsl");
+	GFillProg.create(&GFillVS,&GFillFS);
 	check();
 
-	GYuvVS.LoadVertexShader("red.vert.glsl");
-	GYuvFS.LoadFragmentShader("red.frag.glsl");
-	GYuvProg.Create(&GYuvVS,&GYuvFS);
+	GYuvVS.loadVertexShader("red.vert.glsl");
+	GYuvFS.loadFragmentShader("red.frag.glsl");
+	GYuvProg.create(&GYuvVS,&GYuvFS);
 	check();
 
-	//glUseProgram(GSimpleProg.GetId());
-	glUseProgram(GTriProg.GetId());
+	//glUseProgram(GSimpleProg.getId());
+	glUseProgram(GTriProg.getId());
 	check();
 
 	//create an ickle vertex buffer
@@ -277,7 +277,7 @@ void printShaderInfoLog(GLint shader)
 	}
 }
 
-bool GfxShader::LoadVertexShader(const char* filename)
+bool GfxShader::loadVertexShader(const char* filename)
 {
 	//cheeky bit of code to read the whole file into memory
 	assert(!Src);
@@ -316,7 +316,7 @@ bool GfxShader::LoadVertexShader(const char* filename)
 	return true;
 }
 
-bool GfxShader::LoadFragmentShader(const char* filename)
+bool GfxShader::loadFragmentShader(const char* filename)
 {
 	//cheeky bit of code to read the whole file into memory
 	assert(!Src);
@@ -355,16 +355,16 @@ bool GfxShader::LoadFragmentShader(const char* filename)
 	return true;
 }
 
-bool GfxProgram::Create(GfxShader* vertex_shader, GfxShader* fragment_shader)
+bool GfxProgram::create(GfxShader* vertex_shader, GfxShader* fragment_shader)
 {
 	VertexShader = vertex_shader;
 	FragmentShader = fragment_shader;
 	Id = glCreateProgram();
-	glAttachShader(Id, VertexShader->GetId());
-	glAttachShader(Id, FragmentShader->GetId());
+	glAttachShader(Id, VertexShader->getId());
+	glAttachShader(Id, FragmentShader->getId());
 	glLinkProgram(Id);
 	check();
-	printf("Created program id %d from vs %d and fs %d\n", GetId(), VertexShader->GetId(), FragmentShader->GetId());
+	printf("Created program id %d from vs %d and fs %d\n", getId(), VertexShader->getId(), FragmentShader->getId());
 
 	// Prints the information log for a program object
 	char log[1024];
@@ -377,7 +377,7 @@ bool GfxProgram::Create(GfxShader* vertex_shader, GfxShader* fragment_shader)
 void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1)
 {
 
-	const GLuint Prog = GSimpleProg.GetId();
+	const GLuint Prog = GSimpleProg.getId();
 
 	glUseProgram(Prog);
 	check();
@@ -388,7 +388,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 	check();
 
 
-	glBindTexture(GL_TEXTURE_2D,texture->GetId());
+	glBindTexture(GL_TEXTURE_2D,texture->getId());
 	check();
 
 	GLuint loc = glGetAttribLocation(Prog,"vertex");
@@ -432,7 +432,7 @@ void DrawTextureRect(GfxTexture* texture, float x0, float y0, float x1, float y1
 void DrawTextureRectTri(GfxTexture* texture, float x0, float y0, float x1, float y1)
 {
 
-	const GLuint Prog = GTriProg.GetId();
+	const GLuint Prog = GTriProg.getId();
 
 	glUseProgram(Prog);
 	check();
@@ -468,7 +468,7 @@ void DrawTextureRectTri(GfxTexture* texture, float x0, float y0, float x1, float
 
 	//glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);
 
-	glBindTexture(GL_TEXTURE_2D,texture->GetId());
+	glBindTexture(GL_TEXTURE_2D,texture->getId());
 	check();
 
 	GLuint loc = glGetAttribLocation(Prog,"vertex");
@@ -509,7 +509,7 @@ void DrawTextureRectTri(GfxTexture* texture, float x0, float y0, float x1, float
 
 }
 
-bool GfxTexture::Create(int width, int height, const void* data)
+bool GfxTexture::create(int width, int height, const void* data)
 {
 	Width = width;
 	Height = height;
@@ -527,7 +527,7 @@ bool GfxTexture::Create(int width, int height, const void* data)
 	return true;
 }
 
-void GfxTexture::SetPixels(const void* data)
+void GfxTexture::setPixels(const void* data)
 {
 	glBindTexture(GL_TEXTURE_2D, Id);
 	check();
@@ -541,7 +541,7 @@ void GfxTexture::SetPixels(const void* data)
 void DrawYuvTextureRect(GfxTexture* texY, GfxTexture* texU, GfxTexture* texV,  float x0, float y0, float x1, float y1)
 {
 
-	const GLuint Prog = GYuvProg.GetId();
+	const GLuint Prog = GYuvProg.getId();
 
 	glUseProgram(Prog);
 	check();
@@ -553,9 +553,9 @@ void DrawYuvTextureRect(GfxTexture* texY, GfxTexture* texU, GfxTexture* texV,  f
 	glUniform1i(glGetUniformLocation(Prog,"tex2"), 2);
 	check();
 
-	glBindTexture(GL_TEXTURE_2D,texY->GetId());
-	glBindTexture(GL_TEXTURE_2D,texU->GetId());
-	glBindTexture(GL_TEXTURE_2D,texY->GetId());
+	glBindTexture(GL_TEXTURE_2D,texY->getId());
+	glBindTexture(GL_TEXTURE_2D,texU->getId());
+	glBindTexture(GL_TEXTURE_2D,texY->getId());
 	check();
 
 	GLuint loc = glGetAttribLocation(Prog,"vertex");
@@ -582,7 +582,7 @@ void DrawYuvTextureRect(GfxTexture* texY, GfxTexture* texU, GfxTexture* texV,  f
 
 void handle_blobs(Blobtree *blob, BlobtreeRect *r, GfxTexture *texture){
 
-	const GLuint Prog = GFillProg.GetId();
+	const GLuint Prog = GFillProg.getId();
 	glUseProgram(Prog);
 	check();
 

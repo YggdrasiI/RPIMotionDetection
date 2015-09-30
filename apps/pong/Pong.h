@@ -36,7 +36,8 @@ class Pong{
 		Pong(float radius, float aspect);
 		void changeScore(const unsigned int index, int change);
 		void updatePosition(float dt = 1.0f);
-		void reset();
+		void reset(); // reset game start on begin.
+		void setPause(bool pause); //game starts paused.
 		const float* const getPosition();
 		const float* const getVelocity();
 		const int* const getScore();
@@ -53,7 +54,7 @@ class Pong{
 		//width and height are the dimensions of the blob rect coordinates.
 		bool checkCollision(int width, int height,  std::vector<cBlob> &blobs);
 
-		bool wait_on_camera_init;
+		bool paused;
 };
 
 #endif

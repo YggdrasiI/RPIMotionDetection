@@ -65,7 +65,7 @@ void CCamera::CameraControlCallback(MMAL_PORT_T *port, MMAL_BUFFER_HEADER_T *buf
 	GCamera->OnCameraControlCallback(port,buffer);
 }
 
-MMAL_COMPONENT_T* CCamera::CreateCameraComponentAndSetupPorts()
+MMAL_COMPONENT_T* CCamera::createCameraComponentAndSetupPorts()
 {
 	MMAL_COMPONENT_T *camera = 0;
 	MMAL_ES_FORMAT_T *format;
@@ -195,7 +195,7 @@ MMAL_COMPONENT_T* CCamera::CreateCameraComponentAndSetupPorts()
 	return camera;
 }
 
-MMAL_COMPONENT_T* CCamera::CreateSplitterComponentAndSetupPorts(MMAL_PORT_T* video_output_port)
+MMAL_COMPONENT_T* CCamera::createSplitterComponentAndSetupPorts(MMAL_PORT_T* video_output_port)
 {
 	MMAL_COMPONENT_T *splitter = 0;
 	MMAL_ES_FORMAT_T *format;
@@ -250,7 +250,7 @@ error:
 }
 
 #ifdef WITH_ENCODER
-MMAL_COMPONENT_T* CCamera::CreateEncoderComponentAndSetupPorts(){
+MMAL_COMPONENT_T* CCamera::createEncoderComponentAndSetupPorts(){
 
 	if ((status = create_encoder_component(&state)) != MMAL_SUCCESS)
 	{  
@@ -629,7 +629,7 @@ void CCameraOutput::EndReadFrame()
 }
 
 
-MMAL_COMPONENT_T* CCameraOutput::CreateResizeComponentAndSetupPorts(MMAL_PORT_T* video_output_port, bool do_argb_conversion)
+MMAL_COMPONENT_T* CCameraOutput::createResizeComponentAndSetupPorts(MMAL_PORT_T* video_output_port, bool do_argb_conversion)
 {
 	MMAL_COMPONENT_T *resizer = 0;
 	MMAL_ES_FORMAT_T *format;

@@ -65,7 +65,7 @@ int main(int argc, const char **argv)
 	//create 4 textures of decreasing size
 	GfxTexture textures[4];
 	for(int texidx = 0; texidx < num_levels; texidx++)
-		textures[texidx].Create(MAIN_TEXTURE_WIDTH >> texidx, MAIN_TEXTURE_HEIGHT >> texidx);
+		textures[texidx].create(MAIN_TEXTURE_WIDTH >> texidx, MAIN_TEXTURE_HEIGHT >> texidx);
 
 	IplImage* cvout = NULL;
 	cvout = cvCreateImage(cvSize(roi.width,roi.height), IPL_DEPTH_8U, 1);
@@ -86,14 +86,14 @@ int main(int argc, const char **argv)
 			if(do_argb_conversion)
 			{
 				//if doing argb conversion the frame data will be exactly the right size so just set directly
-				textures[texidx].SetPixels(frame_data);
+				textures[texidx].setPixels(frame_data);
 			}
 			else
 			{
 				//if not converting argb the data will be the wrong size and look weird, put copy it in
 				//via a temporary buffer just so we can observe something happening!
 				memcpy(tmpbuff,frame_data,frame_sz);
-				textures[texidx].SetPixels(tmpbuff);
+				textures[texidx].setPixels(tmpbuff);
 			}
 			cam->EndReadFrame(texidx);
 		}

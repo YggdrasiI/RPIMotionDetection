@@ -154,8 +154,8 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 {
 	/* Begin of row values is NOT word-aligned. Set alignment to 1 */
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
-	imvTexture.CreateGreyScale(121,68);
-	//imvTexture.GenerateFrameBuffer();
+	imvTexture.createGreyScale(121,68);
+	//imvTexture.generateFramebuffer();
 }
 
 void RedrawGui()
@@ -167,7 +167,7 @@ void RedrawGui()
 void RedrawTextures()
 {
 
-	imvTexture.SetPixels(motion_data.imv_norm);
+	imvTexture.setPixels(motion_data.imv_norm);
 	//DrawTextureRect(&imvTexture,-1.0, -1.f,-1.f,1.f,1.f,NULL);
 	//Use Scaling to flip horizontal
 	//DrawTextureRect(&imvTexture,-1.0, .5f,-.5f,-.5f,.5f,NULL);
@@ -181,7 +181,7 @@ void RedrawTextures()
 #if 0
 	static int savecounter=0;
 	if( savecounter == 400 )
-		SaveFrameBuffer("/dev/shm/fb1.png");
+		save_frame_buffer("/dev/shm/fb1.png");
 	++savecounter;
 #endif
 }
@@ -189,19 +189,19 @@ void RedrawTextures()
 void InitShaders()
 {
 	//load shaders
-	GSimpleVS.LoadVertexShader("shader/simplevertshader.glsl");
-	//GSimpleFS.LoadFragmentShader("shader/simplefragshader.glsl");
-	GSimpleFS.LoadFragmentShader("shader/blobids_fragshader.glsl");
-	GSimpleProg.Create(&GSimpleVS,&GSimpleFS);
+	GSimpleVS.loadVertexShader("shader/simplevertshader.glsl");
+	//GSimpleFS.loadFragmentShader("shader/simplefragshader.glsl");
+	GSimpleFS.loadFragmentShader("shader/blobids_fragshader.glsl");
+	GSimpleProg.create(&GSimpleVS,&GSimpleFS);
 	check();
-	GBlobFS.LoadFragmentShader("shader/blobfragshader.glsl");
-	GBlobProg.Create(&GSimpleVS,&GBlobFS);
-	GBlobsVS.LoadVertexShader("shader/blobsvertshader.glsl");
-	GBlobsFS.LoadFragmentShader("shader/blobsfragshader.glsl");
-	GBlobsProg.Create(&GBlobsVS,&GBlobsFS);
+	GBlobFS.loadFragmentShader("shader/blobfragshader.glsl");
+	GBlobProg.create(&GSimpleVS,&GBlobFS);
+	GBlobsVS.loadVertexShader("shader/blobsvertshader.glsl");
+	GBlobsFS.loadFragmentShader("shader/blobsfragshader.glsl");
+	GBlobsProg.create(&GBlobsVS,&GBlobsFS);
 
-	GColouredLinesFS.LoadFragmentShader("shader/colouredlinesfragshader.glsl");
-	GColouredLinesProg.Create(&GBlobsVS,&GColouredLinesFS);
+	GColouredLinesFS.loadFragmentShader("shader/colouredlinesfragshader.glsl");
+	GColouredLinesProg.create(&GBlobsVS,&GColouredLinesFS);
 
 	check();
 

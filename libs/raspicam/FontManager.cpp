@@ -9,12 +9,6 @@ FontManager::FontManager(){
     this->verticesData = vector_new(sizeof(GLfloat));
     this->atlas = texture_atlas_new( 1024, 1024, 1 );
     this->fonts = std::vector<texture_font_t*>();
-
-    // Init shader program
-    this->shader.vertex_shader.LoadVertexShader("shader/fontrendering/font1.vert.glsl");
-    this->shader.fragment_shader.LoadFragmentShader("shader/fontrendering/font1.frag.glsl");
-    this->shader.program.Create(&this->shader.vertex_shader, &this->shader.fragment_shader);
-    check();
 }
 
 FontManager::~FontManager(){
@@ -25,6 +19,14 @@ FontManager::~FontManager(){
         }
     }
     texture_atlas_delete(this->atlas);
+}
+
+void FontManager::initShaders(){
+    // Init shader program
+    this->shader.vertex_shader.loadVertexShader("shader/fontrendering/font1.vert.glsl");
+    this->shader.fragment_shader.loadFragmentShader("shader/fontrendering/font1.frag.glsl");
+    this->shader.program.create(&this->shader.vertex_shader, &this->shader.fragment_shader);
+    check();
 }
 
 /* Example fonts in shader/fontrendering/fonts/ */
@@ -119,17 +121,18 @@ void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* ren
 {
 	if(render_target)
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->GetFramebufferId());
-		glViewport ( 0, 0, render_target->GetWidth(), render_target->GetHeight() );
+		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 		check();
 	}
 
-	glUseProgram(this->shader.program.GetId());	check();
+	glUseProgram(this->shader.program.getId());	check();
 
-  const GLint vertexHandle = this->shader.program.GetHandle("a_position");
-  const GLint texHandle = this->shader.program.GetHandle("a_st");
-  const GLint colorHandle = this->shader.program.GetHandle("a_color");
-  const GLint mvpHandle = this->shader.program.GetHandle( "u_mvp");
+  const GLint vertexHandle = this->shader.program.getAttribLocation("a_position");
+  const GLint texCoordHandle = this->shader.program.getAttribLocation("a_st");
+  const GLint colorHandle = this->shader.program.getAttribLocation("a_color");
+	const GLint samplerHandle = this->shader.program.getUniformLocation("tex");
+  const GLint mvpHandle = this->shader.program.getUniformLocation( "u_mvp");
   const vector_t * const vVector = this->verticesData;
 
   /*
@@ -149,8 +152,8 @@ void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* ren
   float b = 1.0f/(y1-y0);
   // Set scaling so model coords are screen coords
   GLfloat mvp[] = {
-      a*cy*cp, -a*sy, -sp*a*cy, 0+x0,
-      b*sy*cp, b*cy, -sp*b*cy, 0+y0,
+      a*cy*cp, -a*sy, -sp*a*cy, 0-x0,
+      b*sy*cp, b*cy, -sp*b*cy, 0-y0,
       sp, 0, cp, 0,
       0, 0, 0, 1.0
   };
@@ -160,14 +163,14 @@ void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* ren
   // Load the vertex data
   glVertexAttribPointer ( vertexHandle, 3, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), vVector->items );
   glEnableVertexAttribArray ( vertexHandle );
-  glVertexAttribPointer ( texHandle, 2, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), (GLfloat*)vVector->items+3 );
-  glEnableVertexAttribArray ( texHandle );
+  glVertexAttribPointer ( texCoordHandle, 2, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), (GLfloat*)vVector->items+3 );
+  glEnableVertexAttribArray ( texCoordHandle );
   glVertexAttribPointer ( colorHandle, 4, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), (GLfloat*)vVector->items+5 );
   glEnableVertexAttribArray ( colorHandle );
 
   glActiveTexture( GL_TEXTURE0 );
   glBindTexture( GL_TEXTURE_2D, atlas->id );
-	glUniform1i(this->shader.program.GetHandle("tex"), 0);
+	glUniform1i(samplerHandle, 0);
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
