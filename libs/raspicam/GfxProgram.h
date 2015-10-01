@@ -12,6 +12,9 @@
 
 #define check() assert(glGetError() == 0)
 
+int _check_gl_error(const char *file, int line);
+#define check_gl_error() assert(_check_gl_error(__FILE__,__LINE__))
+
 class GfxShader
 {
 	GLchar* src;

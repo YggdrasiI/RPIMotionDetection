@@ -283,6 +283,8 @@ void InitShaders()
 	GColouredLinesFS.loadFragmentShader("shader/colouredlinesfragshader.glsl");
 	GColouredLinesProg.create(&GBlobsVS,&GColouredLinesFS);
 
+	fontManager.initShaders();
+
 	check();
 
 	//create an ickle vertex buffer
@@ -377,40 +379,38 @@ void DrawGui(GfxTexture *scoreTexture, Pong *pong, float border, float x0, float
 void DrawPongRect(GfxTexture* texture, float r, float g, float b,
 		float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
-		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
-		check();
-	}
-	glUseProgram(GPongProg.getId());	check();
+  if(render_target )
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
+    glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
+    check();
+  }
+  glUseProgram(GPongProg.getId());	check_gl_error();
 
-	glUniform2f(GPongProg.getUniformLocation("offset"),x0,y0);
-	glUniform2f(GPongProg.getUniformLocation("scale"),x1-x0,y1-y0);
-	glUniform1i(GPongProg.getUniformLocation("tex"), 0);
-	glUniform3f(GPongProg.getUniformLocation("colorMod"),r,g,b);
-	check();
+  glUniform2f(GPongProg.getUniformLocation("offset"),x0,y0);
+  glUniform2f(GPongProg.getUniformLocation("scale"),x1-x0,y1-y0);
+  glUniform1i(GPongProg.getUniformLocation("tex"), 0);
+  glUniform3f(GPongProg.getUniformLocation("colorMod"),r,g,b);
+  check();
 
-	glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
+  glBindBuffer(GL_ARRAY_BUFFER, GQuadVertexBuffer);	check();
 
-	glActiveTexture(GL_TEXTURE0);
-	glBindTexture(GL_TEXTURE_2D,texture->getId());	check();
+  glActiveTexture(GL_TEXTURE0);
+  glBindTexture(GL_TEXTURE_2D,texture->getId());	check();
 
-	GLuint loc = GPongProg.getAttribLocation("vertex");
-	glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
-	glEnableVertexAttribArray(loc);	check();
-	glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
+  GLuint loc = GPongProg.getAttribLocation("vertex");
+  glVertexAttribPointer(loc, 4, GL_FLOAT, 0, 16, 0);	check();
+  glEnableVertexAttribArray(loc);	check();
+  glDrawArrays ( GL_TRIANGLE_STRIP, 0, 4 ); check();
 
-	//glDisableVertexAttribArray(loc);	check();//neu
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
+  //glDisableVertexAttribArray(loc);	check();//neu
+  glBindBuffer(GL_ARRAY_BUFFER, 0);
+  glBindTexture(GL_TEXTURE_2D, 0);
 
-	printf("Draw pong....");
-
-	if(render_target )
-	{
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
-		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
-	}
+  if(render_target )
+  {
+    glBindFramebuffer(GL_FRAMEBUFFER,0);
+    glViewport ( 0, 0, GScreenWidth, GScreenHeight );
+  }
 }
 
