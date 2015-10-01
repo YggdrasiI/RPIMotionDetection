@@ -221,7 +221,7 @@ void RedrawGui()
 	DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
 	//new approach
 	fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture);
-	guiNeedRedraw = false;
+	//guiNeedRedraw = false;
 	
 	//DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, NULL);
 	//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);

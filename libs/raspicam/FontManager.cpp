@@ -156,7 +156,7 @@ void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* ren
 		 0 0 0 1    0  0 0 1   0    0 0 1     0 0   0 1    0        0      0       1
 		 */
 	// Pitch, roll and yaw
-	float yaw = 0.0;//0.0;
+	float yaw = M_PI;//0.0; //Rotating by 180° required (unknown reason).
 	float pitch = 0.0;//0.0;
 	float sy = sin(yaw);
 	float cy = cos(yaw);

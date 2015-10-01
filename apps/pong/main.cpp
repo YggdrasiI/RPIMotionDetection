@@ -222,7 +222,7 @@ int main(int argc, const char **argv){
 	//Setup font manager
 	fontManager.setInitFunc(setup_fonts);
 
-	//pong.setPause(false);
+	pong.setPause(false);
 
 	//start raspivid application.
 	raspivid(argc, argv);
