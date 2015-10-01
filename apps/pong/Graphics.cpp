@@ -199,7 +199,8 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 
 	//guiTexture.createRGBA(GScreenWidth,GScreenHeight, NULL);
 	guiTexture.createRGBA(800,600, NULL);
-	guiTexture.setInterpolation(false);
+	//guiTexture.setInterpolation(false);//for old approach
+	guiTexture.setInterpolation(true);//for new approach
 	guiTexture.generateFramebuffer();
 	guiTexture.toRaspiTexture(&guiBuffer);
 
@@ -219,12 +220,15 @@ void RedrawGui()
 	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, false, &blobCache, &blobsTexture);
 
 	if( !guiNeedRedraw ) return;
-	//old approach
+	//old approach, draw textures upside down.
 	//DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
 	//new approach
-	fontManager.Render(-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
+	//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture);
+	//guiNeedRedraw = false;
+	
+	DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, NULL);
+	fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);
 
-	guiNeedRedraw = false;
 }
 
 void RedrawTextures()

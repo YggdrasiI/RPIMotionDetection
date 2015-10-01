@@ -91,6 +91,9 @@ public:
 void printShaderInfoLog(GLint shader);
 void saveFramebuffer(const char* fname);
 
+char *file_read(const char *filename);
+GLuint create_shader(const char *filename, GLenum type);
+void print_log(GLuint object);
 
 
 #endif

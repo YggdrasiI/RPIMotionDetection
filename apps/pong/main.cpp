@@ -56,16 +56,16 @@ void* blob_detection(void *argn){
 					imv_eval_norm2(&motion_data);
 
 					//1.5 (optional) OpenGl Output
-					if( true ){
+					if( false ){
 						/* Problem: This texture update is outside
 						 * of the gl context thread and will be
 						 * ignored. Solution?!"
 						 * */
-						//imvTexture.setPixels(motion_data.imv_norm);
+						imvTexture.setPixels(motion_data.imv_norm);
 					}
 
 					//2. Blob detection
-					BlobtreeRect input_roi = {0,0, motion_data.width, motion_data.height -0 };//shrink height because lowest rows contains noise.
+					BlobtreeRect input_roi = {0,0, motion_data.width, motion_data.height - 0 }; // Noise in lowest row removed by raspivid update. Shrinking of height not ness anymore 
 					depthtree_find_blobs(frameblobs, motion_data.imv_norm,
 							motion_data.width, motion_data.height,
 							input_roi, depth_map, dworkspace);
@@ -77,7 +77,6 @@ void* blob_detection(void *argn){
 
 					// Debug: Replace imv_norm with ids, roi has to start in (0,0) and with full width.
 					//eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
-
 
 				}else{
 					//printf("No new imv data\n");
@@ -119,6 +118,27 @@ static int hand_filter(Node *n){
 
 	return 0;
 }
+
+//Setup of font manager for GUI textes. Called after OpenGL initialisation.
+void setup_fonts(FontManager *fontManager){
+
+	fontManager->add_font("./shader/fontrendering/fonts/custom.ttf", 50 );
+	fontManager->add_font("./shader/fontrendering/fonts/ObelixPro.ttf", 70 );
+
+	texture_font_t *font1, *font2;
+	font1 = fontManager->getFonts()->at(0);
+	font2 = fontManager->getFonts()->at(1);
+
+	vec2 pen = {0,0};
+	vec4 color = {.37254, .69411, .17647, 1.0};
+	vec4 transColor = {1,0.3,0.3,0.6};
+
+	//pen.x = -400;
+	//pen.y = 150;
+	//fontManager.add_text( font1, L"freetypeGlesRpi", &transColor, &pen );
+	fontManager->add_text( font1, L"freetypeGlesRpi", &color, &pen );
+}
+
 
 int main(int argc, const char **argv){
 
@@ -201,28 +221,10 @@ int main(int argc, const char **argv){
 	tracker.setMaxRadius(10);
 	tracker.setOldestDurationFilter(4);
 
-	//Setup font manager for GUI textes
-	fontManager.add_font("./shader/fontrendering/fonts/custom.ttf", 50 );
-	fontManager.add_font("./shader/fontrendering/fonts/ObelixPro.ttf", 70 );
+	//Setup font manager
+	fontManager.setInitFunc(setup_fonts);
 
-	texture_font_t *font1, *font2;
-	font1 = fontManager.getFonts()->at(0);
-	font2 = fontManager.getFonts()->at(1);
-
-  vec2 pen = {-400,150};
-  vec4 color = {.2,0.2,0.2,1};
-	vec4 transColor = {1,0.3,0.3,0.6};
-	fontManager.add_text( font1, L"freetypeGlesRpi", &color, &pen );
-	
-	pen.x = -390;
-	pen.y = 140;
-	fontManager.add_text( font1, L"freetypeGlesRpi", &transColor, &pen );
-
-	pen.x = 600;
-	pen.y = 400;
-	fontManager.add_text( font2, L"Special chars: ηαβ∅", &color, &pen );
-
-	pong.setPause(false);
+	//pong.setPause(false);
 
 	//start raspivid application.
 	raspivid(argc, argv);

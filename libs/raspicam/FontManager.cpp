@@ -2,9 +2,11 @@
 #include <string.h>
 #include <assert.h>
 
+#include "lodepng.h"
+
 #include "FontManager.h"
 
-FontManager::FontManager(){
+FontManager::FontManager():initHandle(NULL){
 	// Init font texture plate
 	this->verticesData = vector_new(sizeof(GLfloat));
 	this->atlas = texture_atlas_new( 1024, 1024, 1 );
@@ -27,6 +29,14 @@ void FontManager::initShaders(){
 	this->shader.fragment_shader.loadFragmentShader("shader/fontrendering/font1.frag.glsl");
 	this->shader.program.create(&this->shader.vertex_shader, &this->shader.fragment_shader);
 	check();
+
+	if( initHandle != NULL){
+		(*initHandle)(this);
+	}
+}
+
+void FontManager::setInitFunc( initFontHandler handle){ 
+	this->initHandle = handle;
 }
 
 /* Example fonts in shader/fontrendering/fonts/ */
@@ -116,8 +126,12 @@ void FontManager::add_text( texture_font_t *font, wchar_t *text, vec4 *color, ve
 	}
 }
 
+void FontManager::clear_text(){
+			vector_clear( this->verticesData );
+}
 
-void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* render_target)
+
+void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
 	if(render_target)
 	{
@@ -131,7 +145,7 @@ void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* ren
 	const GLint vertexHandle = this->shader.program.getAttribLocation("a_position");
 	const GLint texCoordHandle = this->shader.program.getAttribLocation("a_st");
 	const GLint colorHandle = this->shader.program.getAttribLocation("a_color");
-	const GLint samplerHandle = this->shader.program.getUniformLocation("tex");
+	const GLint samplerHandle = this->shader.program.getUniformLocation("texure_uniform");
 	const GLint mvpHandle = this->shader.program.getUniformLocation( "u_mvp");
 	const vector_t * const vVector = this->verticesData;
 
@@ -142,18 +156,18 @@ void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* ren
 		 0 0 0 1    0  0 0 1   0    0 0 1     0 0   0 1    0        0      0       1
 		 */
 	// Pitch, roll and yaw
-	float yaw = 0.0;
-	float pitch = 0.0;
+	float yaw = 0.0;//0.0;
+	float pitch = 0.0;//0.0;
 	float sy = sin(yaw);
 	float cy = cos(yaw);
 	float sp = sin(pitch);
 	float cp = cos(pitch);
-	float a = 1.0f/(x1-x0);
-	float b = 1.0f/(y1-y0);
+	float a = 1.0f/(render_target?render_target->getWidth():GScreenWidth); //1.0=>x_i diff
+	float b = 1.0f/(render_target?render_target->getHeight():GScreenHeight);
 	// Set scaling so model coords are screen coords
 	GLfloat mvp[] = {
-		a*cy*cp, -a*sy, -sp*a*cy, 0-x0,
-		b*sy*cp, b*cy, -sp*b*cy, 0-y0,
+		a*cy*cp, -a*sy, -sp*a*cy, 0/*-x0*/,
+		b*sy*cp, b*cy, -sp*b*cy, 0/*-y0*/,
 		sp, 0, cp, 0,
 		0, 0, 0, 1.0
 	};
@@ -170,11 +184,12 @@ void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* ren
 
 	glActiveTexture( GL_TEXTURE0 );
 	glBindTexture( GL_TEXTURE_2D, atlas->id );
+	
 	glUniform1i(samplerHandle, 0);
 
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glDisable(GL_CULL_FACE);
+	glDisable(GL_CULL_FACE);
 
 	glDrawArrays ( GL_TRIANGLES, 0, vVector->size/9 );
 
@@ -186,4 +201,13 @@ void FontManager::Render(float x0, float y0, float x1, float y1, GfxTexture* ren
 		glBindFramebuffer(GL_FRAMEBUFFER,0);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
 	}
+}
+
+void FontManager::saveFontAtlas(int font_index, const char* fname)
+{
+	texture_atlas_t *tex = this->fonts[font_index]->atlas;
+
+	unsigned error = lodepng::encode(fname, (const unsigned char*)tex->data, tex->width, tex->height, tex->depth>1 ? LCT_RGBA : LCT_GREY);
+	if(error) 
+		printf("error: %d\n",error);
 }

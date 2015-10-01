@@ -109,7 +109,7 @@ static const EGLint attribute_list[] =
 	EGL_NONE
 };
 
-static GLfloat varray[] = {
+static GLfloat _varray[] = {
 	-1.0f, -1.0f,
 	1.0f,  1.0f,
 	1.0f, -1.0f,
@@ -117,6 +117,16 @@ static GLfloat varray[] = {
 	-1.0f,  1.0f,
 	1.0f,  1.0f,
 	-1.0f, -1.0f,
+};
+
+static GLfloat varray[] = {
+	-1.0f, -1.0f,
+	 1.0f, -1.0f,
+	 1.0f,  1.0f,
+
+	-1.0f,  1.0f,
+	-1.0f, -1.0f,
+	 1.0f,  1.0f,
 };
 
 /**
@@ -183,7 +193,7 @@ static void pong_video1(RASPITEX_STATE *raspitex_state) {
 	GLCHK(glEnableVertexAttribArray(pong_shader.attribute_locations[0]));
 
 	GLCHK(glVertexAttribPointer(pong_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
-	GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
+	//GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
 
 	GLCHK(glDisableVertexAttribArray(pong_shader.attribute_locations[0]));
 	GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
