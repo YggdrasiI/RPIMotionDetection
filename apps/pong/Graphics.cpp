@@ -50,8 +50,6 @@ GfxShader GPongFS;
 GfxShader GColouredLinesFS;
 GfxShader GGuiVS;
 GfxShader GGuiFS;
-GfxShader GFontVS;
-GfxShader GFontFS;
 
 GfxProgram GSimpleProg;
 GfxProgram GBlobProg;
@@ -59,7 +57,6 @@ GfxProgram GPongProg;
 GfxProgram GBlobsProg;
 GfxProgram GColouredLinesProg;
 GfxProgram GGuiProg;
-GfxProgram GFontProg;
 
 GLuint GQuadVertexBuffer;
 
@@ -221,14 +218,13 @@ void RedrawGui()
 
 	if( !guiNeedRedraw ) return;
 	//old approach, draw textures upside down.
-	//DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
+	DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
 	//new approach
-	//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture);
-	//guiNeedRedraw = false;
+	fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture);
+	guiNeedRedraw = false;
 	
-	DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, NULL);
-	fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);
-
+	//DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, NULL);
+	//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);
 }
 
 void RedrawTextures()

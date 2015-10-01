@@ -122,12 +122,10 @@ static int hand_filter(Node *n){
 //Setup of font manager for GUI textes. Called after OpenGL initialisation.
 void setup_fonts(FontManager *fontManager){
 
-	fontManager->add_font("./shader/fontrendering/fonts/custom.ttf", 50 );
-	fontManager->add_font("./shader/fontrendering/fonts/ObelixPro.ttf", 70 );
+	fontManager->add_font("./shader/fontrendering/fonts/Vera.ttf", 50 );
 
 	texture_font_t *font1, *font2;
 	font1 = fontManager->getFonts()->at(0);
-	font2 = fontManager->getFonts()->at(1);
 
 	vec2 pen = {0,0};
 	vec4 color = {.37254, .69411, .17647, 1.0};

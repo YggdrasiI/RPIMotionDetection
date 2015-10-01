@@ -392,7 +392,9 @@ GLuint create_shader(const char *filename, GLenum type)
         print_log(res);
         glDeleteShader(res);
         return 0;
-    }
+		}else{
+			printf("%s shader %i compiled (%s).\n", (type==GL_VERTEX_SHADER?"Vertex":"Fragment"), res, filename);
+		}
 
     return res;
 }
