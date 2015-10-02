@@ -1,6 +1,5 @@
 #include <stdio.h>
 #include <signal.h>
-#include <unistd.h>
 #include <opencv2/opencv.hpp>
 
 //get ENV variables from BlobDetection lib
@@ -9,9 +8,10 @@
 #include "threshtree.h"
 #include "depthtree.h"
 #include "Tracker2.h"
+#include "TrackerDrawingOpenCV.h"
 
 #ifdef WITH_GSL
-#include "Gestures.h"
+#include "../../Gestures.h"
 #endif
 
 #include "Fps.h"
@@ -19,6 +19,8 @@
 using namespace cv;
 
 static std::vector<cBlob> blobCache;
+// Header for drawing function. Definition in libs/tracker/DrawingOpenCV.cpp
+//void tracker_drawBlobs(Tracker &tracker, cv::Mat &out, bool drawHistoryLines, std::vector<cBlob> *toDraw );
 
 /* Define own filters. Node will pass filter
  * if 0 will be returned. For more info
@@ -80,7 +82,7 @@ static BlobtreeRect input_roi; // Region of interest of input image
 static bool redraw_pending = false;
 static bool display_areas = true;
 static bool display_tracker = false;
-static bool display_filtered_areas = false;
+static bool display_filtered_areas = true;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
 static int gridwidth = 1;
@@ -118,8 +120,8 @@ static GestureStore gestureStore;
  * visual representation of the ids. The array is not
  * reset automaticaly due performance increase.
  * */
-static bool reset_ids = true;
-static const unsigned int IDINITVAL = -1;
+static bool reset_ids = false;
+static const unsigned int IDINITVAL = 0;
 
 
 
@@ -296,9 +298,6 @@ int detection_loop(std::string filename ){
 	tracker.setMaxRadius( max((H+W)/40,7) );
 	tracker.trackBlobs( frameblobs, true );
 
-	/* Textual output of whole tree of blobs. */
-	//print_tree(frameblobs->tree->root,0);
-
 #ifdef WITH_GSL
 	/* Gesture analyser for tracking output */
 	blobCache.clear();
@@ -325,6 +324,9 @@ int detection_loop(std::string filename ){
 		}
 	}
 #endif
+
+	/* Textual output of whole tree of blobs. */
+	//print_tree(frameblobs->tree->root,0);
 
 	return 0;
 }
@@ -363,9 +365,9 @@ int fpsTest(std::string filename ){
 	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
 
 	Fps fps;
-	unsigned int n = 1;
-	while( ++n<100000 ){
-		//printf("n = %i\n", n);
+	unsigned int N = 1;
+	while( ++N<100000 ){
+		//printf("N = %i\n", N);
 		if( algorithm == 0 ){
 			threshtree_find_blobs(frameblobs, ptr, W, H, input_roi, thresh, tworkspace);
 		}else{
@@ -483,9 +485,10 @@ static void redraw(){
 
 	if( display_tracker ){
 		if( display_bounding_boxes ){
+			static std::vector<cBlob> blobCache;
 			blobCache.clear();
 			tracker.getFilteredBlobs(TRACK_ALL_ACTIVE/*|TRACK_PENDING*/, blobCache);
-			tracker.drawBlobs( color, true, &blobCache );
+			tracker_drawBlobs( tracker, color, true, &blobCache );
 		}
 	}else{
 		BlobtreeRect *roi;
