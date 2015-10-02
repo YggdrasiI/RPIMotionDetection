@@ -30,15 +30,5 @@ execute_process( COMMAND "ln" "-s" "${CMAKE_CURRENT_SOURCE_DIR}/images" "."
 ### Create libs
 add_subdirectory(libs)
 
-### Test application for BlobDetection library ###
-# The images directory contains a few images 
-# as examples.
-if(WITH_OCV)
-	add_subdirectory(apps/displayblobs)
-else(WITH_OCV)
-	message(STATUS "No OpenCV lib. Skip DisplayBlob application." )
-endif(WITH_OCV)
-
-
-### Create other testing applications ###
+### Create applications ###
 add_subdirectory(apps)

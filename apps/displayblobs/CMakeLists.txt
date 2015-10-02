@@ -14,7 +14,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_executable( DisplayBlobs 
 	DisplayBlobs.cpp
-	#../../libs/tracker/DrawingOpenCV.cpp  # Only this file contains dependencies to OpenCV
+	../../libs/tracker/DrawingOpenCV.cpp  # Only this file contains dependencies to OpenCV
 	../../Gestures.cpp ../../gsl_helper.c
 	)
 
