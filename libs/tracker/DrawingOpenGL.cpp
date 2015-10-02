@@ -2,11 +2,11 @@
  * Static drawing function for OpenGL.
  */
 #include <unistd.h>
-
 #include <algorithm> //for std::sort
 
 #include "Tracker.h"
 #ifdef WITH_OPENGL
+#include "TrackerDrawingOpenGL.h"
 #include "DrawingFunctions.h"
 
 #ifdef WITH_HISTORY

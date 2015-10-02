@@ -18,6 +18,7 @@
 #include "DrawingFunctions.h"
 
 #include "Tracker2.h"
+#include "TrackerDrawingOpenGL.h"
 extern Tracker2 tracker;
 
 #include <FontManager.h>

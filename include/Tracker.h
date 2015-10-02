@@ -8,16 +8,6 @@
 #include <stdlib.h>
 #include <vector>
 
-#ifdef WITH_OCV
-#include <opencv/cv.h>
-#include <opencv/cxcore.h>
-#include <opencv2/opencv.hpp>
-#endif
-
-#ifdef WITH_OPENGL
-class GfxTexture; 
-#endif
-
 #include "Blob.h"
 
 #include "threshtree.h"
@@ -86,23 +76,6 @@ class Tracker {
 		 */
 		void setOldestDurationFilter(int N_oldest_blobs);
 
-
-#ifdef WITH_OCV
-		/* Helper function to draw blobs for debugging */
-		void tracker_drawBlobs(Tracker &tracker, cv::Mat &out, bool drawHistoryLines, std::vector<cBlob> *toDraw = NULL );
-#endif
-#ifdef WITH_OPENGL
-		/* Helper function to draw blobs for debugging */
-		void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bool drawHistoryLines =     false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL);
-		void tracker_drawHistory( Tracker &tracker, int screenWidth, int screenHeight, cBlob &blob, GfxTexture     *target);
-
-#ifdef WITH_HISTORY
-		//void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
-#endif
-
-#endif
 };
-
-
 
 #endif

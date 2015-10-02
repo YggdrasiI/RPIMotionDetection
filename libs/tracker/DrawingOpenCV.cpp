@@ -4,6 +4,7 @@
 #include <unistd.h>
 
 #include "Tracker.h"
+#include "TrackerDrawingOpenCV.h"
 
 
 #ifdef WITH_OCV
