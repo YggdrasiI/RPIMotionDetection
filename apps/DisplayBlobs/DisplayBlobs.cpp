@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <signal.h>
+#include <unistd.h>
 #include <opencv2/opencv.hpp>
 
 //get ENV variables from BlobDetection lib

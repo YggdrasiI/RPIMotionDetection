@@ -9,8 +9,8 @@
 #include <vector>
 
 #ifdef WITH_OCV
-#include <cv.h>
-#include <cxcore.h>
+#include <opencv/cv.h>
+#include <opencv/cxcore.h>
 #include <opencv2/opencv.hpp>
 #endif
 
@@ -89,11 +89,12 @@ class Tracker {
 
 #ifdef WITH_OCV
 		/* Helper function to draw blobs for debugging */
-		//void drawBlobs(cv::Mat &out, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL);
+		void tracker_drawBlobs(Tracker &tracker, cv::Mat &out, bool drawHistoryLines, std::vector<cBlob> *toDraw = NULL );
 #endif
 #ifdef WITH_OPENGL
 		/* Helper function to draw blobs for debugging */
-		//void drawBlobsGL(int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL );
+		void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bool drawHistoryLines =     false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL);
+		void tracker_drawHistory( Tracker &tracker, int screenWidth, int screenHeight, cBlob &blob, GfxTexture     *target);
 
 #ifdef WITH_HISTORY
 		//void drawHistory( int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
