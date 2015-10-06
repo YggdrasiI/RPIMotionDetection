@@ -82,7 +82,7 @@ static Mat input_image;
 static BlobtreeRect input_roi; // Region of interest of input image
 static bool redraw_pending = false;
 static bool display_areas = true;
-static bool display_tracker = false;
+static bool display_tracker = true;
 static bool display_filtered_areas = true;
 static bool display_bounding_boxes = true;
 static int algorithm = 1;
@@ -94,14 +94,14 @@ static int of_tree_depth_min = 1;
 static int of_tree_depth_max = 100;
 static int of_area_depth_min = 0;
 static int of_area_depth_max = 255;
-static bool of_only_leafs = false;
+static bool of_only_leafs = true;
 static bool of_use_own_filter = false;
 static int output_scalefactor = 1;
 static bool invert_depth_map = false;
 
 
 // Thresh 
-static int thresh = 4;//60;
+static int thresh = 25;//60;
 // Depth map (for algorithm 1)
 unsigned char depth_map[256];
 
@@ -113,6 +113,7 @@ static Tracker2 tracker;
 
 #ifdef WITH_GSL
 static GestureStore gestureStore;
+static std::vector<Gesture*> gestures = std::vector<Gesture*>();
 #endif
 
 /* Init id array:
@@ -169,31 +170,33 @@ void update_filter( ){
 
 }
 
-void drawGestureSpline( Gesture *gesture, cv::Mat out){
+void drawGestureSpline( Gesture *gesture, cv::Mat &out, cv::Scalar line_color = cv::Scalar(255,200,200)){
 
 		double *x = NULL , *y = NULL; 
 		size_t xy_len = 0;
 		gesture->evalSpline(&x,&y,&xy_len);
+
 		if( xy_len > 0 ){
-				cv::Point p1((int)x[0],(int)y[0]);
-				cv::Point p2;
-				for( size_t i=1; i<xy_len; ++i){
-					p2.x = x[i]; p2.y = y[i];
-					cv::Scalar color(255,200,200);
-					cv::line(out,p1,p2,color,2);
-					p1 = p2;
-				}
+			// 1. Draw orientation triangle
+			cv::Point t0(gesture->m_orientationTriangle[0].x,gesture->m_orientationTriangle[0].y);
+			cv::Point t1(gesture->m_orientationTriangle[1].x,gesture->m_orientationTriangle[1].y);
+			cv::Point t2(gesture->m_orientationTriangle[2].x,gesture->m_orientationTriangle[2].y);
+			cv::Scalar triColor(255,50,0);
+			cv::line(out,t0,t1,triColor,2);
+			cv::line(out,t1,t2,triColor,2);
+			cv::line(out,t2,t0,triColor,2);
+
+			// 2. Draw spline
+			cv::Point p1((int)x[0],(int)y[0]);
+			cv::Point p2;
+			for( size_t i=1; i<xy_len; ++i){
+				p2.x = x[i]; p2.y = y[i];
+				cv::line(out,p1,p2,line_color,2);
+				p1 = p2;
+			}
 		}
 		//delete x; delete y;//points to member variables, now. -> no explicit delete
 
-		//draw orientation triangle
-		cv::Point t0(gesture->m_orientationTriangle[0].x,gesture->m_orientationTriangle[0].y);
-		cv::Point t1(gesture->m_orientationTriangle[1].x,gesture->m_orientationTriangle[1].y);
-		cv::Point t2(gesture->m_orientationTriangle[2].x,gesture->m_orientationTriangle[2].y);
-		cv::Scalar triColor(255,50,0);
-		cv::line(out,t0,t1,triColor,2);
-		cv::line(out,t1,t2,triColor,2);
-		cv::line(out,t2,t0,triColor,2);
 }
 
 int detection_loop(std::string filename ){
@@ -295,31 +298,41 @@ int detection_loop(std::string filename ){
 
 	//Update Tracker
 	update_filter();
-	tracker.setMaxRadius(40);
-	tracker.setMaxRadius( max((H+W)/40,7) );
+	//tracker.setMaxRadius(50);
+	tracker.setMaxRadius( max((H+W)/10,7) );
 	tracker.trackBlobs( frameblobs, true );
 
 #ifdef WITH_GSL
 	/* Gesture analyser for tracking output */
 	blobCache.clear();
+
+	//Get blobs which are marked as 'finished'.
+	//Minimize computatation but increase detection delay.
 	tracker.getFilteredBlobs(TRACK_UP, blobCache);
+	//Alternative: Fetch all active blobs
+	//tracker.getFilteredBlobs(TRACK_ALL_ACTIVE, blobCache);
+
+	// Clear shown gesture splines of previous frame
+	gestures.clear();
 
 	std::vector<cBlob>::iterator it = blobCache.begin();
 	const std::vector<cBlob>::iterator itEnd = blobCache.end();
 	for( ; it != itEnd ; ++it ){
-		if( (*it).duration < 20 ) continue; 
-		printf("Create gesture object, %u\n", itEnd-it );
+		// Skip short/flickering movements
+		if( (*it).duration < 10 ) continue; 
+
+		// Convert list of coordinates into spline approximation
 		Gesture *gest = new Gesture( (*it) );
 		//gest->evalSplineCoefficients();
-
-		//drawGestureSpline(&gest, color);
-		//gestureStore.addPattern(gest);
 		
+		// This objects stores some metadata/results.
 		GesturePatternCompareResult res;
 		gestureStore.compateWithPatterns(gest, res);
-		if( res.minDist < 0.01 ){
+		if( res.minGest != NULL && res.minDist < 0.1 ){
 			printf("Gesture similar to %s\n", res.minGest->getGestureName() );
-			gestureStore.addPattern(gest);
+			//gestureStore.addPattern(gest);
+			gestures.emplace_back(gest);
+			printf("Num tmp gestures: %lu\n", gestures.size());
 		}else{
 			delete gest;
 		}
@@ -363,7 +376,7 @@ int fpsTest(std::string filename ){
 	depthtree_create_workspace( W, H, &dworkspace );
 	blobtree_create(&frameblobs);
 	blobtree_set_grid(frameblobs, gridwidth,gridwidth);
-	input_roi = {0,0,W, H };//shrink height because lowest rows contains noise.
+	input_roi = {0,0, (int)W, (int)H };//shrink height because lowest rows contains noise.
 
 	Fps fps;
 	unsigned int N = 1;
@@ -488,7 +501,8 @@ static void redraw(){
 		if( display_bounding_boxes ){
 			static std::vector<cBlob> blobCache;
 			blobCache.clear();
-			tracker.getFilteredBlobs(TRACK_ALL_ACTIVE/*|TRACK_PENDING*/, blobCache);
+			//tracker.getFilteredBlobs(TRACK_ALL_ACTIVE/*|TRACK_PENDING*/, blobCache);
+			tracker.getFilteredBlobs(TRACK_ALL_ACTIVE, blobCache);
 			tracker_drawBlobs( tracker, color, true, &blobCache );
 		}
 	}else{
@@ -553,12 +567,16 @@ static void redraw(){
 	}
 
 #ifdef WITH_GSL
-	std::vector<Gesture*> gestures = gestureStore.getPatterns();
-	std::vector<Gesture*>::iterator it = gestures.begin();
-	const std::vector<Gesture*>::iterator itEnd = gestures.end();
-	printf("Number of stored patterns:%u\n", itEnd-it );
+	std::vector<Gesture*> gestures2 = gestureStore.getPatterns();
+
+	std::vector<Gesture*>::iterator it = gestures2.begin();
+	const std::vector<Gesture*>::iterator itEnd = gestures2.end();
+	//printf("Number of stored patterns:%lu\n", itEnd-it );
 	for( ; it != itEnd ; ++it ){
-		drawGestureSpline( (*it) , color);
+		//drawGestureSpline( (*it) , color);
+	}
+	for( auto& gest: gestures){
+		drawGestureSpline(gest, color, cv::Scalar(0,200,200) );
 	}
 #endif
 
@@ -788,7 +806,7 @@ int main(int argc, char** argv )
 	depthtree_destroy_workspace( &dworkspace );
 	threshtree_destroy_workspace( &tworkspace );
 	blobtree_destroy(&frameblobs);
-
+	uninitStaticGestureVariables();
 
 	return 0;
 }

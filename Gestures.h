@@ -12,12 +12,12 @@
  * 2) The spline will be used to evaluate a 1d function which is invariant 
  * 	under rotation and translation and scaling of the gesture.
  * 	Moreover, this function try to conservate 'global' properties of the curve
- * 	and no 'local' properties. We use secants 
+ * 	and no 'local' properties (like derivatives). We use secants 
  * 	s(t) :=  distance( P(t+0.5) - P(t) )/length(spline)
  *
  * 	TODO: A RANSAC algorithm should produce better results. It could be
  * 	useful to look into the OpenCV Ransac framework.
- * 	A non-uniform	placment of the bspline knots or a similar technique
+ * 	A non-uniform	placement of the bspline knots or a similar technique
  * 	could reduce the overshooting at the curve ends, too.
  * 
  * 3) To compare the motion with an other we check the L1- (or L2-)norm
@@ -32,6 +32,7 @@
 
 #include <cmath>
 #include <vector>
+#include <map>
 #include <deque>
 #include <cstring>
 //#include <string>
@@ -60,7 +61,8 @@ struct fpoint2 {
  * F_1 > F_2 > … > F_i
  * and F_1 - F_i <= MAX_DURATION_STEPS.
  *
- * A difference in the missing_duration property of F_j and F_{j+1} marks skipped frames.
+ * Note that 'F_j - F_{j-1} > 1' if a blob was not found in intermediate frames.
+ * The difference between both values return the number of skipped frames.
  * MAX_DURATION_STEPS determine the number of preevaluated Basis elements
  */
 #define MAX_DURATION_STEPS 100
@@ -86,10 +88,12 @@ struct fpoint2 {
 #define NCOEFFS_FUNC(n) (std::max(NCOEFFS_MIN,std::min((int)(n/3),NCOEFFS_MAX-1)))
 //#define NBREAK   (NCOEFFS + 2 - SPLINE_DEG) //Should be at least 2
 
-/* Uniform grid on [0,1] with MAX_DURATION_STEPS + 2 - SPLINE_DEG.
- * The border values will be doubled (0,0,…,1,1).
+/* Uniform grid on [0,1] with NUM_EVALUATION_POINTS. (Currently) all further 
+ * evaluatationn base on values of this positions.
  */
-//static gsl_vector *FullGrid[NCOEFFS_MAX-NCOEFFS_MIN];
+static gsl_vector *EvalGrid;
+/* Store basis function values for EvalGrid */
+static gsl_matrix *EvalGridBasis[NCOEFFS_MAX-NCOEFFS_MIN]; 
 
 /* Flag to indicate if the spline estimation should be saved in 
  * the gesture objects or a global variable */
@@ -102,7 +106,13 @@ struct fpoint2 {
 /* Distance between two spline evaluation points which will be
  * used for the generation of the gesture invariance function.
  */
-#define COMPARE_DIST (NUM_EVALUATION_POINTS/2)
+static const size_t CompareDistancesNum = 4;
+static const size_t CompareDistances[] = {
+	(NUM_EVALUATION_POINTS*3/4),
+	(NUM_EVALUATION_POINTS/2),
+	(NUM_EVALUATION_POINTS/4),
+	(NUM_EVALUATION_POINTS/3),
+};
 
 /* Basisfunction on all knots of the FullGrid
  */
@@ -130,15 +140,18 @@ static void initStaticGestureVariables(){
 		gsl_bspline_knots_uniform(0.0, 1.0, bw[i]);
 
 		FullBasis[i] = gsl_matrix_alloc(MAX_DURATION_STEPS, ncoeffs);
-		gsl_vector *tmpB = gsl_vector_alloc(ncoeffs);
+		//gsl_vector *tmpB = gsl_vector_alloc(ncoeffs);
 		double step = 1.0/(MAX_DURATION_STEPS-1);
 		double t = 0;
 		for (j = 0; j < MAX_DURATION_STEPS; ++j, t+=step )
 		{
-			gsl_bspline_eval(t, tmpB, bw[i]);
-			gsl_matrix_set_row( FullBasis[i], j, tmpB);
+			//gsl_bspline_eval(t, tmpB, bw[i]);
+			//gsl_matrix_set_row( FullBasis[i], j, tmpB);
+			gsl_vector_view subrow = gsl_matrix_subrow( FullBasis[i], j, 0, ncoeffs);
+			gsl_bspline_eval(t, &subrow.vector, bw[i]);
 		}
-		gsl_vector_free(tmpB);
+		//gsl_vector_free(tmpB);
+
 	}
 
 	//Extract grid. (The bspline knots array is slightly bigger at both ends...)
@@ -153,33 +166,53 @@ static void initStaticGestureVariables(){
 		}
 	}
 
+	// Eval values of basis function for evaluation points
+	EvalGrid = gsl_vector_alloc(NUM_EVALUATION_POINTS);
+	for ( i=0, ncoeffs = NCOEFFS_MIN; ncoeffs < NCOEFFS_MAX; ++ncoeffs, ++i ){
+		EvalGridBasis[i] = gsl_matrix_alloc(NUM_EVALUATION_POINTS, ncoeffs);
+		double step = 1.0/(NUM_EVALUATION_POINTS-1);
+		double t = 0.0;
+		for (j = 0; j < NUM_EVALUATION_POINTS; ++j, t+=step )
+		{
+			if( t>1.0 ) t -= 1E-10; //Omit leaving of interval due rounding errors.
+			gsl_vector_set(EvalGrid, j, t);
+			gsl_vector_view subrow = gsl_matrix_subrow( EvalGridBasis[i], j, 0, ncoeffs);
+			gsl_bspline_eval(t, &subrow.vector, bw[i]);
+		}
+	}
 }
 
 static void uninitStaticGestureVariables(){
 	//gsl_vector_free(FullGrid);
 
-	size_t ncoeffs;
-	for ( ncoeffs = NCOEFFS_MIN; ncoeffs < NCOEFFS_MAX; ++ncoeffs){
-		gsl_bspline_free(bw[ncoeffs]);
-		bw[ncoeffs] = NULL;
-		gsl_matrix_free(FullBasis[ncoeffs]);
-		FullBasis[ncoeffs] = NULL;
+	size_t i,j;
+	for(i = 0;  i < NCOEFFS_MAX - NCOEFFS_MAX; ++i){
+		gsl_bspline_free(bw[i]);
+		bw[i] = NULL;
+		gsl_matrix_free(FullBasis[i]);
+		FullBasis[i] = NULL;
 	}
 
 	/* reset internal mw vector/matrix values to original values
-	 * (just to be on the save side) */
-	gsl_multifit_linear_realloc(mw, MAX_DURATION_STEPS, NCOEFFS_MAX-1);
-	gsl_multifit_linear_free(mw); mw = NULL;
-	//gsl_multifit_robust_free(rw); rw = NULL;
+	 * (just to be on the save side on following freeing) */
+	if( mw != NULL ){
+		gsl_multifit_linear_realloc(mw, MAX_DURATION_STEPS, NCOEFFS_MAX-1);
+		gsl_multifit_linear_free(mw); mw = NULL;
+		//gsl_multifit_robust_free(rw); rw = NULL;
+	}
 
-	size_t i,j;
-	for ( i = NCOEFFS_MAX - NCOEFFS_MAX; i > 0 ;   ){
-		--i;
+	for(i = 0;  i < NCOEFFS_MAX - NCOEFFS_MAX; ++i){
 		for ( j=0; j<DIM; ++j ){
 			gsl_vector_free(Global_c[i][j]);
 			gsl_matrix_free(Global_cov[i][j]);
 		}
 	}
+
+	//Evaluation grid points/basis.
+	for(i = 0;  i < NCOEFFS_MAX - NCOEFFS_MAX; ++i){
+		gsl_matrix_free(EvalGridBasis[i]);
+	}
+	gsl_vector_free(EvalGrid);
 }
 
 
@@ -218,7 +251,8 @@ class Gesture{
 		fpoint2 m_orientationTriangle[3];
 
 		/* Stores result of evalDistances() */
-		gsl_vector *m_curvePointDistances;
+		//gsl_vector *m_curvePointDistances;
+		gsl_vector **m_curvePointDistances;
 
 
 		Gesture( cBlob &blob);
@@ -231,6 +265,7 @@ class Gesture{
 		void evalSplineCoefficients();
 		void evalOrientation();
 		void evalDistances();
+		double evalCurveLength();
 		bool isClosedCurve(/* float *outAbs, float *outRel*/);
 
 		//for debugging...
@@ -239,13 +274,33 @@ class Gesture{
 		void setGestureName(const char* name);
 		const char* getGestureName() const;
 
+		void printDistances() const{
+
+			double *out = m_curvePointDistances[0]->data;
+			for( int i=0; i<NUM_EVALUATION_POINTS-CompareDistances[0]; ++i){
+				printf("%d %f\n", i, *out++);
+			}
+		}
 };
+
+class GestureDistance{
+	public:
+		const Gesture *m_from, *m_to;
+		int m_sorting_weight;
+		GestureDistance(const Gesture *from, const Gesture *to):m_from(from),m_to(to),m_sorting_weight(0){
+		};
+		double m_L2NormSquared[4] = {DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX };
+		double evalL2Dist( size_t level);
+};
+
+
 
 /* Store the result for gesture analyse. */
 struct GesturePatternCompareResult{
 	float minDist; 
-	Gesture *minGest; //Gesture of gestureStore with minimal 'distance'.
+	const Gesture *minGest; //Gesture of gestureStore with minimal 'distance'.
 	float avgDist; // Average distance to (currently all) gestures of the gesture store.
+	//std::map<Gesture*, float[> d
 };
 
 class GestureStore{
@@ -256,7 +311,7 @@ class GestureStore{
 	public:
 			GestureStore();
 			~GestureStore();
-			/* All patters will be deleted in the destrutor. */
+			/* All patters will be deleted in the destructor. */
 			void addPattern(Gesture *pGesture);
 			std::vector<Gesture*> & getPatterns();
 
@@ -287,7 +342,6 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 	Gesture *gest1 = new Gesture( time, xy, n); 
 	gest1->setGestureName("L-shape");
 	gestureStore.addPattern(gest1);
-
 
 	//Circle
 	pos=&xy[0];
@@ -327,6 +381,26 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 	gest4->setGestureName("U-Shape");
 	gestureStore.addPattern(gest4);
 
+	//V-Shape
+	pos=&xy[0];
+	for(i=0 ; i<15; ++i){
+		*pos++ = 150 + i*5; 
+		*pos++ = 100 + i*10;
+	}
+	for( ; i<30; ++i){
+		*pos++ = 150 + i*5; 
+		*pos++ = 100 + (30-i)*10;
+	}
+	Gesture *gest5 = new Gesture( time, xy, n); 
+	gest5->setGestureName("V-Shape");
+	gestureStore.addPattern(gest5);
+
+
+	//Debug, Print out distance vectors
+	for( auto& gesture: gestureStore.getPatterns() ){
+		printf("DIST VECTOR %s\n", gesture->getGestureName());
+		gesture->printDistances();
+	}
 }
 
 #endif

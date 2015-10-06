@@ -1,5 +1,63 @@
 #include <cfloat>
+#include <assert.h>
+#include <algorithm>
 #include "Gestures.h"
+
+
+//Sorting functions to find best fitting gestures.
+static bool sortByLevel0(const GestureDistance *lhs, const GestureDistance *rhs) { 
+	return lhs->m_L2NormSquared[0] < rhs->m_L2NormSquared[0];
+}
+static bool sortByLevel1(const GestureDistance *lhs, const GestureDistance *rhs) { 
+	return lhs->m_L2NormSquared[1] < rhs->m_L2NormSquared[1];
+}
+static bool sortByLevel2(const GestureDistance *lhs, const GestureDistance *rhs) { 
+	return lhs->m_L2NormSquared[2] < rhs->m_L2NormSquared[2];
+}
+static bool sortByLevel3(const GestureDistance *lhs, const GestureDistance *rhs) { 
+	return lhs->m_L2NormSquared[3] < rhs->m_L2NormSquared[3];
+}
+static bool sortByWeight(const GestureDistance *lhs, const GestureDistance *rhs) { 
+	if( lhs->m_sorting_weight == rhs->m_sorting_weight){
+		return lhs->m_L2NormSquared[1] < rhs->m_L2NormSquared[1];
+	}
+	return lhs->m_sorting_weight < rhs->m_sorting_weight;
+}
+
+typedef bool (*sortDef)(const GestureDistance*, const GestureDistance*);
+static const sortDef sortFunctions[4] = { sortByLevel0, sortByLevel1, sortByLevel2, sortByLevel3};
+
+/* Approx |f(t)-g(t)|_2^2 over I=[0,1] with N equidistant supporting points.
+ *
+ * Requires N>1. 
+ * \sum_i( (d_{i+1}+d_i)/2 ) = (d_0+d_{N-1})/2 + sum_{i=1}^{N-2} d_i
+ * */
+static double quadratureSquared( double *inA, double *inB, const size_t abLen ){
+
+	if( abLen<2 ) return 0.0;
+	
+	double d,sum;
+	size_t N = abLen;
+
+	d = *inA - *inB;
+	sum = d*d/2;
+	++inA;
+	++inB;
+	--N;
+
+	while( N ){
+		d = *inA - *inB;
+		sum += d*d;
+		++inA;
+		++inB;
+		--N;
+	}
+	sum -= d*d/2;
+
+	return sum/(abLen-1);
+}
+
+
 
 Gesture::Gesture( cBlob &blob):
 m_n(0),m_ncoeffs(0),m_nbreak(0),
@@ -45,14 +103,12 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 		 * Moreover, m_nbreak must be at least 2 for a successful
 		 * bspline initialisation.
 		 * This check was replaced because m_ncoeffs has the
-		 * correct lower bound, now. It's requred to check m_n directly.
+		 * correct lower bound, now. It's fine to check m_n directly.
 			*/
 		//if( m_nbreak-2 < 1000 )
 		if( m_n > 10 )	
 		{
-
-
-			printf("n,nc,nb=%u,%u,%u \n", m_n, m_ncoeffs, m_nbreak);
+			printf("n,nc,nb=%lu,%lu,%lu \n", m_n, m_ncoeffs, m_nbreak);
 
 			//m_grid = gsl_vector_alloc( m_nbreak/*+2*(SPLINE_DEG-1)*/ );
 			m_ReducedBasis = gsl_matrix_alloc(m_n, m_ncoeffs);
@@ -107,9 +163,9 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 				gsl_vector_set_fast(m_raw_values[0], knot, (*it).location.x);
 				gsl_vector_set_fast(m_raw_values[1], knot, (*it).location.y);
 				gsl_vector_set_fast(m_debugDurationGrid, knot, ((double)globKnot)/MAX_DURATION_STEPS);
+				//gsl_vector_set_fast( m_grid, knot, gsl_vector_get( FullGrid, globKnot ) );
 
 				const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], globKnot, 0, m_ncoeffs);
-				//gsl_vector_set_fast( m_grid, knot, gsl_vector_get( FullGrid, globKnot ) );
 				gsl_matrix_set_row( m_ReducedBasis, knot, &subrow2.vector );
 			}
 
@@ -323,7 +379,13 @@ Gesture::~Gesture(){
 	gsl_matrix_free(m_ReducedBasis);
 
 	gsl_vector_free(m_debugDurationGrid);
-	gsl_vector_free(m_curvePointDistances);
+
+	if( m_curvePointDistances != NULL ){
+		for( size_t i=0; i<CompareDistancesNum; ++i){
+			gsl_vector_free(m_curvePointDistances[i]);
+		}
+		free(m_curvePointDistances);
+	}
 
 	gsl_vector_free(m_splineCurve[0]);
 	gsl_vector_free(m_splineCurve[1]);
@@ -359,12 +421,14 @@ void Gesture::construct(){
 void Gesture::evalSplineCoefficients(){
 	if( m_n == 0 ) return;
 
-	/* Eindampfen des Workspaces auf die geringere Dimension.
+	/* Shrink workspace on reduced dimension.
 	 */
+#if 1
 	gsl_multifit_linear_realloc(mw, m_n, m_ncoeffs);
-
+#else
 	gsl_multifit_linear_free(mw); mw = NULL;
 	mw = gsl_multifit_linear_alloc(m_n, m_ncoeffs);
+#endif
 
 	const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
 	for( size_t d=0; d<DIM; ++d){
@@ -403,16 +467,15 @@ void Gesture::evalSpline(double **outX, double **outY, size_t *outLen ){
 	//*outY = new double[NUM_EVALUATION_POINTS]; 
 
 	const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
+	
+	// Eval basis on [0, m_time_max]
 	double t_step = m_time_max/(NUM_EVALUATION_POINTS-1) - 1E-10;
 	double t_pos = 0.0;
-
+	gsl_vector *tmpB = gsl_vector_alloc(m_ncoeffs);
 	for ( j=0; j<NUM_EVALUATION_POINTS; ++j, t_pos+=t_step )
 	{
 		double x_j,y_j, xerr, yerr;
-		t_pos = t_step*j;
-
 		//Nun berechne ich die Basiswerte ja doch in jedem Objekt...
-		gsl_vector *tmpB = gsl_vector_alloc(m_ncoeffs);
 		gsl_bspline_eval(t_pos, tmpB, bw[basisIndex]);
 #ifdef STORE_IN_MEMBER_VARIABLE
 		gsl_multifit_linear_est(tmpB, m_c[0], m_cov[0], &x_j, &xerr);
@@ -427,8 +490,32 @@ void Gesture::evalSpline(double **outX, double **outY, size_t *outLen ){
 		(*outY)[j] = y_j;
 		//printf("%f %f %f\n",t_pos,x_j,y_j);
 
-		gsl_vector_free(tmpB);
 	}
+	gsl_vector_free(tmpB);
+
+	/*
+	// Use preevaluated basis. This does not work because basis was evaluated on
+	// interval [0,1] not [0,m_time_max].
+	for ( j=0; j<NUM_EVALUATION_POINTS; ++j)
+	{
+		double x_j,y_j, xerr, yerr;
+		const double t_pos = gsl_vector_get_fast(EvalGrid, j);
+		const gsl_vector_const_view t_basis = gsl_matrix_const_subrow ( EvalGridBasis[basisIndex], j, 0, m_ncoeffs);
+		const gsl_vector *tmpB = &t_basis.vector;
+#ifdef STORE_IN_MEMBER_VARIABLE
+		gsl_multifit_linear_est(tmpB, m_c[0], m_cov[0], &x_j, &xerr);
+		gsl_multifit_linear_est(tmpB, m_c[1], m_cov[1], &y_j, &yerr);
+#else
+		gsl_multifit_linear_est(tmpB, Global_c[basisIndex][0], Global_cov[basisIndex][0], &x_j, &xerr);
+		gsl_multifit_linear_est(tmpB, Global_c[basisIndex][1], Global_cov[basisIndex][1], &y_j, &yerr);
+		//gsl_multifit_robust_est(tmpB, Global_c[basisIndex][0], Global_cov[basisIndex][0], &x_j, &yerr);
+		//gsl_multifit_robust_est(tmpB, Global_c[basisIndex][1], Global_cov[basisIndex][1], &x_j, &yerr);
+#endif
+		(*outX)[j] = x_j;
+		(*outY)[j] = y_j;
+		//printf("%f %f %f\n",t_pos,x_j,y_j);
+	}
+	*/
 
 }
 
@@ -465,36 +552,45 @@ void Gesture::evalOrientation(){
 	m_orientationTriangle[2].y /= NUM_END_NODES;
 }
 
-/* Compare spline(t_n) with spline(t_n+COMPARE_DIST) and scale with length of polygon. */
-void Gesture::evalDistances(){
-	size_t start = 0;
-	size_t end = COMPARE_DIST;
-	size_t counter = 0;
-	float curveLen = 0.0;
-
+/* Low order approximation of curve length */
+double Gesture::evalCurveLength(){
 	size_t pos;
-	double tmpX, tmpY;
+	double curveLen = 0.0;
 
-	if( m_curvePointDistances == NULL ){
-		m_curvePointDistances = gsl_vector_alloc(NUM_EVALUATION_POINTS-COMPARE_DIST);
-	}
-
-	double *out = m_curvePointDistances->data;
-
-	/* 1. Approximation of curve length */
 	for( pos=0; pos<NUM_EVALUATION_POINTS-1; ++pos){
+		double tmpX, tmpY;
 		tmpX = gsl_vector_get_fast(m_splineCurve[0],pos+1) - gsl_vector_get_fast(m_splineCurve[0],pos);
 		tmpY = gsl_vector_get_fast(m_splineCurve[1],pos+1) - gsl_vector_get_fast(m_splineCurve[1],pos);
 		curveLen += sqrt( tmpX*tmpX + tmpY*tmpY );
 	}
-	const double curveScale = 1/curveLen;
+	return curveLen;
+}
 
-	for( start=0 ; end < NUM_EVALUATION_POINTS ; ++start, ++end ){
-		tmpX = gsl_vector_get_fast(m_splineCurve[0],end) - gsl_vector_get_fast(m_splineCurve[0],start);
-		tmpY = gsl_vector_get_fast(m_splineCurve[1],end) - gsl_vector_get_fast(m_splineCurve[1],start);
-		*out++ = sqrt( tmpX*tmpX + tmpY*tmpY )*curveScale;
+/* Compare spline(t_n) with spline(t_n+CompareDistances[i]) and scale with length of polygon. */
+void Gesture::evalDistances(){
+	if( m_curvePointDistances == NULL ){
+		m_curvePointDistances = (gsl_vector**) malloc( CompareDistancesNum*sizeof(gsl_vector*) );
+		for( size_t i=0; i<CompareDistancesNum; ++i){
+			m_curvePointDistances[i] = gsl_vector_alloc(NUM_EVALUATION_POINTS-CompareDistances[i]);
+		}
 	}
 
+	const double curveScale = 1/evalCurveLength();
+
+	/* 2. Eval distances for certain levels. */
+	for( size_t i=0; i<CompareDistancesNum; ++i){
+		double *out = m_curvePointDistances[i]->data;
+		size_t start = 0;
+		size_t end = CompareDistances[i];
+
+		for( start=0 ; end < NUM_EVALUATION_POINTS ; ++start, ++end ){
+			double tmpX, tmpY;
+			tmpX = gsl_vector_get_fast(m_splineCurve[0],end) - gsl_vector_get_fast(m_splineCurve[0],start);
+			tmpY = gsl_vector_get_fast(m_splineCurve[1],end) - gsl_vector_get_fast(m_splineCurve[1],start);
+			*out++ = sqrt( tmpX*tmpX + tmpY*tmpY )*curveScale;
+		}
+
+	}
 }
 
 /* Looking at absolute and relative distances
@@ -572,36 +668,6 @@ std::vector<Gesture*> & GestureStore::getPatterns() {
 }
 
 
-/* Approx |f(t)-g(t)|_2^2 over I=[0,1] with N equidistant supporting points.
- *
- * Requires N>1. 
- * \sum_i( (d_{i+1}+d_i)/2 ) = (d_0+d_{N-1})/2 + sum_{i=1}^{N-2} d_i
- * */
-static float quadratureSquared( double *inA, double *inB, const size_t abLen ){
-
-	if( abLen<2 ) return 0.0;
-	
-	float d,sum;
-	size_t N = abLen;
-
-	d = *inA - *inB;
-	sum = d*d/2;
-	++inA;
-	++inB;
-	--N;
-
-	while( N ){
-		d = *inA - *inB;
-		sum += d*d;
-		++inA;
-		++inB;
-		--N;
-	}
-	sum -= d*d/2;
-
-	return sum/(abLen-1);
-}
-
 /* Use very simple quadrature-formular to measure
  * the distance between the input spline S and the
  * stored splines G_i.
@@ -613,33 +679,115 @@ static float quadratureSquared( double *inA, double *inB, const size_t abLen ){
  * to cut of some integrations.
  */
 void GestureStore::compateWithPatterns(Gesture *pGesture, GesturePatternCompareResult &gpcr ){
+	gpcr.minDist = FLT_MAX;
+	gpcr.minGest = NULL;
 
 	if( pGesture->getNumberOfRawSupportNodes() == 0 ) return;
 
 	std::vector<Gesture*>::iterator it = gestures.begin();
 	const std::vector<Gesture*>::iterator itEnd = gestures.end();
-	
-	gpcr.minDist = FLT_MAX;
-	gpcr.minGest = NULL;
-	float avgDist = 0.0;
+
+	double avgDist = 0.0;
 	//Number of dist, which will be used for averaging
 	int countDist = 0;
+	size_t level = 0;
 
+	std::vector<GestureDistance> distObjects; 
+	std::vector<GestureDistance*> distPointers; //for sorting
 	for( ; it != itEnd ; ++it ){
-		float dist = quadratureSquared( 
-				pGesture->m_curvePointDistances->data,
-				(*it)->m_curvePointDistances->data, 
-				pGesture->m_curvePointDistances->size );
-		if( dist < gpcr.minDist ){
-			gpcr.minDist = dist;
-			gpcr.minGest = (*it);
-		}
-		++countDist;
-		avgDist += dist;
-
-		printf("Curve distance: %f\n", dist);
+		distObjects.emplace_back( GestureDistance(pGesture, (*it)) );
+	}
+	for( auto& x: distObjects){
+		distPointers.push_back(&x);
 	}
 
-	gpcr.avgDist = avgDist/countDist;
+	/* Compare on stage 1. This compare
+	 * by the l2 norm on the v=m_curvePointDistances[0] vectors.
+	 * d = (v_from, v_to)_2^2
+	 * Note: No not forget that this norm differs from the 
+	 * L2 norm of the underlying functions. There is no scaling
+	 * by the grid size (vector lengths). 
+	 * The missing scaling must respect if you define thresholds
+	 * for nearby gestures.
+	 */
+	for( auto& x: distObjects){
+		x.evalL2Dist(0);
+	}
+	std::sort(distPointers.begin(), distPointers.end(), sortFunctions[0]);
+
+	/* Filtering out high distances and sort nearby gestures for other levels*/	
+	size_t i = 0;
+	size_t iMin = 3;//minimal number of gestures for next level
+	size_t iCut;
+	for( size_t iL = 1; iL<CompareDistancesNum; ++iL){
+		double l2Limit = 10 * distPointers[0]->m_L2NormSquared[iL-1];
+		iCut = iMin;
+		for( auto& x: distPointers){
+			++i;
+			x->m_sorting_weight += i;
+			if( i <= iMin ) continue;
+			if( x->m_L2NormSquared[iL-1] < l2Limit ) continue;
+			iCut = i;
+			break;
+		}
+		distPointers.erase(distPointers.begin()+iCut, distPointers.end());
+
+		for( auto& x: distPointers){
+			x->evalL2Dist(iL);
+		}
+		std::sort(distPointers.begin(), distPointers.end(), sortFunctions[iL]);
+		i = 0;
+		//--iMin;
+	}
+	for( auto& x: distPointers){
+		++i;
+		x->m_sorting_weight += i;
+	}
+	std::sort(distPointers.begin(), distPointers.end(), sortByWeight);
+
+	i = 0;
+	//for( auto& x: distObjects){
+	for( auto& x: distPointers){
+		printf("%i %i %1.5f %1.5f %1.5f %1.5f %s\n", i,
+				x->m_sorting_weight,
+				x->m_L2NormSquared[0],
+				x->m_L2NormSquared[1],
+				x->m_L2NormSquared[2],
+				x->m_L2NormSquared[3],
+				x->m_to->getGestureName());
+		++i;
+	}
+
+	gpcr.minGest = distPointers[0]->m_to;
+	gpcr.minDist = distPointers[0]->m_L2NormSquared[0];
+	gpcr.avgDist = gpcr.minDist;// TODO: Remove this stuff.
+  printf("Curve distance to %s: %f\n", gpcr.minGest->getGestureName(), gpcr.minDist);
+
+	/* //old
+		 for( ; it != itEnd ; ++it ){
+		 double dist = quadratureSquared( 
+		 pGesture->m_curvePointDistances[level]->data,
+		 (*it)->m_curvePointDistances[level]->data, 
+		 pGesture->m_curvePointDistances[level]->size );
+		 if( dist < gpcr.minDist ){
+		 gpcr.minDist = dist;
+		 gpcr.minGest = (*it);
+		 }
+		 ++countDist;
+		 avgDist += dist;
+
+		 printf("Curve distance: %f\n", dist);
+		 }
+		 gpcr.avgDist = avgDist/countDist;
+		 */
+
 }
 
+double GestureDistance::evalL2Dist( size_t level){
+	assert(level<CompareDistancesNum);
+	m_L2NormSquared[level] = quadratureSquared( 
+			m_from->m_curvePointDistances[level]->data,
+			m_to->m_curvePointDistances[level]->data, 
+			m_from->m_curvePointDistances[level]->size );
+	return m_L2NormSquared[level];
+}

@@ -46,7 +46,7 @@ void tracker_drawBlobs(Tracker &tracker, cv::Mat &out, bool drawHistoryLines, st
 					cv::Scalar color(30,30,200+10*time);
 					cv::line(out,p1,p2,color,2);
 
-					printf("Draw line from (%i,%i) to (%i,%i)\n", p1.x,p1.y, p2.x,p2.y);
+					//printf("Draw line from (%i,%i) to (%i,%i)\n", p1.x,p1.y, p2.x,p2.y);
 					p1 = p2;
 					--time;
 				}
