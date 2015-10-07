@@ -14,6 +14,8 @@ set(WITH_RPI ${WITH_RPI} CACHE BOOL "Native libs of rpi available.")
 set(WITH_OPENGL ${WITH_OPENGL} CACHE BOOL "OpenGL libs available")
 set(WITH_OCV ${WITH_OCV} CACHE BOOL "OpenCV libs available")
 
+option(WITH_GSL "Gnu Sientific Library. Required for gesture recognition" ON)
+
 include_directories(${CMAKE_HOME_DIRECTORY}/include)
 include_directories(${CMAKE_HOME_DIRECTORY}/libs/blobdetection)
 include_directories(${CMAKE_HOME_DIRECTORY}/libs/raspicam)

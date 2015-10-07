@@ -50,7 +50,9 @@ Notes:
 Dependencies:
 ==========
 Required:
-	sudo apt-get install libgsl0-dev
+	GNU Sientific Library, sudo apt-get install libgsl0-dev 
+	RPi Videocore Libs ( preinstalled in Raspbian, see /opt/vc) 
+	OpenGL Libs
 
 Optional:
 	sudo apt-get install libopencv-dev libopencv-highgui-dev

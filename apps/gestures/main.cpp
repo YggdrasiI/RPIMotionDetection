@@ -1,4 +1,5 @@
 #include <pthread.h>
+#include <vector>
 
 #include "RaspiVid.h"
 #include "RaspiImv.h"
@@ -7,11 +8,37 @@
 #include "Tracker2.h"
 #include "Graphics.h"
 
+#include "FontManager.h"
+#include "Gestures.h"
+
+
 static DepthtreeWorkspace *dworkspace = NULL;
 static Blobtree *frameblobs = NULL;
 Tracker2 tracker;
 unsigned char depth_map[256];
 pthread_t blob_tid;
+
+FontManager fontManager;
+static std::vector<cBlob> blobCache; //for gestures
+
+static GestureStore gestureStore;
+static std::vector<Gesture*> gestures = std::vector<Gesture*>();
+
+//Setup of font manager for GUI textes. Called after OpenGL initialisation.
+void setup_fonts(FontManager *fontManager){
+
+	fontManager->add_font("./shader/fontrendering/fonts/Vera.ttf", 50 );
+
+	texture_font_t *font1, *font2;
+	font1 = fontManager->getFonts()->at(0);
+
+	vec2 pen = {0,0};
+	vec4 color = {.37254, .69411, .17647, 1.0};
+	vec4 transColor = {1,0.3,0.3,0.6};
+
+	//fontManager.add_text( font1, L"freetypeGlesRpi", &transColor, &pen );
+	fontManager->add_text( font1, L"freetypeGlesRpi", &color, &pen );
+}
 
 static void eval_ids(DepthtreeWorkspace *dworkspace, unsigned char *out, int len ){
 	unsigned int *ids, *cm, *cs;
@@ -50,12 +77,12 @@ void* blob_detection(void *argn){
 					imv_eval_norm2(&motion_data);
 
 					//1.5 (optional) OpenGl Output
-					if( true ){
+					if( false ){
 						/* Problem: This texture update is outside
 						 * of the gl context thread and will be
 						 * ignored. Solution?!"
 						 * */
-						//imvTexture.setPixels(motion_data.imv_norm);
+						imvTexture.setPixels(motion_data.imv_norm);
 					}
 
 					//2. Blob detection
@@ -66,7 +93,36 @@ void* blob_detection(void *argn){
 
 					//3. Tracker
 					tracker.trackBlobs( frameblobs, true );
-					
+
+					//3.5 Gestures
+					blobCache.clear();
+					tracker.getFilteredBlobs(TRACK_UP|LIMIT_ON_N_OLDEST, blobCache);
+
+					// Remove old detections from drawing
+					while( gestures.size() > 6 ){
+						gestures.erase(gestures.begin());
+					}
+
+					std::vector<cBlob>::iterator it = blobCache.begin();
+					const std::vector<cBlob>::iterator itEnd = blobCache.end();
+					for( ; it != itEnd ; ++it ){
+						// Skip short/flickering movements
+						if( (*it).duration < 10 ) continue; 
+
+						// Convert list of coordinates into spline approximation
+						Gesture *gest = new Gesture( (*it) );
+
+						// This objects stores some metadata/results.
+						GesturePatternCompareResult res;
+						gestureStore.compateWithPatterns(gest, res);
+						if( res.minGest != NULL && res.minDist < 0.04 ){
+							printf("Gesture similar to %s\n", res.minGest->getGestureName() );
+							gestures.emplace_back(gest);
+						}else{
+							delete gest;
+						}
+					}
+
 					//4. Opengl Output
 					// see gl_scenes/motion.c
 
@@ -150,6 +206,11 @@ int main(int argc, const char **argv){
 	tracker.setMinimalDurationFilter(5);
 	//reduce output to N oldest blobs
 	tracker.setOldestDurationFilter(2);
+
+	//Setup font manager
+	fontManager.setInitFunc(setup_fonts);
+
+	addGestureTestPattern(gestureStore);
 
 	//start raspivid application.
 	raspivid(argc, argv);

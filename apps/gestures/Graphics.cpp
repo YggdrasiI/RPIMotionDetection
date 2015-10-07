@@ -51,7 +51,10 @@ GfxProgram GColouredLinesProg;
 GLuint GQuadVertexBuffer;
 
 GfxTexture imvTexture;
+GfxTexture guiTexture;
+extern "C" RASPITEXUTIL_TEXTURE_T  guiBuffer;
 static std::vector<cBlob> blobCache;
+bool guiNeedRedraw = true;
 
 
 
@@ -162,16 +165,25 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
 	imvTexture.createGreyScale(121,68);
 	//imvTexture.generateFramebuffer();
+	
+	guiTexture.createRGBA(800,600, NULL);
+	//guiTexture.setInterpolation(false);//for old approach
+	guiTexture.setInterpolation(true);//for new approach
+	guiTexture.generateFramebuffer();
+	guiTexture.toRaspiTexture(&guiBuffer);
 }
 
 void RedrawGui()
 {
-	// no gui in this app
+	if( !guiNeedRedraw ) return;
+	fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture);
+	guiNeedRedraw = false;
 }
 
 
 void RedrawTextures()
 {
+	RedrawGui();
 
 	imvTexture.setPixels(motion_data.imv_norm);
 	//DrawTextureRect(&imvTexture,-1.0, -1.f,-1.f,1.f,1.f,NULL);
@@ -180,9 +192,9 @@ void RedrawTextures()
 	DrawTextureRect(&imvTexture,0.4, 1.0f,-1.0f,-1.0f,1.0f,NULL);
 
 	blobCache.clear();
-	tracker.getFilteredBlobs(TRACK_ALL_ACTIVE|LIMIT_ON_N_OLDEST, blobCache);
+	//tracker.getFilteredBlobs(TRACK_ALL_ACTIVE|LIMIT_ON_N_OLDEST, blobCache);
+	tracker.getFilteredBlobs(TRACK_UP|LIMIT_ON_N_OLDEST, blobCache);
 	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, true, &blobCache);
-	//tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height);
 
 #if 0
 	static int savecounter=0;
@@ -208,6 +220,8 @@ void InitShaders()
 
 	GColouredLinesFS.loadFragmentShader("shader/colouredlinesfragshader.glsl");
 	GColouredLinesProg.create(&GBlobsVS,&GColouredLinesFS);
+
+	fontManager.initShaders();
 
 	check();
 
