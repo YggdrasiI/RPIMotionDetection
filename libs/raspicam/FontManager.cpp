@@ -10,7 +10,8 @@
 FontManager::FontManager():
 	m_initHandle(NULL),
 	m_verticesMutex(),
-	m_text_changed(false)
+	m_text_changed(false),
+	m_text_cleared(false)
 {
 	// Init font texture plate
 	this->verticesData = vector_new(sizeof(GLfloat));
@@ -146,6 +147,7 @@ void FontManager::clear_text(){
 			vector_clear( this->verticesData );
 			m_verticesMutex.unlock();
 			m_text_changed = true;
+			m_text_cleared = true;
 }
 
 bool FontManager::render_required(){
@@ -161,18 +163,27 @@ bool FontManager::render_required(){
 	return false;
 }
 
-void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* render_target)
+void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* render_target, bool clear_target = false)
 {
+	//GLint oldFBO = 0; // not always 0?!
 	if(render_target)
 	{
+		//glGetIntegerv(GL_FRAMEBUFFER_BINDING, &oldFBO);
+		//printf("FBid: %i\n", oldFBO);
 		glBindFramebuffer(GL_FRAMEBUFFER,render_target->getFramebufferId());
 		glViewport ( 0, 0, render_target->getWidth(), render_target->getHeight() );
 		check();
 	}
 
-	printf("Fontmanager.render()\n");
-	glUseProgram(this->shader.program.getId());	check();
+	/* Clear framebuffer if requested and required.
+	*/
+	if( clear_target && m_text_cleared ){
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f );
+		glClear(GL_COLOR_BUFFER_BIT);
+		m_text_cleared = false;
+	}
 
+	glUseProgram(this->shader.program.getId());	check();
 	const GLint vertexHandle = this->shader.program.getAttribLocation("a_position");
 	const GLint texCoordHandle = this->shader.program.getAttribLocation("a_st");
 	const GLint colorHandle = this->shader.program.getAttribLocation("a_color");
@@ -237,9 +248,11 @@ void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* ren
 
 	if(render_target)
 	{
-		glBindFramebuffer(GL_FRAMEBUFFER,0);
+		assert( GScreenWidth>0 && GScreenHeight>0 );
+		glBindFramebuffer(GL_FRAMEBUFFER, 0/*oldFBO*/);
 		glViewport ( 0, 0, GScreenWidth, GScreenHeight );
 	}
+
 }
 
 void FontManager::saveFontAtlas(int font_index, const char* fname)

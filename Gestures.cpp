@@ -720,7 +720,7 @@ void GestureStore::compateWithPatterns(Gesture *pGesture, GesturePatternCompareR
 
 	/* Filtering out high distances and sort nearby gestures for other levels*/	
 	size_t i = 0;
-	size_t iMin = 3;//minimal number of gestures for next level
+	size_t iMin = 5;//minimal number of gestures for next level
 	size_t iCut;
 	for( size_t iL = 1; iL<CompareDistancesNum; ++iL){
 		double l2Limit = 10 * distPointers[0]->m_L2NormSquared[iL-1];

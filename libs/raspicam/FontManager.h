@@ -49,6 +49,7 @@ class FontManager{
 		 */
 		std::mutex m_verticesMutex;
 		bool m_text_changed;
+		bool m_text_cleared;
 
 	public:
 		FontManager();
@@ -86,7 +87,7 @@ class FontManager{
 		bool render_required();
 
 		/* OpenGL Drawing on framebuffer or render_target. */
-		void render(float x0, float y0, float x1, float y1, GfxTexture* render_target);
+		void render(float x0, float y0, float x1, float y1, GfxTexture* render_target, bool clear_target);
 
 		void saveFontAtlas(int font_index, const char* fname);
 };

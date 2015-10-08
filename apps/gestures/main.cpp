@@ -23,21 +23,25 @@ static std::vector<cBlob> blobCache; //for gestures
 
 static GestureStore gestureStore;
 static std::vector<Gesture*> gestures = std::vector<Gesture*>();
+static const vec2 gest_pen_headline = {0,160};
+static vec2 gest_pen = {0,0};
+static vec4 gest_color = {.37254, .69411, .17647, 1.0};
+static int gest_pos = 0;
 
 //Setup of font manager for GUI textes. Called after OpenGL initialisation.
 void setup_fonts(FontManager *fontManager){
 
-	fontManager->add_font("./shader/fontrendering/fonts/Vera.ttf", 50 );
+	fontManager->add_font("./shader/fontrendering/fonts/Vera.ttf", 70 );
 
 	texture_font_t *font1, *font2;
 	font1 = fontManager->getFonts()->at(0);
 
-	vec2 pen = {0,0};
-	vec4 color = {.37254, .69411, .17647, 1.0};
+	//vec2 gest_pen = {0,0};
+	//vec4 gest_color = {.37254, .69411, .17647, 1.0};
 	vec4 transColor = {1,0.3,0.3,0.6};
 
-	//fontManager.add_text( font1, L"freetypeGlesRpi", &transColor, &pen );
-	fontManager->add_text( font1, L"freetypeGlesRpi α", &color, &pen );
+	vec2 pen = {gest_pen_headline.x, gest_pen_headline.y};
+	fontManager->add_text( font1, L"Last Gestures: α", &gest_color, &pen );
 }
 
 static void eval_ids(DepthtreeWorkspace *dworkspace, unsigned char *out, int len ){
@@ -97,6 +101,7 @@ void* blob_detection(void *argn){
 					//3.5 Gestures
 					blobCache.clear();
 					tracker.getFilteredBlobs(TRACK_UP|LIMIT_ON_N_OLDEST, blobCache);
+					//tracker.getFilteredBlobs(TRACK_UP, blobCache);
 
 					// Remove old detections from drawing
 					while( gestures.size() > 6 ){
@@ -127,10 +132,21 @@ void* blob_detection(void *argn){
 							gestures.emplace_back(gest);
 
 							// Draw gesture name
-							vec2 pen = {0,0};
-							vec4 color = {.37254, .69411, .17647, 1.0};
-							fontManager.clear_text();
-							fontManager.add_text( fontManager.getFonts()->at(0), res.minGest->getGestureName(), &color, &pen );
+							gest_pen.x = 0;
+							if( ++gest_pos > 8 ){
+								gest_pos = 0;	
+								fontManager.clear_text();
+								vec2 pen = {gest_pen_headline.x, gest_pen_headline.y};
+								fontManager.add_text( fontManager.getFonts()->at(0),
+										L"Last Gestures:", &gest_color, &pen );
+							}
+							gest_pen.y = gest_pen_headline.y - 80*(1+gest_pos);
+							char tmpText[100];
+							snprintf(tmpText, 100, "%s   %i", res.minGest->getGestureName(), blobCache.size());
+							fontManager.add_text( fontManager.getFonts()->at(0),
+									tmpText /*res.minGest->getGestureName()*/,
+									&gest_color, &gest_pen );
+
 						}else{
 							delete gest;
 						}

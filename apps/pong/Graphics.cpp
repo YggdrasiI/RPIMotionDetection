@@ -133,6 +133,9 @@ void InitGraphics()
 	// create an EGL window surface
 	success = graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
 	assert( success >= 0 );
+	/*TODO: Check why GScreenWidth, GScreenHeight are zero after this call.
+	 * Correct size will be set in InitTextures() later.
+	 */
 
 	dst_rect.x = 0;
 	dst_rect.y = 0;
@@ -223,11 +226,11 @@ void RedrawGui()
 	//old approach, draw textures upside down.
 	DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, &guiTexture);
 	//new approach
-	fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture);
+	fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture, true);
 	guiNeedRedraw = false;
 	
 	//DrawGui(&numeralsTexture,&pong,0.05f,	-1.0f,1.0f,1.0f,-1.0f, NULL);
-	//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);
+	//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL, false);
 }
 
 /* Raspivid uses gl_scenes/pong.c to draw scenes.

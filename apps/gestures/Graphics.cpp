@@ -119,6 +119,9 @@ void InitGraphics()
 	// create an EGL window surface
 	success = graphics_get_display_size(0 /* LCD */, &GScreenWidth, &GScreenHeight);
 	assert( success >= 0 );
+	/*TODO: Check why GScreenWidth, GScreenHeight are zero after this call.
+	 * Correct size will be set in InitTextures() later.
+	 */
 
 	dst_rect.x = 0;
 	dst_rect.y = 0;
@@ -162,6 +165,9 @@ void InitGraphics()
 
 void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 {
+	GScreenWidth = glWinWidth;
+	GScreenHeight = glWinHeight;
+
 	/* Begin of row values is NOT word-aligned. Set alignment to 1 */
 	glPixelStorei(GL_UNPACK_ALIGNMENT, 1); 
 	imvTexture.createGreyScale(121,68);
@@ -179,7 +185,7 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 void RedrawGui()
 {
 	if( fontManager.render_required() ){
-		fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture);
+		fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture, true);
 		//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);
 		check();
 	}
