@@ -1,12 +1,17 @@
 #include <stdio.h>
 #include <string.h>
+#include <cstring>
 #include <assert.h>
 
 #include "lodepng.h"
 
 #include "FontManager.h"
 
-FontManager::FontManager():initHandle(NULL){
+FontManager::FontManager():
+	m_initHandle(NULL),
+	m_verticesMutex(),
+	m_text_changed(false)
+{
 	// Init font texture plate
 	this->verticesData = vector_new(sizeof(GLfloat));
 	this->atlas = texture_atlas_new( 1024, 1024, 1 );
@@ -30,13 +35,13 @@ void FontManager::initShaders(){
 	this->shader.program.create(&this->shader.vertex_shader, &this->shader.fragment_shader);
 	check();
 
-	if( initHandle != NULL){
-		(*initHandle)(this);
+	if( m_initHandle != NULL){
+		(*m_initHandle)(this);
 	}
 }
 
 void FontManager::setInitFunc( initFontHandler handle){ 
-	this->initHandle = handle;
+	this->m_initHandle = handle;
 }
 
 /* Example fonts in shader/fontrendering/fonts/ */
@@ -69,7 +74,14 @@ std::vector<texture_font_t*> *FontManager::getFonts(){
 	}
 	}*/
 
-void FontManager::add_text( texture_font_t *font, wchar_t *text, vec4 *color, vec2 *pos ){
+void FontManager::add_text( texture_font_t *font, const char *text, vec4 *color, vec2 *pos ){
+	size_t l = strlen(text)+1;
+	wchar_t  wtext[l];
+	swprintf(wtext, l, L"%hs", text);
+	add_text( font, wtext, color, pos);
+}
+
+void FontManager::add_text( texture_font_t *font, const wchar_t *text, vec4 *color, vec2 *pos ){
 
 	size_t i;
 	GLfloat r = color->red, g = color->green, b = color->blue, a = color->alpha;
@@ -119,7 +131,10 @@ void FontManager::add_text( texture_font_t *font, wchar_t *text, vec4 *color, ve
 				r, g, b, a
 			};
 
+			m_verticesMutex.lock();
 			vector_push_back_data( this->verticesData, vertices, 9*6);
+			m_verticesMutex.unlock();
+			m_text_changed = true;
 
 			pos->x += glyph->advance_x;
 		}
@@ -127,9 +142,24 @@ void FontManager::add_text( texture_font_t *font, wchar_t *text, vec4 *color, ve
 }
 
 void FontManager::clear_text(){
+			m_verticesMutex.lock();
 			vector_clear( this->verticesData );
+			m_verticesMutex.unlock();
+			m_text_changed = true;
 }
 
+bool FontManager::render_required(){
+	if( m_text_changed ){
+		if( m_verticesMutex.try_lock() ){
+			m_verticesMutex.unlock();
+			return true;
+		}
+		// vertices vector locked
+		return false;
+	}
+	// no changes
+	return false;
+}
 
 void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* render_target)
 {
@@ -140,6 +170,7 @@ void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* ren
 		check();
 	}
 
+	printf("Fontmanager.render()\n");
 	glUseProgram(this->shader.program.getId());	check();
 
 	const GLint vertexHandle = this->shader.program.getAttribLocation("a_position");
@@ -174,6 +205,7 @@ void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* ren
 
 	glUniformMatrix4fv(mvpHandle, 1, GL_FALSE, (GLfloat *) mvp);
 
+	m_verticesMutex.lock();
 	// Load the vertex data
 	glVertexAttribPointer ( vertexHandle, 3, GL_FLOAT, GL_FALSE, 9*sizeof(GLfloat), vVector->items );
 	glEnableVertexAttribArray ( vertexHandle );
@@ -195,6 +227,13 @@ void FontManager::render(float x0, float y0, float x1, float y1, GfxTexture* ren
 
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glDisableVertexAttribArray( vertexHandle );
+	glDisableVertexAttribArray ( texCoordHandle );
+	glDisableVertexAttribArray ( colorHandle );
+
+	m_verticesMutex.unlock();
+	m_text_changed = false;
 
 	if(render_target)
 	{

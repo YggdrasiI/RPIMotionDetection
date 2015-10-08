@@ -209,13 +209,15 @@ void InitTextures(uint32_t glWinWidth, uint32_t glWinHeight)
 }
 
 /* Raspivid uses gl_scenes/pong.c to draw scenes.
- * pong_redraw() in the above file calls RedrawGui().
+ * pong_redraw() in the above file calls RedrawGui() and RedrawTextures().
  */
 void RedrawGui()
 {
 	blobCache.clear();
 	tracker.getFilteredBlobs(TRACK_ALL_ACTIVE, blobCache);
 	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, false, &blobCache, &blobsTexture);
+
+	guiNeedRedraw = guiNeedRedraw || fontManager.render_required();
 
 	if( !guiNeedRedraw ) return;
 	//old approach, draw textures upside down.
@@ -228,6 +230,9 @@ void RedrawGui()
 	//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);
 }
 
+/* Raspivid uses gl_scenes/pong.c to draw scenes.
+ * pong_redraw() in the above file calls RedrawGui() and RedrawTextures().
+ */
 void RedrawTextures()
 {
 
@@ -309,9 +314,10 @@ void ReleaseGraphics()
 }
 
 
-int GetShader(){
+int GetShader(int option){
 	const int* score = pong.getScore();
-	return  ((score[0]+score[1])/3) %SHADER_TYPE_NUM;
+	if( option < 1 ) option = 1;
+	return  ((score[0]+score[1])/option) %SHADER_TYPE_NUM;
 
 	return ShaderNormal;
 }

@@ -13,8 +13,8 @@ test "$2" ==  "" || PLAYER="$2"
 # Timeout for camera calibration
 WAIT=5000
 
-# --pongUseShader select one shader for the whole game
-# --pongCycleShaders [Num] switch shader after N scoring points
+# --pongUseShader {Num} select one shader for the whole game
+# --pongCycleShaders {Num} switch shader after Num scoring points
 # Definition of the shaders: apps/raspivid/shaders/gl_scenes/pong*.glsl
 SHADEROPTIONS="--pongUseShader 0"
 

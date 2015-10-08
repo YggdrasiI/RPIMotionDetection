@@ -35,8 +35,6 @@ target_link_libraries(gestures
 	gsl gslcblas
 	)
 
-#set_target_properties( gestures PROPERTIES COMPILE_FLAGS -DWITH_GSL)
-
 install(TARGETS gestures RUNTIME DESTINATION bin)
 
 # Create link to simplify paths

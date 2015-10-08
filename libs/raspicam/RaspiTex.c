@@ -185,8 +185,13 @@ int raspitex_parse_cmdline(RASPITEX_STATE *state,
 			}
       case CommandSceneArg0: 
 			{
-				state->ops.args[0] = 1;
-				used = 1;
+				int tmp;
+				tmp = sscanf(arg2, "%d", &state->ops.args[0]);
+				if (tmp != 1)
+				{
+					state->ops.args[0] = 3;
+				}
+				used = 2;
 				break;
 			}
       case CommandSceneArg1: 

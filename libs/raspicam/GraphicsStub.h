@@ -20,7 +20,7 @@ ShaderMirror,
 SHADER_TYPE_NUM,
 };
 
-int /*SHADER_TYPE*/ GetShader();
+int /*SHADER_TYPE*/ GetShader(int option);
 
 void InitGraphics();
 void InitShaders();

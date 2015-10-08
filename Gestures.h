@@ -273,6 +273,7 @@ class Gesture{
 
 		void setGestureName(const char* name);
 		const char* getGestureName() const;
+		size_t getGestureId() const;
 
 		void printDistances() const{
 
@@ -286,8 +287,10 @@ class Gesture{
 class GestureDistance{
 	public:
 		const Gesture *m_from, *m_to;
-		int m_sorting_weight;
-		GestureDistance(const Gesture *from, const Gesture *to):m_from(from),m_to(to),m_sorting_weight(0){
+		int m_sorting_weight; // weight by sorting position in each level.
+		double m_L2_weight; // sum up error of each level.
+		GestureDistance(const Gesture *from, const Gesture *to):m_from(from),m_to(to),
+		m_sorting_weight(0), m_L2_weight(0.0){
 		};
 		double m_L2NormSquared[4] = {DBL_MAX, DBL_MAX, DBL_MAX, DBL_MAX };
 		double evalL2Dist( size_t level);

@@ -37,7 +37,7 @@ void setup_fonts(FontManager *fontManager){
 	vec4 transColor = {1,0.3,0.3,0.6};
 
 	//fontManager.add_text( font1, L"freetypeGlesRpi", &transColor, &pen );
-	fontManager->add_text( font1, L"freetypeGlesRpi", &color, &pen );
+	fontManager->add_text( font1, L"freetypeGlesRpi α", &color, &pen );
 }
 
 static void eval_ids(DepthtreeWorkspace *dworkspace, unsigned char *out, int len ){
@@ -107,7 +107,14 @@ void* blob_detection(void *argn){
 					const std::vector<cBlob>::iterator itEnd = blobCache.end();
 					for( ; it != itEnd ; ++it ){
 						// Skip short/flickering movements
-						if( (*it).duration < 10 ) continue; 
+						if( (*it).duration < 20 ) continue; 
+						size_t id = (size_t) (*it).handid;
+						for( const auto& g: gestures){
+							if( id == g->getGestureId() ){
+								printf("Handle same blob chain twice! id=%u\n", id);
+								continue;
+							}
+						}
 
 						// Convert list of coordinates into spline approximation
 						Gesture *gest = new Gesture( (*it) );
@@ -118,6 +125,12 @@ void* blob_detection(void *argn){
 						if( res.minGest != NULL && res.minDist < 0.04 ){
 							printf("Gesture similar to %s\n", res.minGest->getGestureName() );
 							gestures.emplace_back(gest);
+
+							// Draw gesture name
+							vec2 pen = {0,0};
+							vec4 color = {.37254, .69411, .17647, 1.0};
+							fontManager.clear_text();
+							fontManager.add_text( fontManager.getFonts()->at(0), res.minGest->getGestureName(), &color, &pen );
 						}else{
 							delete gest;
 						}
@@ -202,6 +215,7 @@ int main(int argc, const char **argv){
 
 	/* Setup tracker */
 	tracker.setMaxRadius(15);
+	tracker.setMaxMissingDuration(10);
 	//filter out blobs with live time < M frames
 	tracker.setMinimalDurationFilter(5);
 	//reduce output to N oldest blobs

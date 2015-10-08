@@ -53,14 +53,19 @@ static RASPITEXUTIL_SHADER_PROGRAM_T motion_shader = {
     .fragment_source =
     "#extension GL_OES_EGL_image_external : require\n"
     "uniform samplerExternalOES tex;\n"
+		"uniform sampler2D guitex;\n"
     "varying vec2 texcoord;\n"
     "void main(void) {\n"
-    "       gl_FragColor = texture2D(tex, texcoord);\n"
-    "       gl_FragColor.a = 0.5;\n"
+		"		    vec4 gui = texture2D(guitex, texcoord);\n"
+    //"       gl_FragColor = texture2D(tex, texcoord);\n"
+		"		    gl_FragColor.rgb = mix(texture2D(tex, texcoord).rgb, gui.rgb, gui.a );\n"
+    "       gl_FragColor.a = 1.0;\n"
+		//"				gl_FragColor.rgb = vec3(1.0,0.5,0.5);\n" 
     "}\n",
-    .uniform_names = {"tex"},
+    .uniform_names = {"tex", "guitex"},
     .attribute_names = {"vertex"},
 };
+extern RASPITEXUTIL_TEXTURE_T guiBuffer; //connected with GfxTexture in C++ class
 
 static const EGLint attribute_list[] =
 {
@@ -71,6 +76,17 @@ static const EGLint attribute_list[] =
 	EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
 	EGL_NONE
 };
+
+static GLfloat varray[] = {
+	-1.0f, -1.0f,
+	 1.0f, -1.0f,
+	 1.0f,  1.0f,
+
+	-1.0f,  1.0f,
+	-1.0f, -1.0f,
+	 1.0f,  1.0f,
+};
+
 
 /**
  * Creates the OpenGL ES 2.X context and builds the shaders.
@@ -92,32 +108,62 @@ end:
     return rc;
 }
 
+
+static void motion_video1(RASPITEX_STATE *raspitex_state) {
+
+	GLCHK(glUseProgram(motion_shader.program));
+
+	GLCHK(glUniform1i(motion_shader.uniform_locations[0], 0));
+	GLCHK(glUniform1i(motion_shader.uniform_locations[1], 1));
+
+	// Bind video texture
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
+
+	// Bind score texture
+	glActiveTexture(GL_TEXTURE1);
+	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
+
+	GLCHK(glEnableVertexAttribArray(motion_shader.attribute_locations[0]));
+
+	GLCHK(glVertexAttribPointer(motion_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
+	GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
+
+	GLCHK(glDisableVertexAttribArray(motion_shader.attribute_locations[0]));
+	GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
+	glActiveTexture(GL_TEXTURE0);
+
+}
+
 static int motion_redraw(RASPITEX_STATE *raspitex_state) {
 
     // Start with a clear screen
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    //glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		RedrawGui();
+
+		/*
+    GLCHK(glUseProgram(motion_shader.program));
+		GLCHK(glUniform1i(motion_shader.uniform_locations[0], 0));
 
     // Bind the OES texture which is used to render the camera preview
 		glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
-    GLCHK(glUseProgram(motion_shader.program));
+		// Bind score texture
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
+
     GLCHK(glEnableVertexAttribArray(motion_shader.attribute_locations[0]));
 
-    GLfloat varray[] = {
-        -1.0f, -1.0f,
-        1.0f,  1.0f,
-        1.0f, -1.0f,
-
-        -1.0f,  1.0f,
-        1.0f,  1.0f,
-        -1.0f, -1.0f,
-    };
     GLCHK(glVertexAttribPointer(motion_shader.attribute_locations[0], 2, GL_FLOAT, GL_FALSE, 0, varray));
     GLCHK(glDrawArrays(GL_TRIANGLES, 0, 6));
 
     GLCHK(glDisableVertexAttribArray(motion_shader.attribute_locations[0]));
+		GLCHK(glBindTexture(GL_TEXTURE_2D, 0));
+		glActiveTexture(GL_TEXTURE0);
     GLCHK(glUseProgram(0));
+		*/
+		motion_video1(raspitex_state);
 
 		GLCHK(glEnable(GL_BLEND));
 		GLCHK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));

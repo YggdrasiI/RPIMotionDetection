@@ -228,7 +228,7 @@ void ReleaseGraphics()
 
 }
 
-int GetShader(){
+int GetShader(int option){
 	return ShaderNormal;
 }
 

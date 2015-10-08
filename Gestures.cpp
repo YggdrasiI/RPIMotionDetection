@@ -17,11 +17,14 @@ static bool sortByLevel2(const GestureDistance *lhs, const GestureDistance *rhs)
 static bool sortByLevel3(const GestureDistance *lhs, const GestureDistance *rhs) { 
 	return lhs->m_L2NormSquared[3] < rhs->m_L2NormSquared[3];
 }
-static bool sortByWeight(const GestureDistance *lhs, const GestureDistance *rhs) { 
+static bool sortByOrder(const GestureDistance *lhs, const GestureDistance *rhs) { 
 	if( lhs->m_sorting_weight == rhs->m_sorting_weight){
 		return lhs->m_L2NormSquared[1] < rhs->m_L2NormSquared[1];
 	}
 	return lhs->m_sorting_weight < rhs->m_sorting_weight;
+}
+static bool sortByLevelWeightSum(const GestureDistance *lhs, const GestureDistance *rhs) { 
+	return lhs->m_L2_weight < rhs->m_L2_weight;
 }
 
 typedef bool (*sortDef)(const GestureDistance*, const GestureDistance*);
@@ -70,7 +73,10 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 		//m_bw(NULL),
 		m_ReducedBasis(NULL)
 {
-	//init static variables
+	//Debug, Pass blob id to gesture
+	m_gestureId = blob.handid;
+
+	// Init static variables
 	if( mw == NULL ){
 		initStaticGestureVariables();
 	}
@@ -640,6 +646,9 @@ const char* Gesture::getGestureName() const{
 	return m_gestureName;
 }
 
+size_t Gesture::getGestureId() const{
+	return m_gestureId;
+}
 
 //=======================================================
 
@@ -702,13 +711,7 @@ void GestureStore::compateWithPatterns(Gesture *pGesture, GesturePatternCompareR
 	}
 
 	/* Compare on stage 1. This compare
-	 * by the l2 norm on the v=m_curvePointDistances[0] vectors.
-	 * d = (v_from, v_to)_2^2
-	 * Note: No not forget that this norm differs from the 
-	 * L2 norm of the underlying functions. There is no scaling
-	 * by the grid size (vector lengths). 
-	 * The missing scaling must respect if you define thresholds
-	 * for nearby gestures.
+	 * by the L2 norm (linear quadrature) on the v=m_curvePointDistances[0] vectors.
 	 */
 	for( auto& x: distObjects){
 		x.evalL2Dist(0);
@@ -743,11 +746,11 @@ void GestureStore::compateWithPatterns(Gesture *pGesture, GesturePatternCompareR
 		++i;
 		x->m_sorting_weight += i;
 	}
-	std::sort(distPointers.begin(), distPointers.end(), sortByWeight);
+	//std::sort(distPointers.begin(), distPointers.end(), sortByOrder);
+	std::sort(distPointers.begin(), distPointers.end(), sortByLevelWeightSum);
 
 	i = 0;
-	//for( auto& x: distObjects){
-	for( auto& x: distPointers){
+	for( const auto& x: distPointers){
 		printf("%i %i %1.5f %1.5f %1.5f %1.5f %s\n", i,
 				x->m_sorting_weight,
 				x->m_L2NormSquared[0],
@@ -759,7 +762,7 @@ void GestureStore::compateWithPatterns(Gesture *pGesture, GesturePatternCompareR
 	}
 
 	gpcr.minGest = distPointers[0]->m_to;
-	gpcr.minDist = distPointers[0]->m_L2NormSquared[0];
+	gpcr.minDist = distPointers[0]->m_L2_weight;
 	gpcr.avgDist = gpcr.minDist;// TODO: Remove this stuff.
   printf("Curve distance to %s: %f\n", gpcr.minGest->getGestureName(), gpcr.minDist);
 
@@ -785,9 +788,14 @@ void GestureStore::compateWithPatterns(Gesture *pGesture, GesturePatternCompareR
 
 double GestureDistance::evalL2Dist( size_t level){
 	assert(level<CompareDistancesNum);
+	if( m_L2NormSquared[level] != DBL_MAX ){
+			m_L2_weight -= m_L2NormSquared[level];
+	}
 	m_L2NormSquared[level] = quadratureSquared( 
 			m_from->m_curvePointDistances[level]->data,
 			m_to->m_curvePointDistances[level]->data, 
 			m_from->m_curvePointDistances[level]->size );
+
+	m_L2_weight += m_L2NormSquared[level];
 	return m_L2NormSquared[level];
 }

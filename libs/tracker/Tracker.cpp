@@ -100,7 +100,7 @@ void Tracker::getFilteredBlobs(int /*Trackfilter*/ filter, std::vector<cBlob> &o
 		while( it!=output.end() && (*it).duration == limit_duration ){
 			++it;
 		}
-		printf("Remove %i blobs from list \n", output.end()-it);
+		//printf("Remove %i blobs from list \n", output.end()-it);
 		output.erase(it,output.end());
 	}
 }

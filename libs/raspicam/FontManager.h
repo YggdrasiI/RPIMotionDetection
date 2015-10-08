@@ -1,6 +1,7 @@
 #include <cwchar>
 #include <string.h>
 #include <vector>
+#include <mutex>
 
 extern "C" {
 #include <texture-atlas.h>
@@ -41,7 +42,13 @@ class FontManager{
 		std::vector<texture_font_t*> fonts;
 		texture_atlas_t *atlas;
 		shader_t shader;
-		initFontHandler initHandle;
+		// Should be called after OpenGL initialisation to load shaders, etc.
+		initFontHandler m_initHandle;
+		/* Block access during operations (add_text, clear_text, render)
+		 * on verticesData to made class threadsave.
+		 */
+		std::mutex m_verticesMutex;
+		bool m_text_changed;
 
 	public:
 		FontManager();
@@ -69,10 +76,14 @@ class FontManager{
 		 * Use getFonts()[id] to map on interal font (see add_font()) or map 
 		 * to externally defined texture_font_t.
 		 * */
-		void add_text( texture_font_t *font, wchar_t *text, vec4 *color, vec2 *pos );
+		void add_text( texture_font_t *font, const char *text, vec4 *color, vec2 *pos );
+		void add_text( texture_font_t *font, const wchar_t *text, vec4 *color, vec2 *pos );
 
 		// Remove all textes from rendering.
 		void clear_text();
+
+		// True if text changed after last render() call. 
+		bool render_required();
 
 		/* OpenGL Drawing on framebuffer or render_target. */
 		void render(float x0, float y0, float x1, float y1, GfxTexture* render_target);

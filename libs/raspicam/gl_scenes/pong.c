@@ -92,7 +92,7 @@ static RASPITEXUTIL_SHADER_PROGRAM_T pong_shader_mirror = {
     .attribute_names = {"vertex"},
 };
 
-static RASPITEXUTIL_TEXTURE_T cameraBuffer; //for fancy output effects, unused
+//static RASPITEXUTIL_TEXTURE_T cameraBuffer; //for fancy output effects, unused
 RASPITEXUTIL_TEXTURE_T guiBuffer; //connected with GfxTexture in C++ class
 RASPITEXUTIL_TEXTURE_T blobsBuffer; //connected with GfxTexture in C++ class
 static unsigned char render_into_framebuffer = 0;
@@ -163,10 +163,8 @@ static int pong_init(RASPITEX_STATE *state)
 
     rc = raspitexutil_build_shader_program(&pong_shader_mirror);
 
-
-		cameraBuffer = raspitexutil_create_texture_rgba(GScreenWidth, GScreenHeight, 0, NULL);
-		raspitexutil_create_framebuffer(&cameraBuffer);
-
+		//cameraBuffer = raspitexutil_create_texture_rgba(GScreenWidth, GScreenHeight, 0, NULL);
+		//raspitexutil_create_framebuffer(&cameraBuffer);
 end:
     return rc;
 }
@@ -180,10 +178,11 @@ static void pong_video1(RASPITEX_STATE *raspitex_state) {
 	GLCHK(glUniform1i(pong_shader.uniform_locations[1], 1));
 	GLCHK(glUniform1i(pong_shader.uniform_locations[2], 2));
 
-	// Bind Score texture
+	// Bind video texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
+	// Bind score texture
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
 
@@ -213,10 +212,11 @@ static void pong_video2(RASPITEX_STATE *raspitex_state) {
 	glUniform2f(pong_shader_sobel.uniform_locations[3],
 			1.f/raspitex_state->width, 1.f/raspitex_state->height );
 
-	// Bind Score texture
+	// Bind video texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
+	// Bind score texture
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
 
@@ -243,10 +243,11 @@ static void pong_video3(RASPITEX_STATE *raspitex_state) {
 	GLCHK(glUniform1i(pong_shader_hsv.uniform_locations[1], 1));
 	GLCHK(glUniform1i(pong_shader_hsv.uniform_locations[2], 2));
 
-	// Bind Score texture
+	// Bind video texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
+	// Bind score texture
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
 
@@ -277,10 +278,11 @@ static void pong_video4(RASPITEX_STATE *raspitex_state) {
 
 	glUniform1f(pong_shader_mirror.uniform_locations[3], offset);
 
-	// Bind Score texture
+	// Bind video texture
 	glActiveTexture(GL_TEXTURE0);
 	glBindTexture(GL_TEXTURE_EXTERNAL_OES, raspitex_state->texture);
 
+	// Bind score texture
 	glActiveTexture(GL_TEXTURE1);
 	glBindTexture(GL_TEXTURE_2D, guiBuffer.id);
 
@@ -306,11 +308,13 @@ static int pong_redraw(RASPITEX_STATE *raspitex_state) {
 		RedrawGui();
 
 		int select = 0;
+		// Ask pong object which shader should be used
+		if( raspitex_state->ops.args[0] ){
+			select = GetShader(raspitex_state->ops.args[0]);
+		}
+		// Shift by fixed offset.
 		if( raspitex_state->ops.args[1] ){
-			select = raspitex_state->ops.args[1]; 
-		}else if( raspitex_state->ops.args[0] ){
-			//Ask pong object which shader should be used
-			select = GetShader();
+			select = (select + raspitex_state->ops.args[1]) % SHADER_TYPE_NUM; 
 		}
 		
 		switch( select ){
