@@ -72,8 +72,7 @@ void Tracker::getFilteredBlobs(int /*Trackfilter*/ filter, std::vector<cBlob> &o
 	for (unsigned int i = 0; i < blobs.size(); i++) {
 		cBlob &b = blobs[i];
 		if( ( filter & b.event )
-				|| ( filter & TRACK_ALL )
-				|| ( filter & TRACK_ALL_ACTIVE
+				|| ( filter&TRACK_ALL_ACTIVE
 					&& b.event & (BLOB_MOVE|BLOB_DOWN)
 					&& b.missing_duration < m_max_missing_duration
 					&& b.duration > m_minimal_frames_till_active ) 
