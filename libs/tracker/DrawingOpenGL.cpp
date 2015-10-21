@@ -5,6 +5,7 @@
 #include <algorithm> //for std::sort
 
 #include "Tracker.h"
+
 #ifdef WITH_OPENGL
 #include "TrackerDrawingOpenGL.h"
 #include "DrawingFunctions.h"
@@ -134,7 +135,5 @@ void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bo
 	DrawBlobRects(&points[0], &colors[0], quadIndex, target);
 
 }
-
-
 
 #endif

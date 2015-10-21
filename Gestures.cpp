@@ -3,6 +3,10 @@
 #include <algorithm>
 #include "Gestures.h"
 
+#ifdef WITH_OPENGL
+#include "TrackerDrawingOpenGL.h"
+#include "DrawingFunctions.h"
+#endif
 
 //Sorting functions to find best fitting gestures.
 static bool sortByLevel0(const GestureDistance *lhs, const GestureDistance *rhs) { 
@@ -62,7 +66,7 @@ static double quadratureSquared( double *inA, double *inB, const size_t abLen ){
 
 
 
-Gesture::Gesture( cBlob &blob):
+Gesture::Gesture( cBlob &blob, size_t skipped_begin_nodes, size_t skipped_end_nodes ):
 m_n(0),m_ncoeffs(0),m_nbreak(0),
 	m_time_max(1.0),
 		//m_grid(NULL),
@@ -73,8 +77,7 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 		//m_bw(NULL),
 		m_ReducedBasis(NULL)
 {
-	//Debug, Pass blob id to gesture
-	m_gestureId = blob.handid;
+	m_gestureId = blob.id;
 
 	// Init static variables
 	if( mw == NULL ){
@@ -99,7 +102,8 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 
 		/* 0. Setup sizes and init vectors */
 		//size_t m_n = std::min( 1 + blob.history.get()->size(), MAX_DURATION_STEPS);
-		m_n = 1 + blob.history.get()->size();
+		m_n = 1 + blob.history.get()->size() - skipped_begin_nodes - skipped_end_nodes;
+		assert( m_n >= 0 );
 		if( m_n > MAX_DURATION_STEPS ) m_n = MAX_DURATION_STEPS;
 
 		m_ncoeffs = NCOEFFS_FUNC(m_n);
@@ -133,16 +137,20 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 			//m_bw = gsl_bspline_alloc(SPLINE_DEG, m_nbreak);
 			const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
 
-			/* 1. Filling vectors */
-			//gsl_vector_set(m_grid, 0, 0.0);
-			const gsl_vector_const_view subrow = gsl_matrix_const_subrow ( FullBasis[basisIndex], 0, 0, m_ncoeffs);
-			gsl_matrix_set_row( m_ReducedBasis, 0, &subrow.vector );
-
-			gsl_vector_set_fast(m_raw_values[0], 0, blob.location.x);
-			gsl_vector_set_fast(m_raw_values[1], 0, blob.location.y);
-			gsl_vector_set_fast(m_debugDurationGrid, 0, 0.0);
-
+			/* 1. Filling vectors. Note that values are flipped. [current value,..., oldest value] */
 			int knot=0;
+			//gsl_vector_set(m_grid, 0, 0.0); // unknown behaviour for skipped_*_nodes>0
+			if( skipped_end_nodes > 0 ){
+				const gsl_vector_const_view subrow = gsl_matrix_const_subrow ( FullBasis[basisIndex], 0, 0, m_ncoeffs);
+				gsl_matrix_set_row( m_ReducedBasis, knot, &subrow.vector );
+
+				gsl_vector_set_fast(m_raw_values[0], knot, blob.location.x);
+				gsl_vector_set_fast(m_raw_values[1], knot, blob.location.y);
+				gsl_vector_set_fast(m_debugDurationGrid, 0, 0.0);
+				++knot;
+				--skipped_end_nodes;
+			}
+
 			int duration=blob.duration;
 			int globKnot;
 			std::deque<cBlob>::iterator it = blob.history.get()->begin();
@@ -151,10 +159,9 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 			for ( ; it != itEnd ; ++it){
 				//go to next global knot.
 				globKnot = duration - (*it).duration + 1; /* TODO Ok, die +1 sollte weg und duration bei den Blobs korrigiert werden. */
-				++knot;
 
 				if( globKnot >= MAX_DURATION_STEPS ){
-					fprintf(stderr,"%s:Excess max_jmal duration for gestures.\n",__FILE__);
+					fprintf(stderr,"%s:Excess max duration for gestures.\n",__FILE__);
 					/* The tracked data is to far in the past. Cut of at this position and short
 					 * the dimension of the basis matrix.
 					 * Note: The selection of m_ncoeffs could be to high for the new m_n.
@@ -165,6 +172,11 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 					m_raw_values[1]->size = m_n;
 					break;
 				}
+				if( skipped_end_nodes > 0 ){
+					--skipped_end_nodes;
+					continue;
+				}
+				if( knot >= m_n ) break; // just ness. if skipped_begin_nodes>0
 
 				gsl_vector_set_fast(m_raw_values[0], knot, (*it).location.x);
 				gsl_vector_set_fast(m_raw_values[1], knot, (*it).location.y);
@@ -173,6 +185,8 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 
 				const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], globKnot, 0, m_ncoeffs);
 				gsl_matrix_set_row( m_ReducedBasis, knot, &subrow2.vector );
+
+				++knot;
 			}
 
 			//printf("Matrix:\n");
@@ -195,7 +209,7 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 	construct();
 }
 
-Gesture::Gesture(int *inTimestamp, double *inX, double *inY, size_t xy_Len, size_t stride=1 ):
+Gesture::Gesture(int *inTimestamp, double *inX, double *inY, size_t xy_Len, size_t stride, bool reversedTime ):
 m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 	m_time_max(1.0),
 		m_curvePointDistances(NULL),
@@ -253,29 +267,63 @@ m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 
 		/* 1. Filling vectors */
 		//gsl_vector_set(m_grid, 0, 0.0);
+		if( reversedTime ){
+			int endTime(inTimestamp[xy_Len-1]);
+			inTimestamp += xy_Len;
+			inX += (xy_Len-1)*stride;
+			inY += (xy_Len-1)*stride;
 
-		for (size_t i=0; i<xy_Len; ++i, inX+=stride, inY+=stride, ++inTimestamp ){
+			for (size_t i=0; i<xy_Len; ++i, inX-=stride, inY-=stride, --inTimestamp ){
 
-			if( *inTimestamp >= MAX_DURATION_STEPS ){
-				fprintf(stderr,"%s:Excess max_jmal duration for gestures.\n",__FILE__);
-				/* The tracked data is to far in the past. Cut of at this position and short
-				 * the dimension of the basis matrix.
-				 * Note: The selection of m_ncoeffs could be to high for the new m_n.
-				 */
-				m_n = i;
-				m_ReducedBasis->size1 = m_n;
-				m_raw_values[0]->size = m_n;
-				m_raw_values[1]->size = m_n;
-				break;
+				int curTime(endTime - *inTimestamp);
+				if( curTime >= MAX_DURATION_STEPS ){
+					fprintf(stderr,"%s:Excess max duration for gestures.\n",__FILE__);
+					/* The tracked data is to far in the past. Cut of at this position and short
+					 * the dimension of the basis matrix.
+					 * Note: The selection of m_ncoeffs could be to high for the new m_n.
+					 */
+					m_n = i;
+					m_ReducedBasis->size1 = m_n;
+					m_raw_values[0]->size = m_n;
+					m_raw_values[1]->size = m_n;
+					--inTimestamp;
+					break;
+				}
+
+				gsl_vector_set_fast(m_raw_values[0], i, *inX);
+				gsl_vector_set_fast(m_raw_values[1], i, *inY);
+				gsl_vector_set_fast(m_debugDurationGrid, i, curTime);
+
+				const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], curTime, 0, m_ncoeffs);
+				gsl_matrix_set_row( m_ReducedBasis, i, &subrow2.vector );
 			}
 
-			gsl_vector_set_fast(m_raw_values[0], i, *inX);
-			gsl_vector_set_fast(m_raw_values[1], i, *inY);
-			gsl_vector_set_fast(m_debugDurationGrid, i, *inTimestamp);
+			m_time_max = ((double)(endTime-*(inTimestamp+1)))/MAX_DURATION_STEPS;
 
-			const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], *inTimestamp, 0, m_ncoeffs);
-			gsl_matrix_set_row( m_ReducedBasis, i, &subrow2.vector );
-		}
+		}else{ // time not reversed
+			for (size_t i=0; i<xy_Len; ++i, inX+=stride, inY+=stride, ++inTimestamp ){
+
+				if( *inTimestamp >= MAX_DURATION_STEPS ){
+					fprintf(stderr,"%s:Excess max duration for gestures.\n",__FILE__);
+					/* The tracked data is to far in the past. Cut of at this position and short
+					 * the dimension of the basis matrix.
+					 * Note: The selection of m_ncoeffs could be to high for the new m_n.
+					 */
+					m_n = i;
+					m_ReducedBasis->size1 = m_n;
+					m_raw_values[0]->size = m_n;
+					m_raw_values[1]->size = m_n;
+					++inTimestamp;
+					break;
+				}
+
+				gsl_vector_set_fast(m_raw_values[0], i, *inX);
+				gsl_vector_set_fast(m_raw_values[1], i, *inY);
+				gsl_vector_set_fast(m_debugDurationGrid, i, *inTimestamp);
+
+				const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], *inTimestamp, 0, m_ncoeffs);
+				gsl_matrix_set_row( m_ReducedBasis, i, &subrow2.vector );
+			}
 
 		//printf("Matrix:\n");
 		//gsl_matrix_fprintf(stdout,m_ReducedBasis, "%f");
@@ -283,6 +331,7 @@ m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 		//gsl_bspline_knots(m_grid, m_bw);//internally, m_grid data will be copied, which is omitable
 
 		m_time_max = ((double)*(inTimestamp-1))/MAX_DURATION_STEPS;
+		}
 	}else{
 		// To less points
 		m_n = 0;
@@ -295,7 +344,7 @@ size_t Gesture::getNumberOfRawSupportNodes() const {
 	return m_n;
 }
 
-Gesture::Gesture(int *inTimestamp, double *inXY, size_t xy_Len ):
+Gesture::Gesture(int *inTimestamp, double *inXY, size_t xy_Len, bool reversedTime ):
 m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 	m_time_max(1.0),
 		m_curvePointDistances(NULL),
@@ -305,7 +354,7 @@ m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 		m_ReducedBasis(NULL)
 //:Gesture(inTimestamp, inXY, inXY+1, xy_Len, 2)
 {
-	//*this = Gesture(inTimestamp, inXY, inXY+1, xy_Len, 2);//does not work?!
+	// new(this) Gesture(inTimestamp, inXY, inXY+1, xy_Len, 2, reversedTime);
 	
 	//init static variables
 	if( mw == NULL ){
@@ -346,30 +395,64 @@ m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 		const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
 
 		/* 1. Filling vectors */
-		for (size_t i=0; i<xy_Len; ++i, inXY+=2, ++inTimestamp ){
+		if( reversedTime ){
+			int endTime(inTimestamp[xy_Len-1]);
+			inTimestamp += xy_Len-1;
+			inXY += (xy_Len-1)*2;
+			for (size_t i=0; i<xy_Len; ++i, inXY-=2, --inTimestamp ){
 
-			if( *inTimestamp >= MAX_DURATION_STEPS ){
-				fprintf(stderr,"%s:Excess max_jmal duration for gestures.\n",__FILE__);
-				/* The tracked data is to far in the past. Cut of at this position and short
-				 * the dimension of the basis matrix.
-				 * Note: The selection of m_ncoeffs could be to high for the new m_n.
-				 */
-				m_n = i;
-				m_ReducedBasis->size1 = m_n;
-				m_raw_values[0]->size = m_n;
-				m_raw_values[1]->size = m_n;
-				break;
+				int curTime(endTime - *inTimestamp);
+				if( curTime >= MAX_DURATION_STEPS ){
+					fprintf(stderr,"%s:Excess max duration for gestures.\n",__FILE__);
+					/* The tracked data is to far in the past. Cut of at this position and short
+					 * the dimension of the basis matrix.
+					 * Note: The selection of m_ncoeffs could be to high for the new m_n.
+					 */
+					m_n = i;
+					m_ReducedBasis->size1 = m_n;
+					m_raw_values[0]->size = m_n;
+					m_raw_values[1]->size = m_n;
+					--inTimestamp;
+					break;
+				}
+
+				gsl_vector_set_fast(m_raw_values[0], i, inXY[0]);
+				gsl_vector_set_fast(m_raw_values[1], i, inXY[1]);
+				gsl_vector_set_fast(m_debugDurationGrid, i, curTime);
+
+				const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], curTime, 0, m_ncoeffs);
+				gsl_matrix_set_row( m_ReducedBasis, i, &subrow2.vector );
 			}
 
-			gsl_vector_set_fast(m_raw_values[0], i, inXY[0]);
-			gsl_vector_set_fast(m_raw_values[1], i, inXY[1]);
-			gsl_vector_set_fast(m_debugDurationGrid, i, *inTimestamp);
+			m_time_max = ((double)(endTime-*(inTimestamp+1)))/MAX_DURATION_STEPS;
 
-			const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], *inTimestamp, 0, m_ncoeffs);
-			gsl_matrix_set_row( m_ReducedBasis, i, &subrow2.vector );
+		}else{ // time not reversed
+
+			for (size_t i=0; i<xy_Len; ++i, inXY+=2, ++inTimestamp ){
+				if( *inTimestamp >= MAX_DURATION_STEPS ){
+					fprintf(stderr,"%s:Excess max duration for gestures.\n",__FILE__);
+					/* The tracked data is to far in the past. Cut of at this position and short
+					 * the dimension of the basis matrix.
+					 * Note: The selection of m_ncoeffs could be to high for the new m_n.
+					 */
+					m_n = i;
+					m_ReducedBasis->size1 = m_n;
+					m_raw_values[0]->size = m_n;
+					m_raw_values[1]->size = m_n;
+					++inTimestamp;
+					break;
+				}
+
+				gsl_vector_set_fast(m_raw_values[0], i, inXY[0]);
+				gsl_vector_set_fast(m_raw_values[1], i, inXY[1]);
+				gsl_vector_set_fast(m_debugDurationGrid, i, *inTimestamp);
+
+				const gsl_vector_const_view subrow2 = gsl_matrix_const_subrow( FullBasis[basisIndex], *inTimestamp, 0, m_ncoeffs);
+				gsl_matrix_set_row( m_ReducedBasis, i, &subrow2.vector );
+			}
+
+			m_time_max = ((double)*(inTimestamp-1))/MAX_DURATION_STEPS;
 		}
-
-		m_time_max = ((double)*(inTimestamp-1))/MAX_DURATION_STEPS;
 	}else{
 		// To less points
 		m_n = 0;
@@ -799,3 +882,67 @@ double GestureDistance::evalL2Dist( size_t level){
 	m_L2_weight += m_L2NormSquared[level];
 	return m_L2NormSquared[level];
 }
+
+
+#ifdef WITH_OPENGL
+void gesture_drawSpline( Gesture *gesture, int screenWidth, int screenHeight, float *color_rgba, float *increment_rgba, GfxTexture *target){
+
+	GLfloat default_rgba[4] = {1.0, 0.0, 1.0, 0.9};
+	GLfloat default_increment[4] = {0.01, 0.05, 0.05, 0.0};
+	if( color_rgba == NULL ) color_rgba = &default_rgba[0];
+	if( increment_rgba == NULL ) increment_rgba = &default_increment[0];
+
+	double *x = NULL , *y = NULL; 
+	size_t xy_len = 0;
+	//Map pointer on values of gesture object.
+	gesture->evalSpline(&x,&y,&xy_len);
+
+	float scaleW = 2.0/screenWidth;
+	float scaleH = 2.0/screenHeight;
+	GLfloat points[xy_len*2];
+	GLfloat *p = &points[0];
+	GLfloat colors[xy_len*4];
+	GLfloat *c = &colors[0];
+	float x0,y0;
+
+	if( xy_len > 0 ){
+		// 1. Draw orientation triangle
+		/*
+			 cv::Point t0(gesture->m_orientationTriangle[0].x,gesture->m_orientationTriangle[0].y);
+			 cv::Point t1(gesture->m_orientationTriangle[1].x,gesture->m_orientationTriangle[1].y);
+			 cv::Point t2(gesture->m_orientationTriangle[2].x,gesture->m_orientationTriangle[2].y);
+			 cv::Scalar triColor(255,50,0);
+			 cv::line(out,t0,t1,triColor,2);
+			 cv::line(out,t1,t2,triColor,2);
+			 cv::line(out,t2,t0,triColor,2);
+			 */
+		// 2. Draw spline
+		x0 = x[0]*scaleW - 1;
+		y0 = 1 - y[0]*scaleH;
+		*p++ = x0; 	*p++ = y0; 	
+		*c++ = color_rgba[0]; *c++ = color_rgba[1]; *c++ = color_rgba[2]; *c++ = color_rgba[3];
+
+		for( size_t i=1; i<xy_len; ++i){
+			x0 = x[i]*scaleW - 1;
+			y0 = 1 - y[i]*scaleH;
+			*p++ = x0; 	*p++ = y0; 	
+
+			for( size_t ic=0; ic<4; ++ic){
+				color_rgba[ic] += increment_rgba[ic];
+				if( color_rgba[ic] < 0.0 ){
+					color_rgba[ic] = 0.0;
+					increment_rgba[ic] *= -1.0;
+				}else if( color_rgba[ic] > 1.0 ){
+					color_rgba[ic] = 1.0;
+					increment_rgba[ic] *= -1.0;
+				}
+			}
+			*c++ = color_rgba[0]; *c++ = color_rgba[1]; *c++ = color_rgba[2]; *c++ = color_rgba[3];
+		}
+	}
+
+	DrawColouredLines(&points[0], &colors[0], xy_len, target);
+
+}
+
+#endif

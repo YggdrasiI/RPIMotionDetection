@@ -195,8 +195,7 @@ void drawGestureSpline( Gesture *gesture, cv::Mat &out, cv::Scalar line_color = 
 				p1 = p2;
 			}
 		}
-		//delete x; delete y;//points to member variables, now. -> no explicit delete
-
+		//delete x; delete y;//variables points to member variables of gesture object, now. -> no explicit delete required!
 }
 
 int detection_loop(std::string filename ){

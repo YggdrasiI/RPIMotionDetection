@@ -74,18 +74,20 @@ struct fpoint2 {
  */
 #define NUM_EVALUATION_POINTS 50
 
-#define SPLINE_DEG					4
-#define MAX_DURATION_STEPS        100
+/*
+ * Higher values (>3) reduce the detection of edges.
+ */
+#define SPLINE_DEG					3
 
 /* Preevaluate the Spline values on MAX_DURATION_STEPS positions for splines with
  * nc coefficients with NCOEFFS_MIN <= nc < NCOEFFS_MAX
  * On runtime, the selected value for nc depends on the NCOEFFS_FUNC.
- * It's important for the smoothing to avoid high nc values
- * for a small amount of datapoints (n).
+ * It's important for the smoothing (and again overshooting) to avoid high nc values
+ * for a small amount of datapoints (n). 
  */
 #define NCOEFFS_MIN 4
 #define NCOEFFS_MAX 9
-#define NCOEFFS_FUNC(n) (std::max(NCOEFFS_MIN,std::min((int)(n/3),NCOEFFS_MAX-1)))
+#define NCOEFFS_FUNC(n) (std::max(NCOEFFS_MIN,std::min((int)(n/4),NCOEFFS_MAX-1)))
 //#define NBREAK   (NCOEFFS + 2 - SPLINE_DEG) //Should be at least 2
 
 /* Uniform grid on [0,1] with NUM_EVALUATION_POINTS. (Currently) all further 
@@ -102,6 +104,13 @@ static gsl_matrix *EvalGridBasis[NCOEFFS_MAX-NCOEFFS_MIN];
 /* Number of nodes which are used for the mean value of start and
  * end of a gesture. */
 #define NUM_END_NODES 3
+
+/* Number of ignored nodes at the beginning and end of input values. If the
+ * gesture ends, mostly the last hand movements disturbs the
+ * curve.
+ */
+#define DEFAULT_SKIPPED_BEGIN_NODES 1
+#define DEFAULT_SKIPPED_END_NODES 1
 
 /* Distance between two spline evaluation points which will be
  * used for the generation of the gesture invariance function.
@@ -255,9 +264,16 @@ class Gesture{
 		gsl_vector **m_curvePointDistances;
 
 
-		Gesture( cBlob &blob);
-		Gesture(int *inTimestamp, double *inX, double *inY, size_t xy_Len, size_t stride );
-		Gesture(int *inTimestamp, double *inXY, size_t xy_Len );
+		Gesture( cBlob &blob,
+				size_t skipped_begin_nodes = DEFAULT_SKIPPED_BEGIN_NODES,
+				size_t skipped_end_nodes = DEFAULT_SKIPPED_END_NODES );
+		/* reversedTime flip's the order of the input values.
+		 * Note that the history/values of the tracker 
+		 * are ordered als
+		 * [actual value, previous value, ...., oldes value ]
+		 */
+		Gesture(int *inTimestamp, double *inX, double *inY, size_t xy_Len, size_t stride = 1, bool reversedTime = true );
+		Gesture(int *inTimestamp, double *inXY, size_t xy_Len, bool reversedTime = true );
 		~Gesture();
 
 		size_t getNumberOfRawSupportNodes() const;
@@ -342,9 +358,13 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 		*pos++ = 100 + 20*5;
 		time[i] = i;
 	}
-	Gesture *gest1 = new Gesture( time, xy, n); 
+	Gesture *gest1 = new Gesture( time, xy, n, false); 
 	gest1->setGestureName("L-shape");
 	gestureStore.addPattern(gest1);
+
+	Gesture *gest1inv = new Gesture( time, xy, n, true); 
+	gest1inv->setGestureName("Inv L-shape");
+	gestureStore.addPattern(gest1inv);
 
 	//Circle
 	pos=&xy[0];
@@ -352,7 +372,7 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 		*pos++ = 300 + 20*cos(2*3.1415*i/30);
 		*pos++ = 150 + 20*sin(2*3.1415*i/30);
 	}
-	Gesture *gest2 = new Gesture( time, xy, n); 
+	Gesture *gest2 = new Gesture( time, xy, n, false); 
 	gest2->setGestureName("Circle");
 	gestureStore.addPattern(gest2);
 
@@ -362,7 +382,7 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 		*pos++ = 200 - 6*i - (i*333)%7;
 		*pos++ = 100 + 6*i + (i*111)%7;
 	}
-	Gesture *gest3 = new Gesture( time, xy, n); 
+	Gesture *gest3 = new Gesture( time, xy, n, false); 
 	gest3->setGestureName("Line");
 	gestureStore.addPattern(gest3);
 
@@ -380,7 +400,7 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 		*pos++ = 350; 
 		*pos++ = 200 - (i-20)*10;
 	}
-	Gesture *gest4 = new Gesture( time, xy, n); 
+	Gesture *gest4 = new Gesture( time, xy, n, true); 
 	gest4->setGestureName("U-Shape");
 	gestureStore.addPattern(gest4);
 
@@ -394,7 +414,7 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 		*pos++ = 150 + i*5; 
 		*pos++ = 100 + (30-i)*10;
 	}
-	Gesture *gest5 = new Gesture( time, xy, n); 
+	Gesture *gest5 = new Gesture( time, xy, n, true); 
 	gest5->setGestureName("V-Shape");
 	gestureStore.addPattern(gest5);
 
@@ -405,5 +425,17 @@ static void addGestureTestPattern(GestureStore &gestureStore){
 		gesture->printDistances();
 	}
 }
+
+#ifdef WITH_OPENGL
+class GfxTexture; 
+
+/* Render spline resprentation of gesture.
+ *
+ * color_rgba: color of first node. Use NULL for default value
+ * increment_rgba: offset for each further node. Value will be flipped if color leave [0,1].
+ * 			Use NULL for default value.
+ */
+void gesture_drawSpline( Gesture *gesture, int screenWidth, int screenHeight, float *color_rgba = NULL, float *increment_rgba = NULL, GfxTexture *target = NULL);
+#endif
 
 #endif

@@ -24,6 +24,8 @@ extern Tracker2 tracker;
 #include <FontManager.h>
 extern FontManager fontManager;
 
+#include <Gestures.h>
+
 // Header for drawing function. Definition in libs/tracker/DrawingOpenGL.cpp
 //void tracker_drawBlobsGL(Tracker &tracker, int screenWidth, int screenHeight, bool drawHistoryLines = false, std::vector<cBlob> *toDraw = NULL, GfxTexture *target = NULL);
 //void tracker_drawHistory( Tracker &tracker, int screenWidth, int screenHeight, cBlob &blob, GfxTexture *target);
@@ -57,6 +59,7 @@ extern "C" RASPITEXUTIL_TEXTURE_T  guiBuffer;
 static std::vector<cBlob> blobCache;
 bool guiNeedRedraw = true;
 
+extern std::vector<Gesture*> gestures;
 
 
 void InitGraphics()
@@ -187,8 +190,19 @@ void RedrawGui()
 	if( fontManager.render_required() ){
 		fontManager.render(-1.0f,-1.0f,1.0f,1.0f, &guiTexture, true);
 		//fontManager.render(-1.0f,-1.0f,1.0f,1.0f, NULL);
-		check();
-	}
+		
+		std::vector<Gesture*>::iterator it = gestures.begin();
+		const std::vector<Gesture*>::iterator itEnd = gestures.end();
+		if( gestures.size() > 1 ){
+			it += gestures.size()-2;
+			for( ; it != itEnd ; ++it ){
+				const auto& g = *it;
+				gesture_drawSpline(g, motion_data.width, motion_data.height, NULL, NULL, &guiTexture);
+			}
+		}
+
+			check();
+		}
 
 	if( !guiNeedRedraw ) return;
 	guiNeedRedraw = false;
@@ -205,8 +219,8 @@ void RedrawTextures()
 	//DrawTextureRect(&imvTexture,0.4, 1.0f,-1.0f,-1.0f,1.0f,NULL);
 
 	blobCache.clear();
-	//tracker.getFilteredBlobs(TRACK_ALL_ACTIVE|LIMIT_ON_N_OLDEST, blobCache);
-	tracker.getFilteredBlobs(TRACK_UP|LIMIT_ON_N_OLDEST, blobCache);
+	tracker.getFilteredBlobs(TRACK_ALL_ACTIVE|LIMIT_ON_N_OLDEST, blobCache);
+	//tracker.getFilteredBlobs(TRACK_UP|LIMIT_ON_N_OLDEST, blobCache);
 	tracker_drawBlobsGL(tracker, motion_data.width, motion_data.height, true, &blobCache);
 	check();
 

@@ -26,6 +26,8 @@ struct point {
  	int  x, y;
 };
 
+static unsigned int CBlob_Id = 0;
+
 class cBlob {
 	private:
 	public:
@@ -48,6 +50,7 @@ class cBlob {
 		int handid; // associate id for tuio processing
 		int duration; //blob exists for duration frames.
 		int missing_duration; //blob is missed for missing_duration frames.
+		unsigned int id; // shared id with blobs of history chain.
 
 #ifdef WITH_HISTORY
 		//std::deque<cBlob> *history;
@@ -56,6 +59,7 @@ class cBlob {
 			//assert( history == NULL );
 			history = previousBlob.history;
 			//previousBlob.history = NULL;
+			id = previousBlob.id;
 		}
 
 		/*Note: Only add (old) blob b to history container
@@ -79,6 +83,7 @@ class cBlob {
 			:history(nullptr)
 #endif
 		{
+			id = ++CBlob_Id;
 		};
 		~cBlob()
 		{

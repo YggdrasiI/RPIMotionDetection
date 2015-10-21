@@ -157,6 +157,8 @@ int main(int argc, const char **argv){
 	blobtree_set_filter(frameblobs, F_ONLY_LEAFS, 1);
 
 	//init depth map, [0,1,1,1,1,2,3,3,4,4,5, 100,100,…]
+	//Mapping low values to zero reduces the noise of 
+	//the motion vector values.
 	for( int i=0; i<256; i++){
 		switch(i){
 			case 0:

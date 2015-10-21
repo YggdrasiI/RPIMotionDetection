@@ -22,7 +22,7 @@ FontManager fontManager;
 static std::vector<cBlob> blobCache; //for gestures
 
 static GestureStore gestureStore;
-static std::vector<Gesture*> gestures = std::vector<Gesture*>();
+std::vector<Gesture*> gestures = std::vector<Gesture*>();
 static const vec2 gest_pen_headline = {0,160};
 static vec2 gest_pen = {0,0};
 static vec4 gest_color = {.37254, .69411, .17647, 1.0};
@@ -31,15 +31,12 @@ static int gest_pos = 0;
 //Setup of font manager for GUI textes. Called after OpenGL initialisation.
 void setup_fonts(FontManager *fontManager){
 
-	fontManager->add_font("./shader/fontrendering/fonts/Vera.ttf", 70 );
+	//fontManager->add_font("./shader/fontrendering/fonts/Vera.ttf", 70 );
+	fontManager->add_font("./shader/fontrendering/fonts/amiri-regular.ttf", 70 );
+	//fontManager->add_font("/usr/share/fonts/truetype/liberation/LiberationSans-Bold.ttf", 70 );
 
-	texture_font_t *font1, *font2;
+	texture_font_t *font1;
 	font1 = fontManager->getFonts()->at(0);
-
-	//vec2 gest_pen = {0,0};
-	//vec4 gest_color = {.37254, .69411, .17647, 1.0};
-	vec4 transColor = {1,0.3,0.3,0.6};
-
 	vec2 pen = {gest_pen_headline.x, gest_pen_headline.y};
 	fontManager->add_text( font1, L"Last Gestures: α", &gest_color, &pen );
 }
@@ -90,7 +87,7 @@ void* blob_detection(void *argn){
 					}
 
 					//2. Blob detection
-					BlobtreeRect input_roi = {0,0, motion_data.width, motion_data.height -0 };//shrink height because lowest rows contains noise.
+					BlobtreeRect input_roi = {0,0, motion_data.width, motion_data.height - 0 }; // Noise in lowest row removed by raspivid update. Shrinking of height not ness anymore 
 					depthtree_find_blobs(frameblobs, motion_data.imv_norm,
 							motion_data.width, motion_data.height,
 							input_roi, depth_map, dworkspace);
@@ -104,22 +101,32 @@ void* blob_detection(void *argn){
 					//tracker.getFilteredBlobs(TRACK_UP, blobCache);
 
 					// Remove old detections from drawing
-					while( gestures.size() > 6 ){
+					while( gestures.size() > 8 ){
+						delete gestures.front();
 						gestures.erase(gestures.begin());
 					}
 
 					std::vector<cBlob>::iterator it = blobCache.begin();
 					const std::vector<cBlob>::iterator itEnd = blobCache.end();
+					int tmpI(0);
+					bool gestureHandledTwice(false);
 					for( ; it != itEnd ; ++it ){
 						// Skip short/flickering movements
-						if( (*it).duration < 20 ) continue; 
-						size_t id = (size_t) (*it).handid;
+						if( (*it).duration < 16 ) continue; 
+
+						size_t id = (size_t) (*it).id;//handid;
+						printf("Gest (%u,%i)\t", id, (*it).event );
 						for( const auto& g: gestures){
 							if( id == g->getGestureId() ){
-								printf("Handle same blob chain twice! id=%u\n", id);
+								printf("Handle same blob chain twice! id=%u el=%i\n", id, tmpI);
+								gestureHandledTwice = true;
 								continue;
 							}
 						}
+
+						tmpI++;
+						if( gestureHandledTwice ) continue;
+						printf("===\n");
 
 						// Convert list of coordinates into spline approximation
 						Gesture *gest = new Gesture( (*it) );
@@ -127,13 +134,13 @@ void* blob_detection(void *argn){
 						// This objects stores some metadata/results.
 						GesturePatternCompareResult res;
 						gestureStore.compateWithPatterns(gest, res);
-						if( res.minGest != NULL && res.minDist < 0.04 ){
+						if( res.minGest != NULL && res.minDist < 0.08 ){
 							printf("Gesture similar to %s\n", res.minGest->getGestureName() );
 							gestures.emplace_back(gest);
 
 							// Draw gesture name
 							gest_pen.x = 0;
-							if( ++gest_pos > 8 ){
+							if( ++gest_pos > 3 ){
 								gest_pos = 0;	
 								fontManager.clear_text();
 								vec2 pen = {gest_pen_headline.x, gest_pen_headline.y};
@@ -142,13 +149,20 @@ void* blob_detection(void *argn){
 							}
 							gest_pen.y = gest_pen_headline.y - 80*(1+gest_pos);
 							char tmpText[100];
-							snprintf(tmpText, 100, "%s   %i", res.minGest->getGestureName(), blobCache.size());
+							snprintf(tmpText, 100, "%s   %i", res.minGest->getGestureName(), gest->getGestureId());
 							fontManager.add_text( fontManager.getFonts()->at(0),
 									tmpText /*res.minGest->getGestureName()*/,
 									&gest_color, &gest_pen );
 
 						}else{
-							delete gest;
+							//delete gest;
+							gest->setGestureName("Unknown");
+							gestures.emplace_back(gest);
+							gest_pos++;
+							gest_pen.x = 0;
+							gest_pen.y = gest_pen_headline.y - 80*(1+gest_pos);
+							fontManager.add_text( fontManager.getFonts()->at(0),
+									gest->getGestureName(), &gest_color, &gest_pen );
 						}
 					}
 
@@ -156,7 +170,7 @@ void* blob_detection(void *argn){
 					// see gl_scenes/motion.c
 
 					// Debug: Replace imv_norm with ids, roi has to start in (0,0) and with full width.
-					eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
+					//eval_ids(dworkspace, motion_data.imv_norm, input_roi.width* input_roi.height);
 
 
 				}else{
@@ -219,8 +233,10 @@ int main(int argc, const char **argv){
 	blobtree_set_filter(frameblobs, F_ONLY_LEAFS, 1);
 
 	//init depth map
+	//Mapping low values to zero reduces the noise of 
+	//the motion vector values.
 	for( int i=0; i<256; i++){
-		depth_map[i] = (i<10?0:i/4+1);
+		depth_map[i] = (i<7?0:i/4+1);
 	}
 	//Create thread for blob detection.
 	int err = pthread_create(&blob_tid, NULL, &blob_detection, NULL);
