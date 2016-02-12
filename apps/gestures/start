@@ -10,6 +10,8 @@ ENV="LD_LIBRARY_PATH=./lib:\${LD_LIBRARY_PATH}"
 MAINCMD="./gestures -x /dev/null -o /dev/null -t 0  --gl --glscene motion --waitAndFix ${WAIT} "
 EXTRA_ARGS="--vflip"
 #EXTRA_ARGS="--hflip -rot 90"
+# Artifical light or bad power supply can cause flickering. Reduce of fps could stable the image
+EXTRA_ARGS="${EXTRA_ARGS} -fps 10"
 
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
 echo "Waiting $WAIT ms on camera initialisation"

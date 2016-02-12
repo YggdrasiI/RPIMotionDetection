@@ -76,6 +76,7 @@ struct fpoint2 {
 
 /*
  * Higher values (>3) reduce the detection of edges.
+ * 2 degrees of freedom = piecewise linear 
  */
 #define SPLINE_DEG					3
 
@@ -89,6 +90,13 @@ struct fpoint2 {
 #define NCOEFFS_MAX 9
 #define NCOEFFS_FUNC(n) (std::max(NCOEFFS_MIN,std::min((int)(n/4),NCOEFFS_MAX-1)))
 //#define NBREAK   (NCOEFFS + 2 - SPLINE_DEG) //Should be at least 2
+
+/*
+ * Uncomment ROBUST_FIT to gsl_multifit_robust_est() for approximation.
+ * Otherwise, gsl_multifit_linear_est() will be used.
+ * Robust version does not work. The algorithm is probably misunderstand by the author...
+ */
+//#define ROBUST_FIT
 
 /* Uniform grid on [0,1] with NUM_EVALUATION_POINTS. (Currently) all further 
  * evaluatationn base on values of this positions.
@@ -109,8 +117,8 @@ static gsl_matrix *EvalGridBasis[NCOEFFS_MAX-NCOEFFS_MIN];
  * gesture ends, mostly the last hand movements disturbs the
  * curve.
  */
-#define DEFAULT_SKIPPED_BEGIN_NODES 1
-#define DEFAULT_SKIPPED_END_NODES 1
+#define DEFAULT_SKIPPED_BEGIN_NODES 0
+#define DEFAULT_SKIPPED_END_NODES 0
 
 /* Distance between two spline evaluation points which will be
  * used for the generation of the gesture invariance function.
@@ -129,17 +137,23 @@ static gsl_matrix *FullBasis[NCOEFFS_MAX-NCOEFFS_MIN];
 static gsl_vector *Global_c[NCOEFFS_MAX-NCOEFFS_MIN][DIM];
 static gsl_matrix *Global_cov[NCOEFFS_MAX-NCOEFFS_MIN][DIM];
 
-static gsl_multifit_linear_workspace *mw = NULL;
-//static gsl_multifit_robust_workspace *rw = NULL;//more stable agains outliners
 static gsl_bspline_workspace *bw[NCOEFFS_MAX-NCOEFFS_MIN];
+#ifdef ROBUST_FIT
+static gsl_multifit_robust_workspace *rw = NULL;//more stable agains outliners
+#else
+static gsl_multifit_linear_workspace *mw = NULL;
+#endif
 
 static size_t gestureIdCounter = 0;
 
 static void initStaticGestureVariables(){
 	size_t i,j, ncoeffs;
 
+#ifdef ROBUST_FIT
+	rw = gsl_multifit_robust_alloc(gsl_multifit_robust_default, MAX_DURATION_STEPS, NCOEFFS_MAX-1);
+#else
 	mw = gsl_multifit_linear_alloc(MAX_DURATION_STEPS, NCOEFFS_MAX-1);
-	//rw = gsl_multifit_robust_alloc(gsl_multifit_robust_default, MAX_DURATION_STEPS, NCOEFFS);
+#endif
 
 	/* Evaluate the basisvalues for MAX_DURATION_STEPS points in [0,1] and different
 	 * values of ncoeffs. */
@@ -202,13 +216,19 @@ static void uninitStaticGestureVariables(){
 		FullBasis[i] = NULL;
 	}
 
-	/* reset internal mw vector/matrix values to original values
-	 * (just to be on the save side on following freeing) */
+#ifdef ROBUST_FIT
+	if( rw != NULL ){
+		gsl_multifit_robust_free(rw); rw = NULL;
+		gsl_multifit_robust_realloc(rw, MAX_DURATION_STEPS, NCOEFFS_MAX-1);
+	}
+#else
 	if( mw != NULL ){
+		/* reset internal mw vector/matrix values to original values
+		 * (just to be on the save side on following freeing) */
 		gsl_multifit_linear_realloc(mw, MAX_DURATION_STEPS, NCOEFFS_MAX-1);
 		gsl_multifit_linear_free(mw); mw = NULL;
-		//gsl_multifit_robust_free(rw); rw = NULL;
 	}
+#endif
 
 	for(i = 0;  i < NCOEFFS_MAX - NCOEFFS_MAX; ++i){
 		for ( j=0; j<DIM; ++j ){
@@ -340,91 +360,7 @@ class GestureStore{
 
 
 /* Create test gesture by function and store it. */
-static void addGestureTestPattern(GestureStore &gestureStore){
-	size_t n = 30;
-	double xy[2*n];
-	int time[n];
-	double *pos=&xy[0];
-	size_t i=0; 
-
-	//L-shape
-	for( ; i<20; ++i){
-		*pos++ = 100; 
-		*pos++ = 100 + i*5;
-		time[i] = i;
-	}
-	for( ; i<30; ++i){
-		*pos++ = 100 + (i-20)*5; 
-		*pos++ = 100 + 20*5;
-		time[i] = i;
-	}
-	Gesture *gest1 = new Gesture( time, xy, n, false); 
-	gest1->setGestureName("L-shape");
-	gestureStore.addPattern(gest1);
-
-	Gesture *gest1inv = new Gesture( time, xy, n, true); 
-	gest1inv->setGestureName("Inv L-shape");
-	gestureStore.addPattern(gest1inv);
-
-	//Circle
-	pos=&xy[0];
-	for(i=0 ; i<30; ++i){
-		*pos++ = 300 + 20*cos(2*3.1415*i/30);
-		*pos++ = 150 + 20*sin(2*3.1415*i/30);
-	}
-	Gesture *gest2 = new Gesture( time, xy, n, false); 
-	gest2->setGestureName("Circle");
-	gestureStore.addPattern(gest2);
-
-	//Line
-	pos=&xy[0];
-	for(i=0 ; i<30; ++i){
-		*pos++ = 200 - 6*i - (i*333)%7;
-		*pos++ = 100 + 6*i + (i*111)%7;
-	}
-	Gesture *gest3 = new Gesture( time, xy, n, false); 
-	gest3->setGestureName("Line");
-	gestureStore.addPattern(gest3);
-
-	//U-Shape
-	pos=&xy[0];
-	for(i=0 ; i<10; ++i){
-		*pos++ = 300; 
-		*pos++ = 100 + i*10;
-	}
-	for( ; i<20; ++i){
-		*pos++ = 300 + (i-10)*5; 
-		*pos++ = 200;
-	}
-	for( ; i<30; ++i){
-		*pos++ = 350; 
-		*pos++ = 200 - (i-20)*10;
-	}
-	Gesture *gest4 = new Gesture( time, xy, n, true); 
-	gest4->setGestureName("U-Shape");
-	gestureStore.addPattern(gest4);
-
-	//V-Shape
-	pos=&xy[0];
-	for(i=0 ; i<15; ++i){
-		*pos++ = 150 + i*5; 
-		*pos++ = 100 + i*10;
-	}
-	for( ; i<30; ++i){
-		*pos++ = 150 + i*5; 
-		*pos++ = 100 + (30-i)*10;
-	}
-	Gesture *gest5 = new Gesture( time, xy, n, true); 
-	gest5->setGestureName("V-Shape");
-	gestureStore.addPattern(gest5);
-
-
-	//Debug, Print out distance vectors
-	for( auto& gesture: gestureStore.getPatterns() ){
-		printf("DIST VECTOR %s\n", gesture->getGestureName());
-		gesture->printDistances();
-	}
-}
+void addGestureTestPattern(GestureStore &gestureStore);
 
 #ifdef WITH_OPENGL
 class GfxTexture; 

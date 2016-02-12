@@ -112,24 +112,24 @@ void* blob_detection(void *argn){
 					bool gestureHandledTwice(false);
 					for( ; it != itEnd ; ++it ){
 						// Skip short/flickering movements
-						if( (*it).duration < 16 ) continue; 
+						if( (*it).duration < 20 ) continue; 
 
 						size_t id = (size_t) (*it).id;//handid;
 						printf("Gest (%u,%i)\t", id, (*it).event );
 						for( const auto& g: gestures){
 							if( id == g->getGestureId() ){
-								printf("Handle same blob chain twice! id=%u el=%i\n", id, tmpI);
+								printf("WRN, handle same blob chain twice! id=%u el=%i\n", id, tmpI);
 								gestureHandledTwice = true;
 								continue;
 							}
 						}
 
 						tmpI++;
-						if( gestureHandledTwice ) continue;
+						//if( gestureHandledTwice ) continue;
 						printf("===\n");
 
 						// Convert list of coordinates into spline approximation
-						Gesture *gest = new Gesture( (*it) );
+						Gesture *gest = new Gesture( (*it), 0, 0 );
 
 						// This objects stores some metadata/results.
 						GesturePatternCompareResult res;

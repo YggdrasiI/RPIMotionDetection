@@ -80,7 +80,11 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 	m_gestureId = blob.id;
 
 	// Init static variables
+#ifdef ROBUST_FIT
+	if( rw == NULL ){
+#else
 	if( mw == NULL ){
+#endif
 		initStaticGestureVariables();
 	}
 
@@ -99,23 +103,55 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 #ifdef WITH_HISTORY
 
 	if( blob.history.get() != nullptr ){
+		/* 0. Count number of useful elements of history.
+		 * Blobs with .event = BLOB_PENDING should be ignored.*/
+		size_t n(0);
+		int globKnot(0);
+		int duration(-1);
+		std::deque<cBlob>::iterator it = blob.history.get()->begin();
+		const std::deque<cBlob>::iterator itEnd = blob.history.get()->end();
+		if( blob.event != BLOB_PENDING ){
+			duration = blob.duration+1; //TODO check if +1 is ness.?
+			++n;
+		}
+		for ( ; it != itEnd ; ++it){
+			if( (*it).event == BLOB_UP ){
+					fprintf(stderr,"%s:Chain contain blob with BLOB_UP event.\n",__FILE__);
+			}
+			if( (*it).event != BLOB_PENDING ){ 
+				if( duration == -1 ){
+					duration = blob.duration;
+				}
+				globKnot = duration - (*it).duration;// + 1; /* TODO Remove +1 shift here but increase/decrease(?) duration value in history. */
 
-		/* 0. Setup sizes and init vectors */
-		//size_t m_n = std::min( 1 + blob.history.get()->size(), MAX_DURATION_STEPS);
-		m_n = 1 + blob.history.get()->size() - skipped_begin_nodes - skipped_end_nodes;
-		assert( m_n >= 0 );
-		if( m_n > MAX_DURATION_STEPS ) m_n = MAX_DURATION_STEPS;
+				if( globKnot >= MAX_DURATION_STEPS ){
+					fprintf(stderr,"%s:Excess max duration for gestures.\n",__FILE__);
+					/* The tracked data is to far in the past. Ignore all older nodes. */
+					break;
+				}else{
+					++n;
+				}
+			}
+		}
+
+		/* 1. Setup sizes and init vectors */
+		if( n <= skipped_begin_nodes + skipped_end_nodes ){
+			// Not enough nodes.
+			return;
+		}
+
+		m_n = n - skipped_begin_nodes - skipped_end_nodes;
+		assert( m_n < 1000000 ); //underflow check
+		assert( m_n > 0 );
 
 		m_ncoeffs = NCOEFFS_FUNC(m_n);
 		m_nbreak = m_ncoeffs + 2 - SPLINE_DEG;
 		
-		/* Note: m_nbreak is size_t and could be underflow.
-		 * Moreover, m_nbreak must be at least 2 for a successful
-		 * bspline initialisation.
-		 * This check was replaced because m_ncoeffs has the
-		 * correct lower bound, now. It's fine to check m_n directly.
-			*/
-		//if( m_nbreak-2 < 1000 )
+		/* m_nbreak must be at least 2 for a successful
+		 * bspline initialisation. We check this here,
+		 * but respect a possible underflowing of the variable.
+		 */
+		//if( m_nbreak-2 < 1000000 )
 		if( m_n > 10 )	
 		{
 			printf("n,nc,nb=%lu,%lu,%lu \n", m_n, m_ncoeffs, m_nbreak);
@@ -137,46 +173,37 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 			//m_bw = gsl_bspline_alloc(SPLINE_DEG, m_nbreak);
 			const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
 
-			/* 1. Filling vectors. Note that values are flipped. [current value,..., oldest value] */
-			int knot=0;
+			/* 2. Filling vectors. Note that values are backward aligned. [current value,..., oldest value] */
+			int knot(0);
+			globKnot = 0;
 			//gsl_vector_set(m_grid, 0, 0.0); // unknown behaviour for skipped_*_nodes>0
-			if( skipped_end_nodes > 0 ){
-				const gsl_vector_const_view subrow = gsl_matrix_const_subrow ( FullBasis[basisIndex], 0, 0, m_ncoeffs);
-				gsl_matrix_set_row( m_ReducedBasis, knot, &subrow.vector );
+			if( blob.event != BLOB_PENDING ){
+				if( skipped_end_nodes == 0 
+					){
+					const gsl_vector_const_view subrow = gsl_matrix_const_subrow ( FullBasis[basisIndex], globKnot, 0, m_ncoeffs);
+					gsl_matrix_set_row( m_ReducedBasis, knot, &subrow.vector );
 
-				gsl_vector_set_fast(m_raw_values[0], knot, blob.location.x);
-				gsl_vector_set_fast(m_raw_values[1], knot, blob.location.y);
-				gsl_vector_set_fast(m_debugDurationGrid, 0, 0.0);
-				++knot;
-				--skipped_end_nodes;
+					gsl_vector_set_fast(m_raw_values[0], knot, blob.location.x);
+					gsl_vector_set_fast(m_raw_values[1], knot, blob.location.y);
+					gsl_vector_set_fast(m_debugDurationGrid, 0, 0.0);
+					++knot;
+				}else{
+					--skipped_end_nodes;
+				}
 			}
 
-			int duration=blob.duration;
-			int globKnot;
 			std::deque<cBlob>::iterator it = blob.history.get()->begin();
 			const std::deque<cBlob>::iterator itEnd = blob.history.get()->end();
 
 			for ( ; it != itEnd ; ++it){
-				//go to next global knot.
-				globKnot = duration - (*it).duration + 1; /* TODO Ok, die +1 sollte weg und duration bei den Blobs korrigiert werden. */
-
-				if( globKnot >= MAX_DURATION_STEPS ){
-					fprintf(stderr,"%s:Excess max duration for gestures.\n",__FILE__);
-					/* The tracked data is to far in the past. Cut of at this position and short
-					 * the dimension of the basis matrix.
-					 * Note: The selection of m_ncoeffs could be to high for the new m_n.
-					 */
-					m_n = knot;
-					m_ReducedBasis->size1 = m_n; //Now, the internal array size not matching anymore.
-					m_raw_values[0]->size = m_n;
-					m_raw_values[1]->size = m_n;
-					break;
-				}
+				if( (*it).event == BLOB_PENDING ) continue;
 				if( skipped_end_nodes > 0 ){
 					--skipped_end_nodes;
 					continue;
 				}
-				if( knot >= m_n ) break; // just ness. if skipped_begin_nodes>0
+
+				//Global knot of uniform grid
+				globKnot = duration - (*it).duration;// + 1;
 
 				gsl_vector_set_fast(m_raw_values[0], knot, (*it).location.x);
 				gsl_vector_set_fast(m_raw_values[1], knot, (*it).location.y);
@@ -187,10 +214,12 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 				gsl_matrix_set_row( m_ReducedBasis, knot, &subrow2.vector );
 
 				++knot;
+				if( knot >= m_n ) break; // just ness. if skipped_begin_nodes>0
 			}
 
 			//printf("Matrix:\n");
 			//gsl_matrix_fprintf(stdout,m_ReducedBasis, "%f");
+			//gsl_vector_fprintf(stdout,m_debugDurationGrid, "%f");
 
 			//gsl_bspline_knots(m_grid, m_bw);//internally, m_grid data will be copied, which is omitable
 
@@ -198,6 +227,8 @@ m_n(0),m_ncoeffs(0),m_nbreak(0),
 		}else{
 			// To less points
 			m_n = 0;
+			m_ncoeffs = 0;
+			m_nbreak = 0;
 		}
 	}
 
@@ -219,7 +250,11 @@ m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 		m_ReducedBasis(NULL)
 {
 	//init static variables
+#ifdef ROBUST_FIT
+	if( rw == NULL ){
+#else
 	if( mw == NULL ){
+#endif
 		initStaticGestureVariables();
 	}
 
@@ -239,13 +274,11 @@ m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 	m_ncoeffs = NCOEFFS_FUNC(m_n);
 	m_nbreak = m_ncoeffs + 2 - SPLINE_DEG;
 
-	/* Note: m_nbreak is size_t and could be underflow.
-	 * Moreover, m_nbreak must be at least 2 for a successful
-	 * bspline initialisation.
-	 * This check was replaced because m_ncoeffs has the
-	 * correct lower bound, now. It's requred to check m_n directly.
+	/* m_nbreak must be at least 2 for a successful
+	 * bspline initialisation. We check this here,
+	 * but respect a possible underflowing of the variable.
 	 */
-	//if( m_nbreak-2 < 1000 )
+	//if( m_nbreak-2 < 1000000 )
 	if( m_n > 10 )	
 	{
 		//m_grid = gsl_vector_alloc( m_nbreak/*+2*(SPLINE_DEG-1)*/ );
@@ -357,7 +390,11 @@ m_n(xy_Len),m_ncoeffs(0),m_nbreak(0),
 	// new(this) Gesture(inTimestamp, inXY, inXY+1, xy_Len, 2, reversedTime);
 	
 	//init static variables
+#ifdef ROBUST_FIT
+	if( rw == NULL ){
+#else
 	if( mw == NULL ){
+#endif
 		initStaticGestureVariables();
 	}
 
@@ -507,6 +544,30 @@ void Gesture::construct(){
 }
 
 
+#ifdef ROBUST_FIT
+void Gesture::evalSplineCoefficients(){
+	if( m_n == 0 ) return;
+
+	/* Shrink workspace on reduced dimension.
+	*/
+#if 1
+	gsl_multifit_robust_realloc(rw, m_n, m_ncoeffs);
+#else
+	gsl_multifit_robust_free(rw); rw = NULL;
+	rw = gsl_multifit_robust_alloc(m_n, m_ncoeffs);
+#endif
+
+	const size_t basisIndex = m_ncoeffs-NCOEFFS_MIN;
+	for( size_t d=0; d<DIM; ++d){
+#ifdef STORE_IN_MEMBER_VARIABLE
+		gsl_multifit_robust(m_ReducedBasis, m_raw_values[d], m_c[d], m_cov[d], rw);
+#else
+		gsl_multifit_robust(m_ReducedBasis, m_raw_values[d], Global_c[basisIndex][d], Global_cov[basisIndex][d], rw);
+#endif
+	}
+
+}
+#else
 void Gesture::evalSplineCoefficients(){
 	if( m_n == 0 ) return;
 
@@ -532,6 +593,7 @@ void Gesture::evalSplineCoefficients(){
 	}
 
 }
+#endif
 
 void Gesture::evalSpline(double **outX, double **outY, size_t *outLen ){
 	if( m_n == 0 ) return;
@@ -567,8 +629,13 @@ void Gesture::evalSpline(double **outX, double **outY, size_t *outLen ){
 		//Nun berechne ich die Basiswerte ja doch in jedem Objekt...
 		gsl_bspline_eval(t_pos, tmpB, bw[basisIndex]);
 #ifdef STORE_IN_MEMBER_VARIABLE
+#ifdef ROBUST_FIT
+		//gsl_multifit_robust_est(tmpB, Global_c[basisIndex][0], Global_cov[basisIndex][0], &x_j, &yerr);
+		//gsl_multifit_robust_est(tmpB, Global_c[basisIndex][1], Global_cov[basisIndex][1], &x_j, &yerr);
+#else
 		gsl_multifit_linear_est(tmpB, m_c[0], m_cov[0], &x_j, &xerr);
 		gsl_multifit_linear_est(tmpB, m_c[1], m_cov[1], &y_j, &yerr);
+#endif
 #else
 		gsl_multifit_linear_est(tmpB, Global_c[basisIndex][0], Global_cov[basisIndex][0], &x_j, &xerr);
 		gsl_multifit_linear_est(tmpB, Global_c[basisIndex][1], Global_cov[basisIndex][1], &y_j, &yerr);
@@ -883,6 +950,91 @@ double GestureDistance::evalL2Dist( size_t level){
 	return m_L2NormSquared[level];
 }
 
+void addGestureTestPattern(GestureStore &gestureStore){
+	size_t n = 30;
+	double xy[2*n];
+	int time[n];
+	double *pos=&xy[0];
+	size_t i=0; 
+
+	//L-shape
+	for( ; i<20; ++i){
+		*pos++ = 100; 
+		*pos++ = 100 + i*5;
+		time[i] = i;
+	}
+	for( ; i<30; ++i){
+		*pos++ = 100 + (i-20)*5; 
+		*pos++ = 100 + 20*5;
+		time[i] = i;
+	}
+	Gesture *gest1 = new Gesture( time, xy, n, false); 
+	gest1->setGestureName("L-shape");
+	gestureStore.addPattern(gest1);
+
+	Gesture *gest1inv = new Gesture( time, xy, n, true); 
+	gest1inv->setGestureName("Inv L-shape");
+	gestureStore.addPattern(gest1inv);
+
+	//Circle
+	pos=&xy[0];
+	for(i=0 ; i<30; ++i){
+		*pos++ = 300 + 20*cos(2*3.1415*i/30);
+		*pos++ = 150 + 20*sin(2*3.1415*i/30);
+	}
+	Gesture *gest2 = new Gesture( time, xy, n, false); 
+	gest2->setGestureName("Circle");
+	gestureStore.addPattern(gest2);
+
+	//Line
+	pos=&xy[0];
+	for(i=0 ; i<30; ++i){
+		*pos++ = 200 - 6*i - (i*333)%7;
+		*pos++ = 100 + 6*i + (i*111)%7;
+	}
+	Gesture *gest3 = new Gesture( time, xy, n, false); 
+	gest3->setGestureName("Line");
+	gestureStore.addPattern(gest3);
+
+	//U-Shape
+	pos=&xy[0];
+	for(i=0 ; i<10; ++i){
+		*pos++ = 300; 
+		*pos++ = 100 + i*10;
+	}
+	for( ; i<20; ++i){
+		*pos++ = 300 + (i-10)*5; 
+		*pos++ = 200;
+	}
+	for( ; i<30; ++i){
+		*pos++ = 350; 
+		*pos++ = 200 - (i-20)*10;
+	}
+	Gesture *gest4 = new Gesture( time, xy, n, true); 
+	gest4->setGestureName("U-Shape");
+	gestureStore.addPattern(gest4);
+
+	//V-Shape
+	pos=&xy[0];
+	for(i=0 ; i<15; ++i){
+		*pos++ = 150 + i*5; 
+		*pos++ = 100 + i*10;
+	}
+	for( ; i<30; ++i){
+		*pos++ = 150 + i*5; 
+		*pos++ = 100 + (30-i)*10;
+	}
+	Gesture *gest5 = new Gesture( time, xy, n, true); 
+	gest5->setGestureName("V-Shape");
+	gestureStore.addPattern(gest5);
+
+
+	//Debug, Print out distance vectors
+	for( auto& gesture: gestureStore.getPatterns() ){
+		printf("DIST VECTOR %s\n", gesture->getGestureName());
+		gesture->printDistances();
+	}
+}
 
 #ifdef WITH_OPENGL
 void gesture_drawSpline( Gesture *gesture, int screenWidth, int screenHeight, float *color_rgba, float *increment_rgba, GfxTexture *target){

@@ -12,6 +12,7 @@ extern "C"
  * Should be faster as reallocation?!
  */
 void gsl_multifit_linear_realloc (gsl_multifit_linear_workspace *w, size_t n, size_t p);
+void gsl_multifit_robust_realloc (gsl_multifit_robust_workspace *w, size_t n, size_t p);
 
 /*assume stride=1*/
 inline double gsl_vector_get_fast( gsl_vector *v, const size_t pos){
