@@ -13,8 +13,18 @@ EXTRA_ARGS="--vflip"
 # Artifical light or bad power supply can cause flickering. Reduce of fps could stable the image
 EXTRA_ARGS="${EXTRA_ARGS} -fps 10"
 
+# Remove small disturbance
+# EXTRA_ARGS="${EXTRA_ARGS} -ifx blur"
+
+# Add further arguments from input args, but remove RESOLUTION arg
+# Could be used to filter the image, i.e. -ifx emboss
+shift
+EXTRA_ARGS="${EXTRA_ARGS} $@"
+
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
 echo "Waiting $WAIT ms on camera initialisation"
+echo "Extra arguments:"
+echo "$EXTRA_ARGS"
 
 if [ "$RESOLUTION" = "high" ] ; then
 eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,1920,1080' --glwin '0,0,1920,1080'"

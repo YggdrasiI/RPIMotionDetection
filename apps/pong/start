@@ -23,8 +23,16 @@ MAINCMD="./pong --player ${PLAYER} -x /dev/null -o /dev/null -t 0 --gl --glscene
 EXTRA_ARGS="--vflip"
 #EXTRA_ARGS="--hflip -rot 90"
 
+# Add further arguments from input args, but remove RESOLUTION and PLAYER arg
+# Could be used to filter the image, i.e. -ifx emboss
+shift
+shift
+EXTRA_ARGS="${EXTRA_ARGS} $@"
+
 echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
 echo "Waiting $WAIT ms on camera initialisation"
+echo "Extra arguments:"
+echo "$EXTRA_ARGS"
 
 if [ "$RESOLUTION" = "high" ] ; then
 eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,1920,1080' --glwin '0,0,1920,1080'"

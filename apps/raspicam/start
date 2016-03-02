@@ -8,11 +8,20 @@ WAIT=5000
 
 ENV="LD_LIBRARY_PATH=./lib:\${LD_LIBRARY_PATH}"
 MAINCMD="./raspivid -x /dev/null -o /dev/null -t 0  --gl --glscene motion --waitAndFix ${WAIT} "
+
 EXTRA_ARGS="--vflip"
 #EXTRA_ARGS="--hflip -rot 90"
 
-echo "Starting with resolution '${RESOLUTION}' and player '${PLAYER}'"
+# Add further arguments from input args, but remove RESOLUTION arg
+# Could be used to filter the image, i.e. -ifx emboss -fps 10
+shift
+EXTRA_ARGS="${EXTRA_ARGS} $@"
+
+
+echo "Starting with resolution '${RESOLUTION}'"
 echo "Waiting $WAIT ms on camera initialisation"
+echo "Extra arguments:"
+echo "$EXTRA_ARGS"
 
 if [ "$RESOLUTION" = "high" ] ; then
 eval "$ENV $MAINCMD $EXTRA_ARGS --preview '0,0,1920,1080' --glwin '0,0,1920,1080'"
