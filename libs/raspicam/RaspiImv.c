@@ -102,3 +102,35 @@ void imv_eval_norm2(MOTION_DATA *md){
 	}
 
 }
+
+/* 
+ * avg_direction: avg. x and y value for md.
+ * support_len: Number of pixels != 0
+ * variance: E(X^2) - E(X)^2
+ */
+void imv_eval_avg_direction(MOTION_DATA *md, AVG_DIRECTION_DATA *ret){
+	INLINE_MOTION_VECTOR *curImv = (INLINE_MOTION_VECTOR*) md->imv_array_buffer; 
+	INLINE_MOTION_VECTOR *curImvEnd = curImv+md->imv_array_len;
+	/* This values should not overflow because the input dimensions are holding
+	 * width*height*range << 2^31.
+	 * */
+	int sum_x = 0, sum_y = 0;
+	int sum_x2 = 0, sum_y2 = 0;
+	size_t num_not_zero = 0;
+
+	while( curImv<curImvEnd ){
+			if( curImv->x_vector || curImv->y_vector ){
+					++num_not_zero;
+					sum_x += curImv->x_vector;
+					sum_x2 += *(norm2_pow_map+(unsigned char)curImv->x_vector);
+					sum_y += curImv->y_vector;
+					sum_y2 += *(norm2_pow_map+(unsigned char)curImv->y_vector);
+					++curImv;
+			}
+	}
+	ret->direction_avg[0] = ((double)sum_x)/num_not_zero;
+	ret->direction_avg[1] = ((double)sum_y)/num_not_zero;
+	ret->direction_variance[0] = ((double)sum_x2)/num_not_zero - ret->direction_avg[0] * ret->direction_avg[0];
+	ret->direction_variance[1] = ((double)sum_y2)/num_not_zero - ret->direction_avg[1] * ret->direction_avg[1];
+	ret->direction_support_len	= num_not_zero;
+}

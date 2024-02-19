@@ -72,6 +72,14 @@ void uninit_motion_data(MOTION_DATA *md, RASPIVID_STATE *state);
 void imv_eval_norm(MOTION_DATA *md);
 void imv_eval_norm2(MOTION_DATA *md);
 
+typedef struct
+{
+	float direction_avg[2];
+	float direction_variance[2];
+	size_t direction_support_len;
+} AVG_DIRECTION_DATA; 
+
+void imv_eval_avg_direction(MOTION_DATA *md, AVG_DIRECTION_DATA *ret);
 
 
 #ifdef __cplusplus

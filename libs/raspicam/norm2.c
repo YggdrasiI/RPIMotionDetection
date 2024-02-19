@@ -18,8 +18,8 @@
 
 #include "norm2.h"
 
-static unsigned int norm2_pow_map[256];//for -128,...,0,...,127
-static unsigned int norm2_root_map[129];//maps on sqrt(a)*2^16
+unsigned int norm2_pow_map[256];//for -128,...,0,...,127
+unsigned int norm2_root_map[129];//maps on sqrt(a)*2^16
 
 /* Fill arrays on startup */
 void norm2_init_arrays(){
@@ -135,7 +135,7 @@ inline unsigned int sqrt_asm( const unsigned int n){
 /* Only for values <= 2^15 defined/required.
  * Own algorithm (Olaf Schulz)
  */
-inline unsigned int mem_lookup(unsigned int s){
+/*inline*/ unsigned int mem_lookup(unsigned int s){
 	if( s>>11 ){
 		s =  *(norm2_root_map+(s>>8)) >> (16-4);
 	}else if( s>>7 ){

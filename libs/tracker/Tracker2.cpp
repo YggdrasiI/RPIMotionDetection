@@ -4,7 +4,8 @@
 #include <unistd.h>
 
 //get ENV variables from BlobDetection lib
-#include "settings.h"
+//#include "settings.h"
+#define BLOB_BARYCENTER
 
 #include "Tracker2.h"
 

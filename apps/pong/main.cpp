@@ -147,7 +147,7 @@ int main(int argc, const char **argv){
 		printf("Unable to create workspace.\n");
 		return -1;
 	}
-	blobtree_create(&frameblobs);
+	frameblobs = blobtree_create();
 	blobtree_set_grid(frameblobs, 1, 1);
 
 	blobtree_set_filter(frameblobs, F_AREA_MIN, 50 );

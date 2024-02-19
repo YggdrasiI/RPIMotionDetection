@@ -20,6 +20,9 @@
 
 #define NORM2_USE_ALGO 3
 
+extern unsigned int norm2_pow_map[256];
+extern unsigned int norm2_root_map[129];
+
 /* Fill arrays on startup */
 void norm2_init_arrays();
 unsigned int norm2(const signed char a, const signed char b);

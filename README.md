@@ -53,6 +53,10 @@ Required:
 	GNU Sientific Library, sudo apt-get install libgsl0-dev 
 	RPi Videocore Libs ( preinstalled in Raspbian, see /opt/vc) 
 	OpenGL Libs
+    libfreetype-dev
+
+    (TODO) Build blobdection lib in 
+    3rdparty/blobdetection/build
 
 Optional:
 	sudo apt-get install libopencv-dev libopencv-highgui-dev

@@ -1,4 +1,4 @@
-add_subdirectory(blobdetection)
+#add_subdirectory(blobdetection)
 add_subdirectory(tracker)
 if(WITH_RPI)
 	add_subdirectory(raspicam)

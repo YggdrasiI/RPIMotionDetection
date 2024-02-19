@@ -3,13 +3,6 @@
 add_definitions(-DWITH_OPENGL)
 SET(COMPILE_DEFINITIONS -Werror)
 
-add_executable(pong
-	Pong.cpp
-	main.cpp 
-	Graphics.cpp 
-	../../libs/tracker/DrawingOpenGL.cpp
-	)
-
 include_directories(/opt/vc/include)
 include_directories(/opt/vc/include/interface/vcos)
 include_directories(/opt/vc/include/interface/vcos/pthreads)
@@ -21,11 +14,17 @@ include_directories(${CMAKE_SOURCE_DIR}/include)
 #include_directories(${CMAKE_SOURCE_DIR}/apps/raspicam/)
 
 include_directories(${CMAKE_SOURCE_DIR}/libs/raspicam/)
-include_directories(${CMAKE_SOURCE_DIR}/libs/blobdetection/)
 include_directories(${CMAKE_SOURCE_DIR}/libs/tracker/)
 include_directories(${CMAKE_SOURCE_DIR}/libs/freetypeGlesRpi/)
 
 link_directories(/opt/vc/lib)
+
+add_executable(pong
+	Pong.cpp
+	main.cpp 
+	Graphics.cpp 
+	../../libs/tracker/DrawingOpenGL.cpp
+	)
 
 target_link_libraries(pong
 	raspivid_core

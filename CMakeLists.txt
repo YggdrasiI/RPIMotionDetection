@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8)
 project( RPiMotionDetection )
-find_package( OpenCV )
+#find_package( OpenCV )
 #find_package( OpenGLES REQUIRED )
 
 option(WITH_RPI "Enable this option if you compiling on the Raspberry Pi." ON)
@@ -16,9 +16,13 @@ set(WITH_OCV ${WITH_OCV} CACHE BOOL "OpenCV libs available")
 
 option(WITH_GSL "Gnu Sientific Library. Required for gesture recognition" ON)
 
-include_directories(${CMAKE_HOME_DIRECTORY}/include)
-include_directories(${CMAKE_HOME_DIRECTORY}/libs/blobdetection)
-include_directories(${CMAKE_HOME_DIRECTORY}/libs/raspicam)
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/blobdetection/include/blobdetection)
+include_directories(${CMAKE_SOURCE_DIR}/3rdparty/blobdetection/src)
+link_directories(${CMAKE_SOURCE_DIR}/3rdparty/blobdetection/build/src)
+# TODO shift link dir to 'make' target dir of blobdetection library
+
+include_directories(${CMAKE_SOURCE_DIR}/include)
+include_directories(${CMAKE_SOURCE_DIR}/libs/raspicam)
 
 # Use newer c++ standard (for shared pointers)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x" )

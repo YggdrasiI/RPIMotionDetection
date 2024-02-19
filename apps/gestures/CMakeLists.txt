@@ -20,7 +20,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 include_directories(${CMAKE_SOURCE_DIR}/libs/raspicam/)
-include_directories(${CMAKE_SOURCE_DIR}/libs/blobdetection/)
 include_directories(${CMAKE_SOURCE_DIR}/libs/tracker/)
 include_directories(${CMAKE_SOURCE_DIR}/libs/freetypeGlesRpi/)
 
